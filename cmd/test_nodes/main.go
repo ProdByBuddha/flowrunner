@@ -271,7 +271,7 @@ func testSMTPNode(username, password string) {
 		"username":  username,
 		"password":  password,
 		"from":      username,
-		"to":        []string{recipient},
+		"to":        recipient, // Pass as a string, not a slice
 		"subject":   "Test Email from Flowrunner",
 		"body":      "This is a test email sent from the Flowrunner SMTP node.",
 		"html":      "<h1>Test Email</h1><p>This is a <b>test email</b> sent from the Flowrunner SMTP node.</p>",
