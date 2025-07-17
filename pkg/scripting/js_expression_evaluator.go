@@ -48,7 +48,15 @@ func (e *JSExpressionEvaluator) Evaluate(expression string, context map[string]a
 		return nil, fmt.Errorf("failed to convert result to Go value: %w", err)
 	}
 
-	return goValue, nil
+	// Ensure consistent type conversion for numeric values
+	switch v := goValue.(type) {
+	case int:
+		return float64(v), nil
+	case int64:
+		return float64(v), nil
+	default:
+		return goValue, nil
+	}
 }
 
 // EvaluateInObject processes all expressions in an object
@@ -95,10 +103,22 @@ func (e *JSExpressionEvaluator) EvaluateInObject(obj map[string]any, context map
 						return nil, err
 					}
 				} else {
-					evaluatedArray[i] = item
+					// Convert numeric types to float64 for consistency
+					switch numVal := item.(type) {
+					case int:
+						evaluatedArray[i] = float64(numVal)
+					case int64:
+						evaluatedArray[i] = float64(numVal)
+					default:
+						evaluatedArray[i] = item
+					}
 				}
 			}
 			evaluatedValue = evaluatedArray
+		case int:
+			evaluatedValue = float64(v)
+		case int64:
+			evaluatedValue = float64(v)
 		default:
 			evaluatedValue = value
 		}

@@ -1,5 +1,10 @@
 package scripting
 
+import (
+	"context"
+	"time"
+)
+
 // ExpressionEvaluator evaluates expressions in YAML
 type ExpressionEvaluator interface {
 	// Evaluate processes an expression string with the given context
@@ -15,5 +20,5 @@ type ScriptEngine interface {
 	Execute(script string, context map[string]any) (any, error)
 
 	// ExecuteWithTimeout runs a JavaScript snippet with a timeout
-	ExecuteWithTimeout(ctx any, script string, context map[string]any, timeout any) (any, error)
+	ExecuteWithTimeout(ctx context.Context, script string, context map[string]any, timeout time.Duration) (any, error)
 }

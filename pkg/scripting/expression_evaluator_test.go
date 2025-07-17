@@ -109,7 +109,7 @@ func TestJSExpressionEvaluator_EvaluateInObject(t *testing.T) {
 			},
 			want: map[string]any{
 				"name": "John",
-				"age":  30,
+				"age":  float64(30),
 			},
 			wantErr: false,
 		},
@@ -128,7 +128,7 @@ func TestJSExpressionEvaluator_EvaluateInObject(t *testing.T) {
 			want: map[string]any{
 				"user": map[string]any{
 					"name": "John",
-					"age":  30,
+					"age":  float64(30),
 				},
 			},
 			wantErr: false,
