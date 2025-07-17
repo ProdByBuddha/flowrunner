@@ -13,7 +13,7 @@ import (
 func CoreNodeTypes() map[string]NodeFactory {
 	return map[string]NodeFactory{
 		"http.request":  NewHTTPRequestNodeWrapper,
-		"store":         NewStoreNodeWrapper,
+		"store":         NewEnhancedStoreNodeWrapper, // Use the enhanced store node
 		"transform":     NewTransformNodeWrapper,
 		"condition":     NewConditionNodeWrapper,
 		"delay":         NewDelayNodeWrapper,
@@ -394,28 +394,7 @@ func NewIMAPNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 	return wrapper, nil
 }
 
-// NewAgentNodeWrapper creates a new agent node wrapper
-func NewAgentNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
-	// Create the base node
-	baseNode := flowlib.NewNode(3, 1*time.Second)
-
-	// Create the wrapper
-	wrapper := &NodeWrapper{
-		node: baseNode,
-		exec: func(input interface{}) (interface{}, error) {
-			// This is a placeholder - in a real implementation, this would run
-			// an AI agent with reasoning capabilities
-			return map[string]interface{}{
-				"result": "This is a placeholder result from the agent node.",
-			}, nil
-		},
-	}
-
-	// Set the parameters
-	wrapper.SetParams(params)
-
-	return wrapper, nil
-}
+// The actual implementation of NewAgentNodeWrapper is in agent_node.go
 
 // NewWebhookNodeWrapper creates a new webhook node wrapper
 func NewWebhookNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
