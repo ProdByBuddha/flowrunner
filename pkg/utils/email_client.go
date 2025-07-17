@@ -37,18 +37,18 @@ type EmailClient struct {
 
 // EmailMessage represents an email message
 type EmailMessage struct {
-	From        string                 `json:"from"`
-	To          []string               `json:"to"`
-	Cc          []string               `json:"cc,omitempty"`
-	Bcc         []string               `json:"bcc,omitempty"`
-	Subject     string                 `json:"subject"`
-	Body        string                 `json:"body"`
-	HTML        string                 `json:"html,omitempty"`
-	Attachments []EmailAttachment      `json:"attachments,omitempty"`
-	Headers     map[string]string      `json:"headers,omitempty"`
-	Date        time.Time              `json:"date,omitempty"`
-	MessageID   string                 `json:"message_id,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	From        string            `json:"from"`
+	To          []string          `json:"to"`
+	Cc          []string          `json:"cc,omitempty"`
+	Bcc         []string          `json:"bcc,omitempty"`
+	Subject     string            `json:"subject"`
+	Body        string            `json:"body"`
+	HTML        string            `json:"html,omitempty"`
+	Attachments []EmailAttachment `json:"attachments,omitempty"`
+	Headers     map[string]string `json:"headers,omitempty"`
+	Date        time.Time         `json:"date,omitempty"`
+	MessageID   string            `json:"message_id,omitempty"`
+	Metadata    map[string]any    `json:"metadata,omitempty"`
 }
 
 // EmailAttachment represents an email attachment
@@ -117,13 +117,20 @@ func (c *EmailClient) Connect() error {
 func (c *EmailClient) Close() error {
 	var smtpErr, imapErr error
 
+	// Only try to close the SMTP client if it's not nil
 	if c.smtpClient != nil {
-		smtpErr = c.smtpClient.Close()
+		// Skip closing for our dummy SMTP client
+		dummyClient := &smtp.Client{}
+		if c.smtpClient != dummyClient {
+			smtpErr = c.smtpClient.Close()
+		}
 		c.smtpClient = nil
 	}
 
+	// Only try to logout from IMAP if the client is not nil
 	if c.imapClient != nil {
-		c.imapClient.Logout()
+		// Use Logout() which is safer than Close()
+		imapErr = c.imapClient.Logout()
 		c.imapClient = nil
 	}
 
@@ -333,7 +340,7 @@ func (c *EmailClient) GetEmails(filter EmailFilter) ([]EmailMessage, error) {
 			Subject:   msg.Envelope.Subject,
 			Date:      msg.Envelope.Date,
 			MessageID: msg.Envelope.MessageId,
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"uid":      msg.Uid,
 				"flags":    msg.Flags,
 				"date":     msg.InternalDate,

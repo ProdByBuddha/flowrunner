@@ -233,11 +233,28 @@ func (c *LLMClient) completeOpenAI(ctx context.Context, request LLMRequest) (*LL
 
 // completeAnthropicMessages sends a completion request to Anthropic using the messages API (Claude 3)
 func (c *LLMClient) completeAnthropicMessages(ctx context.Context, request LLMRequest) (*LLMResponse, error) {
+	// Extract system message if present
+	var systemPrompt string
+	var userAssistantMessages []Message
+
+	for _, msg := range request.Messages {
+		if msg.Role == "system" {
+			systemPrompt = msg.Content
+		} else {
+			userAssistantMessages = append(userAssistantMessages, msg)
+		}
+	}
+
 	// Create request body for Claude 3 messages API
 	requestBody := map[string]interface{}{
 		"model":       request.Model,
-		"messages":    request.Messages,
+		"messages":    userAssistantMessages,
 		"temperature": request.Temperature,
+	}
+
+	// Add system prompt if present
+	if systemPrompt != "" {
+		requestBody["system"] = systemPrompt
 	}
 
 	if request.MaxTokens > 0 {
