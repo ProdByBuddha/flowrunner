@@ -98,14 +98,77 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 				for key, value := range headersParam {
 					if strValue, ok := value.(string); ok {
 						headers[key] = strValue
+					} else {
+						// Convert non-string values to string
+						headers[key] = fmt.Sprintf("%v", value)
 					}
 				}
 			}
 
-			// Extract body
+			// Extract body based on content type
 			var body interface{}
+			contentType := ""
+
 			if bodyParam, ok := params["body"]; ok {
 				body = bodyParam
+
+				// Check if content type is specified in headers
+				if ct, ok := headers["Content-Type"]; ok {
+					contentType = ct
+				} else if ct, ok := headers["content-type"]; ok {
+					contentType = ct
+				}
+
+				// If no content type is specified, try to determine it from the body
+				if contentType == "" {
+					switch bodyParam.(type) {
+					case map[string]interface{}, []interface{}:
+						contentType = "application/json"
+					case string:
+						// Check if it looks like JSON
+						strBody := bodyParam.(string)
+						if len(strBody) > 0 && (strBody[0] == '{' || strBody[0] == '[') {
+							contentType = "application/json"
+						} else {
+							contentType = "text/plain"
+						}
+					}
+
+					// Set the content type header if determined
+					if contentType != "" {
+						headers["Content-Type"] = contentType
+					}
+				}
+			}
+
+			// Handle file uploads
+			if fileParam, ok := params["file"]; ok {
+				// File upload handling would go here
+				// For now, we'll just log that it's not fully implemented
+				fmt.Println("File upload requested but not fully implemented")
+
+				// If we have a file path, we could read the file and set it as the body
+				if filePath, ok := fileParam.(string); ok {
+					// In a real implementation, we would read the file and set up multipart form data
+					fmt.Printf("Would upload file: %s\n", filePath)
+				}
+			}
+
+			// Handle form data
+			if formData, ok := params["form_data"].(map[string]interface{}); ok {
+				// In a real implementation, we would set up form data
+				// For now, we'll just convert it to a string representation
+				formStr := ""
+				for k, v := range formData {
+					if formStr != "" {
+						formStr += "&"
+					}
+					formStr += fmt.Sprintf("%s=%v", k, v)
+				}
+				body = formStr
+				if contentType == "" {
+					headers["Content-Type"] = "application/x-www-form-urlencoded"
+				}
 			}
 
 			// Extract timeout
@@ -114,6 +177,9 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 				if parsedTimeout, err := time.ParseDuration(timeoutParam); err == nil {
 					timeout = parsedTimeout
 				}
+			} else if timeoutNum, ok := params["timeout"].(float64); ok {
+				// Handle numeric timeout in seconds
+				timeout = time.Duration(timeoutNum * float64(time.Second))
 			}
 
 			// Extract authentication
@@ -122,14 +188,52 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 				auth = authParam
 			}
 
+			// Handle specific auth types
+			if bearerToken, ok := params["bearer_token"].(string); ok {
+				if auth == nil {
+					auth = make(map[string]interface{})
+				}
+				auth["token"] = bearerToken
+			}
+
+			if apiKey, ok := params["api_key"].(string); ok {
+				if auth == nil {
+					auth = make(map[string]interface{})
+				}
+				auth["api_key"] = apiKey
+
+				// Check if key name is provided
+				if keyName, ok := params["key_name"].(string); ok {
+					auth["key_name"] = keyName
+				}
+			}
+
+			// Handle basic auth directly
+			if username, ok := params["username"].(string); ok {
+				if password, ok := params["password"].(string); ok {
+					if auth == nil {
+						auth = make(map[string]interface{})
+					}
+					auth["username"] = username
+					auth["password"] = password
+				}
+			}
+
+			// Extract follow redirects option
+			followRedirects := true
+			if followParam, ok := params["follow_redirects"].(bool); ok {
+				followRedirects = followParam
+			}
+
 			// Create HTTP request
 			httpRequest := &utils.HTTPRequest{
-				URL:     url,
-				Method:  method,
-				Headers: headers,
-				Body:    body,
-				Timeout: timeout,
-				Auth:    auth,
+				URL:            url,
+				Method:         method,
+				Headers:        headers,
+				Body:           body,
+				Timeout:        timeout,
+				Auth:           auth,
+				FollowRedirect: followRedirects,
 			}
 
 			// Execute request
@@ -139,13 +243,44 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 			}
 
 			// Return response
-			return map[string]interface{}{
+			result := map[string]interface{}{
 				"status_code": resp.StatusCode,
 				"headers":     resp.Headers,
 				"body":        resp.Body,
 				"raw_body":    string(resp.RawBody),
 				"metadata":    resp.Metadata,
-			}, nil
+				"success":     resp.StatusCode >= 200 && resp.StatusCode < 300,
+			}
+
+			// Add timing information if available
+			if resp.Metadata != nil {
+				if timing, ok := resp.Metadata["timing"].(time.Duration); ok {
+					result["timing_ms"] = timing.Milliseconds()
+				}
+			}
+
+			return result, nil
+		},
+		post: func(shared, p, e interface{}) (flowlib.Action, error) {
+			// Get the result
+			result, ok := e.(map[string]interface{})
+			if !ok {
+				return flowlib.DefaultAction, nil
+			}
+
+			// Check if we should route based on status code
+			if statusCode, ok := result["status_code"].(int); ok {
+				// Route based on status code range
+				if statusCode >= 200 && statusCode < 300 {
+					return "success", nil
+				} else if statusCode >= 400 && statusCode < 500 {
+					return "client_error", nil
+				} else if statusCode >= 500 {
+					return "server_error", nil
+				}
+			}
+
+			return flowlib.DefaultAction, nil
 		},
 	}
 

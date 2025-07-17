@@ -17,6 +17,8 @@ func CoreNodeTypes() map[string]NodeFactory {
 		"transform":     NewTransformNodeWrapper,
 		"condition":     NewConditionNodeWrapper,
 		"delay":         NewDelayNodeWrapper,
+		"wait":          NewWaitNodeWrapper,
+		"cron":          NewCronNodeWrapper,
 		"llm":           NewLLMNodeWrapper,
 		"email.send":    NewSMTPNodeWrapper,
 		"email.receive": NewIMAPNodeWrapper,

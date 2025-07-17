@@ -17,12 +17,13 @@ type HTTPClient struct {
 
 // HTTPRequest represents an HTTP request
 type HTTPRequest struct {
-	URL     string                 `json:"url"`
-	Method  string                 `json:"method"`
-	Headers map[string]string      `json:"headers,omitempty"`
-	Body    interface{}            `json:"body,omitempty"`
-	Timeout time.Duration          `json:"timeout,omitempty"`
-	Auth    map[string]interface{} `json:"auth,omitempty"`
+	URL            string                 `json:"url"`
+	Method         string                 `json:"method"`
+	Headers        map[string]string      `json:"headers,omitempty"`
+	Body           interface{}            `json:"body,omitempty"`
+	Timeout        time.Duration          `json:"timeout,omitempty"`
+	Auth           map[string]interface{} `json:"auth,omitempty"`
+	FollowRedirect bool                   `json:"follow_redirect,omitempty"`
 }
 
 // HTTPResponse represents an HTTP response
@@ -114,12 +115,27 @@ func (c *HTTPClient) Do(req *HTTPRequest) (*HTTPResponse, error) {
 		defer func() { c.client.Timeout = originalTimeout }()
 	}
 
+	// Configure redirect policy
+	originalCheckRedirect := c.client.CheckRedirect
+	if !req.FollowRedirect {
+		c.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+		defer func() { c.client.CheckRedirect = originalCheckRedirect }()
+	}
+
+	// Record start time for timing information
+	startTime := time.Now()
+
 	// Execute request
 	resp, err := c.client.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
+
+	// Calculate request duration
+	requestDuration := time.Since(startTime)
 
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
@@ -151,6 +167,8 @@ func (c *HTTPClient) Do(req *HTTPRequest) (*HTTPResponse, error) {
 			"content_length": resp.ContentLength,
 			"request_url":    req.URL,
 			"request_method": req.Method,
+			"timing":         requestDuration,
+			"timing_ms":      requestDuration.Milliseconds(),
 		},
 	}
 

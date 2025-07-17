@@ -48,8 +48,8 @@ func TestHTTPRequestNode(t *testing.T) {
 	}
 
 	// Check the result
-	if result != "default" {
-		t.Errorf("Expected result to be 'default', got '%s'", result)
+	if result != "success" {
+		t.Errorf("Expected result to be 'success', got '%s'", result)
 	}
 }
 
