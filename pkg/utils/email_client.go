@@ -115,17 +115,11 @@ func (c *EmailClient) Connect() error {
 
 // Close closes the connections to the SMTP and IMAP servers
 func (c *EmailClient) Close() error {
-	var smtpErr, imapErr error
+	var imapErr error
 
-	// Only try to close the SMTP client if it's not nil
-	if c.smtpClient != nil {
-		// Skip closing for our dummy SMTP client
-		dummyClient := &smtp.Client{}
-		if c.smtpClient != dummyClient {
-			smtpErr = c.smtpClient.Close()
-		}
-		c.smtpClient = nil
-	}
+	// For SMTP, we're using a dummy client for Gmail, so we don't need to close it
+	// Just set it to nil
+	c.smtpClient = nil
 
 	// Only try to logout from IMAP if the client is not nil
 	if c.imapClient != nil {
@@ -135,10 +129,6 @@ func (c *EmailClient) Close() error {
 	}
 
 	c.connected = false
-
-	if smtpErr != nil {
-		return smtpErr
-	}
 	return imapErr
 }
 
