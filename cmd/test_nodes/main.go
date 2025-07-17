@@ -44,6 +44,13 @@ func main() {
 				} else {
 					fmt.Println("\nSkipping email tests - no credentials provided")
 				}
+			case "help":
+				printHelp()
+				return
+			default:
+				fmt.Printf("Unknown test: %s\n", arg)
+				printHelp()
+				return
 			}
 		}
 		return
@@ -69,6 +76,24 @@ func main() {
 	} else {
 		fmt.Println("\nSkipping email tests - no credentials provided")
 	}
+}
+
+// printHelp prints usage information for the test_nodes command
+func printHelp() {
+	fmt.Println("Usage: go run cmd/test_nodes/main.go [test1] [test2] ...")
+	fmt.Println("\nAvailable tests:")
+	fmt.Println("  openai     - Test OpenAI LLM node")
+	fmt.Println("  anthropic  - Test Anthropic LLM node")
+	fmt.Println("  template   - Test LLM with template support")
+	fmt.Println("  structured - Test LLM with structured output")
+	fmt.Println("  email      - Test email nodes (SMTP/IMAP)")
+	fmt.Println("  help       - Show this help message")
+	fmt.Println("\nEnvironment variables:")
+	fmt.Println("  OPENAI_API_KEY    - Required for OpenAI tests")
+	fmt.Println("  ANTHROPIC_API_KEY - Required for Anthropic tests")
+	fmt.Println("  GMAIL_USERNAME    - Required for email tests")
+	fmt.Println("  GMAIL_PASSWORD    - Required for email tests")
+	fmt.Println("  EMAIL_RECIPIENT   - Optional for email tests (defaults to GMAIL_USERNAME)")
 }
 
 func testOpenAILLM() {
