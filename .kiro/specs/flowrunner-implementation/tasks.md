@@ -1,19 +1,19 @@
 # Implementation Plan
 
-- [x] 1. Set up project structure and core interfaces
+- [ ] 1. Set up project structure and core interfaces
   - Create directory structure for core components
   - Define key interfaces that establish system boundaries
   - Set up basic configuration handling
   - _Requirements: 1.1, 1.2, 8.1_
 
 - [ ] 2. Implement YAML loader and schema validation
-  - [x] 2.1 Define YAML schema for flow definitions
+  - [ ] 2.1 Define YAML schema for flow definitions
     - Create schema for nodes, edges, parameters, and metadata
     - Support JavaScript hooks in schema
     - Support expression evaluation syntax
     - _Requirements: 1.1, 1.2_
 
-  - [x] 2.2 Implement YAML parser and validator
+  - [ ] 2.2 Implement YAML parser and validator
     - Create parser that converts YAML to internal representation
     - Implement validation logic for schema conformance
     - Add detailed error reporting for validation failures

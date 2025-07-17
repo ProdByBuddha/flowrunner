@@ -36,7 +36,7 @@ func TestHTTPRequestNode(t *testing.T) {
 	}
 
 	// Create the node
-	node, err := NewHTTPRequestNode(params)
+	node, err := NewHTTPRequestNodeWrapper(params)
 	if err != nil {
 		t.Fatalf("Failed to create HTTP request node: %v", err)
 	}
@@ -55,7 +55,7 @@ func TestHTTPRequestNode(t *testing.T) {
 
 func TestStoreNode(t *testing.T) {
 	// Create the node
-	node, err := NewStoreNode(map[string]interface{}{})
+	node, err := NewStoreNodeWrapper(map[string]interface{}{})
 	if err != nil {
 		t.Fatalf("Failed to create store node: %v", err)
 	}
@@ -122,7 +122,7 @@ func TestDelayNode(t *testing.T) {
 		"duration": "10ms",
 	}
 
-	node, err := NewDelayNode(params)
+	node, err := NewDelayNodeWrapper(params)
 	if err != nil {
 		t.Fatalf("Failed to create delay node: %v", err)
 	}
@@ -143,7 +143,7 @@ func TestDelayNode(t *testing.T) {
 
 func TestConditionNode(t *testing.T) {
 	// Create the node
-	node, err := NewConditionNode(map[string]interface{}{})
+	node, err := NewConditionNodeWrapper(map[string]interface{}{})
 	if err != nil {
 		t.Fatalf("Failed to create condition node: %v", err)
 	}
