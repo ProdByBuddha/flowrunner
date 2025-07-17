@@ -248,6 +248,22 @@ func testIMAPNode(username, password string) {
 					break
 				}
 				fmt.Printf("Email %d: Subject: %s, From: %s\n", i+1, email["subject"], email["from"])
+
+				// Display body preview if available
+				if body, ok := email["body"].(string); ok && body != "" {
+					// Truncate long bodies
+					preview := body
+					if len(preview) > 100 {
+						preview = preview[:100] + "..."
+					}
+					fmt.Printf("  Body preview: %s\n", preview)
+				}
+
+				// Check if HTML content is available
+				if _, ok := email["html"].(string); ok {
+					fmt.Println("  (HTML content available)")
+				}
+				fmt.Println()
 			}
 		} else {
 			fmt.Printf("Unexpected result type: %T\n", result)

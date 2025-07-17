@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"mime"
 	"mime/multipart"
+	"net/mail"
 	"net/smtp"
 	"net/textproto"
 	"path/filepath"
@@ -361,8 +363,66 @@ func (c *EmailClient) GetEmails(filter EmailFilter) ([]EmailMessage, error) {
 		}
 
 		// Process body if requested
-		if filter.WithBody && msg.Body != nil {
-			// TODO: Process body parts
+		if filter.WithBody {
+			// Check for RFC822 (full message)
+			if msg.GetBody(&imap.BodySectionName{}) != nil {
+				var buf bytes.Buffer
+				bodyReader := msg.GetBody(&imap.BodySectionName{})
+				if bodyReader != nil {
+					if _, err := buf.ReadFrom(bodyReader); err == nil {
+						// Parse the message
+						m, err := mail.ReadMessage(&buf)
+						if err == nil {
+							// Get headers
+							for k, v := range m.Header {
+								if email.Headers == nil {
+									email.Headers = make(map[string]string)
+								}
+								email.Headers[k] = strings.Join(v, ", ")
+							}
+
+							// Get body
+							mediaType, params, err := mime.ParseMediaType(m.Header.Get("Content-Type"))
+							if err == nil && strings.HasPrefix(mediaType, "multipart/") {
+								// Handle multipart message
+								boundary := params["boundary"]
+								if boundary != "" {
+									mr := multipart.NewReader(m.Body, boundary)
+									for {
+										p, err := mr.NextPart()
+										if err == io.EOF {
+											break
+										}
+										if err != nil {
+											break
+										}
+
+										// Read part content
+										var partBuf bytes.Buffer
+										if _, err := io.Copy(&partBuf, p); err != nil {
+											continue
+										}
+
+										// Check content type
+										partType, _, _ := mime.ParseMediaType(p.Header.Get("Content-Type"))
+										if strings.HasPrefix(partType, "text/plain") {
+											email.Body = partBuf.String()
+										} else if strings.HasPrefix(partType, "text/html") {
+											email.HTML = partBuf.String()
+										}
+									}
+								}
+							} else {
+								// Handle simple message
+								bodyBytes, err := io.ReadAll(m.Body)
+								if err == nil {
+									email.Body = string(bodyBytes)
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 
 		emails = append(emails, email)
