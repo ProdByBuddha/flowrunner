@@ -7,13 +7,13 @@
   - _Requirements: 1.1, 1.2, 8.1_
 
 - [ ] 2. Implement YAML loader and schema validation
-  - [ ] 2.1 Define YAML schema for flow definitions
+  - [x] 2.1 Define YAML schema for flow definitions
     - Create schema for nodes, edges, parameters, and metadata
     - Support JavaScript hooks in schema
     - Support expression evaluation syntax
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 2.2 Implement YAML parser and validator
+  - [x] 2.2 Implement YAML parser and validator
     - Create parser that converts YAML to internal representation
     - Implement validation logic for schema conformance
     - Add detailed error reporting for validation failures

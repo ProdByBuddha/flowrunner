@@ -41,7 +41,8 @@ func NewHTTPRequestNode(params map[string]interface{}) (flowlib.Node, error) {
 		client:        &http.Client{},
 	}
 	node.SetParams(params)
-	node.execFn = node.Exec
+	// We can't directly set execFn since it's unexported
+	// Instead, we'll override the Run method
 	return node, nil
 }
 
