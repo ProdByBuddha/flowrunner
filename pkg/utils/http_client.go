@@ -1,0 +1,158 @@
+// Package utils provides utility functions and abstractions for flowrunner.
+package utils
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
+)
+
+// HTTPClient provides a reusable HTTP client with common functionality
+type HTTPClient struct {
+	client *http.Client
+}
+
+// HTTPRequest represents an HTTP request
+type HTTPRequest struct {
+	URL     string                 `json:"url"`
+	Method  string                 `json:"method"`
+	Headers map[string]string      `json:"headers,omitempty"`
+	Body    interface{}            `json:"body,omitempty"`
+	Timeout time.Duration          `json:"timeout,omitempty"`
+	Auth    map[string]interface{} `json:"auth,omitempty"`
+}
+
+// HTTPResponse represents an HTTP response
+type HTTPResponse struct {
+	StatusCode int                    `json:"status_code"`
+	Headers    map[string][]string    `json:"headers"`
+	Body       interface{}            `json:"body"`
+	RawBody    []byte                 `json:"raw_body,omitempty"`
+	Error      string                 `json:"error,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// NewHTTPClient creates a new HTTP client
+func NewHTTPClient() *HTTPClient {
+	return &HTTPClient{
+		client: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+// SetTimeout sets the timeout for the HTTP client
+func (c *HTTPClient) SetTimeout(timeout time.Duration) {
+	c.client.Timeout = timeout
+}
+
+// Do executes an HTTP request
+func (c *HTTPClient) Do(req *HTTPRequest) (*HTTPResponse, error) {
+	// Set default method if not provided
+	if req.Method == "" {
+		req.Method = "GET"
+	}
+
+	// Create request body if provided
+	var bodyReader io.Reader
+	if req.Body != nil {
+		switch body := req.Body.(type) {
+		case string:
+			bodyReader = bytes.NewBufferString(body)
+		case []byte:
+			bodyReader = bytes.NewBuffer(body)
+		default:
+			// Marshal JSON body
+			jsonBody, err := json.Marshal(body)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal request body: %w", err)
+			}
+			bodyReader = bytes.NewBuffer(jsonBody)
+		}
+	}
+
+	// Create HTTP request
+	httpReq, err := http.NewRequest(req.Method, req.URL, bodyReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add headers
+	for key, value := range req.Headers {
+		httpReq.Header.Add(key, value)
+	}
+
+	// Set content type if not provided and body is not nil
+	if req.Body != nil && httpReq.Header.Get("Content-Type") == "" {
+		httpReq.Header.Set("Content-Type", "application/json")
+	}
+
+	// Add authentication if provided
+	if req.Auth != nil {
+		if username, ok := req.Auth["username"].(string); ok {
+			if password, ok := req.Auth["password"].(string); ok {
+				httpReq.SetBasicAuth(username, password)
+			}
+		} else if token, ok := req.Auth["token"].(string); ok {
+			httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		} else if apiKey, ok := req.Auth["api_key"].(string); ok {
+			if keyName, ok := req.Auth["key_name"].(string); ok {
+				httpReq.Header.Set(keyName, apiKey)
+			} else {
+				httpReq.Header.Set("X-API-Key", apiKey)
+			}
+		}
+	}
+
+	// Set client timeout if provided
+	originalTimeout := c.client.Timeout
+	if req.Timeout > 0 {
+		c.client.Timeout = req.Timeout
+		defer func() { c.client.Timeout = originalTimeout }()
+	}
+
+	// Execute request
+	resp, err := c.client.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Parse response body based on content type
+	var parsedBody interface{}
+	contentType := resp.Header.Get("Content-Type")
+	if contentType != "" && (contentType == "application/json" || contentType == "application/json; charset=utf-8") {
+		if err := json.Unmarshal(body, &parsedBody); err != nil {
+			// If JSON parsing fails, use the raw body
+			parsedBody = string(body)
+		}
+	} else {
+		// Use raw body for non-JSON responses
+		parsedBody = string(body)
+	}
+
+	// Create response
+	httpResp := &HTTPResponse{
+		StatusCode: resp.StatusCode,
+		Headers:    resp.Header,
+		Body:       parsedBody,
+		RawBody:    body,
+		Metadata: map[string]interface{}{
+			"content_type":   contentType,
+			"content_length": resp.ContentLength,
+			"request_url":    req.URL,
+			"request_method": req.Method,
+		},
+	}
+
+	return httpResp, nil
+}

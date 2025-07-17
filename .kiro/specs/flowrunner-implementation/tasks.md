@@ -160,7 +160,7 @@
     - Support attachments and templates
     - _Requirements: 4.3_
 
-  - [ ] 9.3 Create LLM integration node
+  - [x] 9.3 Create LLM integration node
     - Implement OpenAI-compatible client
     - Support prompt templates and context management
     - Add structured output handling

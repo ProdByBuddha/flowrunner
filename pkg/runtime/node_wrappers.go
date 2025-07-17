@@ -1,14 +1,11 @@
 package runtime
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"strings"
 	"time"
 
 	"github.com/tcmartin/flowlib"
+	"github.com/tcmartin/flowrunner/pkg/utils"
 )
 
 // NodeWrapper is a base wrapper for flowlib.Node implementations
@@ -51,6 +48,11 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 			return "", err
 		}
 
+		// Store the result in the shared context if it's a map
+		if sharedMap, ok := shared.(map[string]interface{}); ok {
+			sharedMap["result"] = result
+		}
+
 		// Call the post function if provided
 		if w.post != nil {
 			return w.post(shared, params, result)
@@ -69,8 +71,8 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 	// Create the base node
 	baseNode := flowlib.NewNode(3, 1*time.Second)
 
-	// Create the client
-	client := &http.Client{}
+	// Create HTTP client
+	httpClient := utils.NewHTTPClient()
 
 	// Create the wrapper
 	wrapper := &NodeWrapper{
@@ -82,63 +84,67 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
 			}
 
+			// Extract parameters
 			url, ok := params["url"].(string)
 			if !ok {
 				return nil, fmt.Errorf("url parameter is required")
 			}
 
-			method, ok := params["method"].(string)
-			if !ok {
-				method = "GET"
-			}
+			method, _ := params["method"].(string) // Default is set in HTTPClient
 
-			// Create request
-			req, err := http.NewRequest(method, url, nil)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create request: %w", err)
-			}
-
-			// Add headers
-			if headers, ok := params["headers"].(map[string]interface{}); ok {
-				for key, value := range headers {
+			// Extract headers
+			headers := make(map[string]string)
+			if headersParam, ok := params["headers"].(map[string]interface{}); ok {
+				for key, value := range headersParam {
 					if strValue, ok := value.(string); ok {
-						req.Header.Add(key, strValue)
+						headers[key] = strValue
 					}
 				}
 			}
 
-			// Execute request
-			resp, err := client.Do(req)
-			if err != nil {
-				return nil, fmt.Errorf("request failed: %w", err)
-			}
-			defer resp.Body.Close()
-
-			// Read the response body
-			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				return nil, fmt.Errorf("failed to read response body: %w", err)
+			// Extract body
+			var body interface{}
+			if bodyParam, ok := params["body"]; ok {
+				body = bodyParam
 			}
 
-			// Parse response based on content type
-			var parsedBody interface{}
-			contentType := resp.Header.Get("Content-Type")
-			if strings.Contains(contentType, "application/json") {
-				// Parse JSON
-				if err := json.Unmarshal(body, &parsedBody); err != nil {
-					// If JSON parsing fails, use the raw body
-					parsedBody = string(body)
+			// Extract timeout
+			var timeout time.Duration
+			if timeoutParam, ok := params["timeout"].(string); ok {
+				if parsedTimeout, err := time.ParseDuration(timeoutParam); err == nil {
+					timeout = parsedTimeout
 				}
-			} else {
-				// Use raw body for non-JSON responses
-				parsedBody = string(body)
+			}
+
+			// Extract authentication
+			var auth map[string]interface{}
+			if authParam, ok := params["auth"].(map[string]interface{}); ok {
+				auth = authParam
+			}
+
+			// Create HTTP request
+			httpRequest := &utils.HTTPRequest{
+				URL:     url,
+				Method:  method,
+				Headers: headers,
+				Body:    body,
+				Timeout: timeout,
+				Auth:    auth,
+			}
+
+			// Execute request
+			resp, err := httpClient.Do(httpRequest)
+			if err != nil {
+				return nil, err
 			}
 
 			// Return response
 			return map[string]interface{}{
 				"status_code": resp.StatusCode,
-				"headers":     resp.Header,
-				"body":        parsedBody,
+				"headers":     resp.Headers,
+				"body":        resp.Body,
+				"raw_body":    string(resp.RawBody),
+				"metadata":    resp.Metadata,
 			}, nil
 		},
 	}
