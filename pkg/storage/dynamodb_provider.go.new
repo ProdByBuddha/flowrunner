@@ -1,0 +1,1740 @@
+}l
+return ni}
+
+	rr)
+	: %w", eete accountto del("failed fmt.Errorfn 
+		returund
+		}tFoErrAccountNorn 
+			retution {kFailedExceplChecditionaoneCodb.ErrCod dynam==e() rr.Cod ae); ok &&serr.Errorr.(awok := ererr, 	if a {
+	il != nif err	})
+
+	(ID)"),
+bute_existsriString("attion: aws.tionExpress
+		Condi		},		},
+D),
+	untI.String(accowsS: a				: {
+"ID"		e{
+	Valub.Attributeamod*dyn[string]y: map,
+		KetableName)ws.String(s.ame: a
+		TableNItemInput{eletedb.D(&dynamoeteItemclient.Del, err := s.ccount
+	_e a
+	// Deletg) error {D strint(accountIeteAccounStore) DeloDBAccount (s *Dynamccount
+funcves an at remoDeleteAccoun
+}
+
+// nilounts, rn acc
+
+	retu
+	}ccount)accounts, as = append(		account)
+
+dAtUnix, 0Item.Updateaccix( time.Un.UpdatedAt =	account, 0)
+	UnixeatedAtm.Crnix(accItedAt = time.UateCret.accoun		Account
+tem.unt := accI		accoe
+im to time.T backmpsmestat Unix tinver	// Co		}
+
+	w", err)
+l account: %arshanmto ud rf("faileronil, fmt.Erurn 
+			ret {rr != nilem); em, &accItp(itealMate.Unmarshattribunamodb= dy :
+		if err	}	dAt"`
+Updatet64 `json:"x indAtUni	Updatet"`
+		eatedAon:"Cr `jsUnix int64	CreatedAt
+		untcco		auth.At {
+	cItem struc
+		var acult.Items {ge resitem := ran
+	for _, t.Items))ul, 0, len(res.Accounte([]authts := makouncc
+	ascount Extract ac}
+
+	//	", err)
+ccounts: %wd to scan a"failet.Errorf(urn nil, fm{
+		retrr != nil })
+
+	if e	eName),
+tablws.String(s.bleName: a		Tanput{
+odb.ScanIam&dynScan(ent. s.clirr :=, e
+	resulttscoun Scan ac {
+	//nt, error).Accou) ([]authtAccounts(tStore) LisnamoDBAccounnc (s *Dyaccounts
+fureturns all s ccountistAl
+}
+
+// Lnt, nirn accou)
+
+	retuix, 0tUnedAItem.Updatme.Unix(acc= tit.UpdatedAt ccoun
+	a, 0)eatedAtUnix.Crtemme.Unix(accItedAt = ti.Creaountcccount
+	atem.Ac:= accIt 
+	accountime.Time to ckmps banix timesta// Convert U
+	}
+
+	 err)ount: %w",al accunmarsh to ailed"frf(roErt{}, fmt.th.Accoun		return au
+nil {!= rr ccItem); e[0], &ault.ItemsshalMap(resarribute.Unmmodbattna err := dy	}
+	if"`
+pdatedAt `json:"Unix int64AtUUpdated		"`
+t"CreatedAjson:x int64 `reatedAtUnicount
+		C		auth.Ac{
+em struct accIt
+	var accountl 	// Unmarsha	}
+
+ound
+countNotF ErrAc.Account{},uth arn	retu0 {
+	 == tems).If len(result	i
+	}
+
+r)%w", eroken:  t accounts by to queryled"faif(fmt.Errorcount{}, uth.Ac		return anil {
+ != err})
+
+	if ,
+	s()alue.Vues: exprributeValsionAttres	Exp
+	,xpr.Names()Names:  etettribuxpressionAn(),
+		E.KeyCondition:    exprressioitionExp	KeyCond
+	dex"),TokenIn(".String         aws        IndexName:		
+Name),letring(s.tab.S       aws      Name:    ableput{
+		Todb.QueryInynament.Query(&drr := s.cli	result, eaccounts
+Query 	// )
+	}
+
+: %w", errxpressionild eto builed Errorf("famt.ccount{}, f.Aurn auth
+		retnil {if err != Build()
+	yCond).ion(keKeyCondit).Withlder(n.NewBui= expressiorr :)
+	expr, eValue(token)ssion.xpre(een").Equal"APITokion.Key(d := express	keyConession
+expre query eat
+	// Cr, error) {auth.Accounting) ((token strTokenntByAccoutore) GetcountS *DynamoDBAcen
+func (sokI t APbyccount n aieves aken retrtByToGetAccoun
+// t, nil
+}
+urn accoun)
+
+	retedAtUnix, 0datItem.Upx(acc.UnitimedatedAt = count.Up
+	acx, 0)ni.CreatedAtUccItemx(a = time.UniatedAt	account.Cret
+m.Accoun= accIte
+	account :e.Time timtomps back nix timestat Unver}
+
+	// Co
+	w", err)l account: %o unmarshaed trorf("failfmt.Ercount{}, rn auth.Ac		retu
+{err != nil m); ccItetems[0], &ap(result.I.UnmarshalMabutemodbattri := dynaerr	if 
+dAt"`
+	}ate `json:"UpdAtUnix int64
+		Updatedt"`n:"CreatedA4 `jsodAtUnix int6reate		Cccount
+uth.A		a {
+ structcItem
+	var ac account/ Unmarshal	/
+	}
+
+ountNotFoundAccnt{}, Errcouurn auth.Ac		ret
+= 0 {s) =temen(result.I
+
+	if lerr)
+	}%w", e: amrny useunts bccoo query aled trf("fai, fmt.Erroount{}h.Accutturn arel {
+		 ni err !=	})
+
+	if(),
+alueslues: expr.VttributeVanApressio		Ex.Names(),
+es:  exprbuteNamtriExpressionAt		dition(),
+onexpr.KeyCon:    onExpressiti	KeyCondi),
+	ameIndex"ring("Usern    aws.St            ame: exNnd
+		IeName),tablring(s.s.St         aw        	TableName:	put{
+db.QueryInmoynauery(&d.Q= s.client :sult, errs
+	re account
+	// Query	}
+w", err)
+sion: %d expresd to builf("failefmt.Errorount{}, n auth.Accurl {
+		retif err != ni)
+	ld(nd).Buidition(keyCoKeyCon).Withuilder(ession.NewB err := expr)
+	expr,ue(username)alon.Vressiqual(exprname").Ese"Uression.Key(xpeyCond := eion
+	kuery expresseate q{
+	// Crrror) unt, euth.Accoing) (atre sname(usernamntByUsercouStore) GetAcAccountnamoDBnc (s *Dyfu
+y usernamen account bieves atrame rernUsetAccountBy
+
+// Gel
+}account, nieturn x, 0)
+
+	rtUnidAteaccItem.Updae.Unix( timtedAt =nt.Updacoux, 0)
+	acAtUnitem.CreatedaccIUnix(t = time.CreatedAccount.
+	aount.AcccItemunt := acaccome.Time
+	 back to tiimestampsvert Unix t	// Con
+	}
+r)
+%w", eral account: rsh unma("failed torrorf fmt.E},uth.Account{		return al {
+!= nirr  eItem);&acclt.Item, p(resuarshalMaute.Unmnamodbattribr := dy}
+	if er
+	pdatedAt"`:"Unt64 `jsontUnix i		UpdatedA`
+reatedAt""Cn: `jso64x intreatedAtUni
+		Cunt.Acco {
+		authstructcItem t
+	var acounrshal acc Unma
+	//ound
+	}
+untNotF}, ErrAccouth.Account{turn a		re{
+il == n.Item lt
+	if resuerr)
+	}
+nt: %w", couto get acailed rf("ffmt.Erro}, th.Account{urn auret	= nil {
+		if err !,
+	})
+
+
+		}),
+			},ng(accountID: aws.Stri			SD": {
+				"Ie{
+tributeValunamodb.Attring]*dyp[sey: maame),
+		Ks.tableNring(e: aws.StableNam
+		TtemInput{db.GetI(&dynamotItem.client.Get, err := snt
+	resulcout acGe/ r) {
+	/ount, erroh.Accng) (autID striuntnt(accoGetAccoucountStore) Ac *DynamoDBc (suncount
+f an acrievesccount ret
+// GetArn nil
+}
+tu}
+
+	re, err)
+	ccount: %w"ave ao sled tai("frrorfturn fmt.E {
+		renil	if err != 
+	})
+
+v,      atem:),
+		ImeeNaabl(s.tngs.StrileName: aw	Tab
+	utItemInput{amodb.PItem(&dyn.Put s.client err =unt
+	_, Save acco	}
+
+	//
+r) ercount: %w",al acarsh"failed to mrrorf(fmt.En 
+		retur!= nil {rr 
+	if eitem)arshalMap(ribute.Mdynamodbattav, err := 
+	 accounthal/ Mars
+	/(),
+	}
+.UnixUpdatedAt account.datedAtUnix:	Up
+	ix(),UneatedAt.nt.Crccouix: aUnatedAtret,
+		C     accoun	Account:  	}{
+	
+datedAt"` `json:"UptUnix int64UpdatedAt"`
+		:"CreatedAt64 `jsonx inAtUnieated		Crount
+		auth.Acc
+{truct 
+	item := smestampsix tio Un tme fields tiConvert// error {
+	) h.Accountutt at(accounveAccoun SantStore)AccoumoDBs *Dynac (t
+funaccounists an count pers/ SaveAc
+
+/", err)
+} %wts: exisable accounts teck if to chledf("fai fmt.Error
+	return
+il
+	}	return n	}
+
+		 err)
+ion: %w",le creatccounts tabr ao wait fof("failed tmt.Errorreturn f {
+			f err != nil)
+
+		i	}me),
+	ng(s.tableNaws.StrieName: abl	Tat{
+		leInpuescribeTab.DynamodbbleExists(&dilTaient.WaitUnt.cl
+		err = se created to bor table/ Wait f
+
+		/		}r)
+, er%w"unts table: ccoo create a tailed"ft.Errorf(rn fmtu	rel {
+		rr != ni
+
+		if e	})	UEST"),
+PAY_PER_REQ"aws.String(ingMode: ill	B			},
+			},
+			},
+				L"),
+	"ALaws.String(ype: ectionToj			Pr		ection{
+	ynamodb.Projtion: &d		Projec					},
+					},
+			),
+	"HASH"(Stringaws.ype:       yT		Ke				
+	IToken"),.String("APame: awstributeN	At										{
+		t{
+enlemhemaEKeySc]*dynamodb.chema: [	KeyS		x"),
+		ndenITokeng("rie: aws.StxNam		Inde			
+				{
+			},		},
+),
+				L"ring("ALs.Stawype: 	ProjectionT					n{
+jectiomodb.Pro: &dynaion			Project				},
+
+				},	
+				ASH"),g("Haws.Strin:       		KeyType
+					ername"),ing("Usaws.StrName: uterib				Att			{
+					t{
+	emaElemenamodb.KeySch]*dyn: [Schema					Key"),
+exameInd"Usernring(.Stame: aws			IndexN		{
+		ndex{
+		econdaryImodb.GlobalSyna []*des:daryIndexecon		GlobalS			},
+		},
+			H"),
+ring("HAS      aws.St	KeyType: ,
+				")Dng("Iws.Stri atributeName:			At		{
+		
+		lement{maEKeySche[]*dynamodb.ema: chKeyS						},
+,
+				},
+S")ing("trType: aws.S	Attribute			),
+	APIToken"s.String("me: awtributeNa	At				
+
+				{	},			),
+ng("S"ws.Striype: aAttributeT	,
+				")menaser"U(ws.String ateName:ribu					Att			{
+
+					},("S"),
+nge: aws.StriAttributeTyp
+					("ID"),ringme: aws.St	AttributeNa			
+			{
+		eDefinition{odb.Attributynamitions: []*dteDefinbu	Attri	Name),
+	letabtring(s..Same: aws	TableN
+		Input{ableodb.CreateTable(&dynamt.CreateTcliens.= 		_, err ate table
+/ Creion {
+		/ExceptNotFoundceurCodeResoamodb.Errode() == dynrr.C); ok && ae.Errorr.(awserrr, ok := erif aernd"
+	le not fouor is "tabk if err	// Chec
+nil
+	}
+n 		returs
+ble exist
+		// Ta== nil {r f er
+	i),
+	})
+tableNamews.String(s.bleName: a	Ta
+	eInput{beTabldb.Descriable(&dynamoibeTDescr:= s.client._, err ts
+	able exisif t Check 
+	//or {ize() erre) InitialcountStornamoDBAcnc (s *Dyt exist
+fuif it doesn'oDB table ynamhe Dates te creiztial Ini
+}
+
+//
+	}counts",efix + "ac:   tablePrme	tableNaPrefix,
+	bleefix: taPr		tablelient,
+    c	client:  	{
+ccountStoren &DynamoDBAur
+	retntStore {couoDBAcg) *Dynamfix strinreoDB, tableP.Dynamnamodbnt *dylientStore(couamoDBAccwDyne
+func Neornt stamoDB accouDyn a new e createscountStorAcNewDynamoDB
+}
+
+//   stringeName blstring
+	tarefix DB
+	tablePamonamodb.Dyn     *dy
+	client ruct {ntStore stDBAccouamoype Dyn
+tynamoDBsing Dce u interfarecountStonts the AcmeStore implentccouamoDBA// Dynnil
+}
+
+eturn logs, 
+	r}
+s, log)
+	loggs = append(		lo
+		}
+
+datalog.Data = 
+			
+			}%w", err)data: og shal lled to unmarfait.Errorf("n nil, fm				retur
+err != nil {ata); m.Data), &dyte(logIteshal([]bjson.Unmarif err := e{}
+			terfacg]in map[strin	var data		" {
+" != taDalogItem.		if ent
+ presa ifmarshal datUn		// 
+
+age,
+		}gItem.Messssage:   lo		Me	el,
+gItem.Lev lo   : 	LevelodeID,
+		   logItem.N: 			NodeIDp),
+em.Timestamix(0, logItmp: time.Un	Timesta{
+		tionLogecu= runtime.Ex		log :ntry
+reate log e	// C
+		}
+
+	", err)%wlog entry: nmarshal led to u"faiErrorf(mt.rn nil, f
+			retu!= nil {rr ); e&logItemitem, ap(alMute.Unmarshtrib= dynamodbat	if err :		}
+Data"`
+	on:"ring `js       st			Data "`
+:"Messagejson  string `sage   		Mesl"`
+	veson:"Le  string `j	Level     ID"`
+		son:"Nodeg `j     strin	NodeID mp"`
+		sta`json:"Time64   int  amp	Timest	
+	utionID"`Execjson:"ing `ID str	Executionuct {
+		ogItem str
+		var lt.Items { resultem := range_, is))
+	for Itemresult.n(, 0, leExecutionLog[]runtime.ogs := make(s
+	llogt Extrac	}
+
+	// r)
+w", erogs: %uery lled to qf("faimt.Errorturn nil, f
+		reerr != nil {})
+
+	if ing
+	scend amestamp/ Sort by Titrue), /ws.Bool(     aorward:     anIndexF),
+		Scxpr.Values(s: etributeValuesionAtExpress(),
+		ameexpr.Names:  eNuttribnAt	Expressio(),
+	nditionexpr.KeyCossion:    ExprenditionCo		Keye),
+TableNamogsString(s.lws.          ae:       TableNam		t{
+yInpuermodb.Quy(&dynaent.Quer s.cli, err :=ltresugs
+	uery lo	// Q)
+	}
+
+ %w", erron:pressibuild ex"failed to mt.Errorf(l, f	return nil {
+	err != ni	if )
+ld(Bui(keyCond).nditionyCohKelder().Witssion.NewBui expre :=r, errxpID))
+	eutionalue(execssion.VpreEqual(exnID").xecutioKey("Eression.d := expyConn
+	kexpressioery eate qu/ Crerror) {
+	/ etionLog,ime.Execu[]runt) (ingtionID strgs(execuxecutionLo) GetEoreutionStnamoDBExec(s *Dyfunc tion
+ecuor an ex fes logs retrievLogsxecution
+// GetEnil
+}
+turn 
+	re
+r)
+	}, er: %w"entrysave log "failed to rrorf(mt.E	return fl {
+	err != nif 
+	i
+,
+	}):      avem
+		Ite),ogsTableNams.String(s.le: awbleNamt{
+		TaItemInpuamodb.Putem(&dynIt.Putent= s.cli	_, err 
+ve log entry}
+
+	// Sa	
+%w", err)try: og enl l marshafailed toorf(" fmt.Errrntu
+		renil { != f err
+	iap(item)lMMarsharibute.dbattrr := dynamo
+	av, eentryal log 	// Marsh
+
+
+	}ataJSON) string(dm.Data =		ite
+		}
+w", err)ta: %l log dashamarto "failed rrorf(rn fmt.E		retul {
+	f err != ni
+		ig.Data)al(loarshon.M:= jserr JSON, 
+		data != nil {g.Dataif lo
+	o JSONg data tal loMarsh
+
+	// sage,
+	}log.Mes    age: ,
+		Mess  log.LevelLevel:     D,
+		eIg.Nod   lo	NodeID:   ,
+	xNano()stamp.Unig.Time lomp:  TimestaD,
+		nIecutionID: ex	Executio
+	}{
+	"`:"Dataonng `js      stri		Data  sage"`
+son:"Mes  string `jge   
+		Messa"`son:"Levelstring `jel       
+		Lev"NodeID"`ng `json:ri   stdeID   `
+		NoTimestamp"4  `json:"stamp   int6	TimeD"`
+	xecutionI"Eing `json:onID strxecutit {
+		Eem := structamp
+	itesx tim Uniime field tovert t	// Con
+ error {og)ecutionLme.Exog runtitring, ltionID sexecuutionLog( SaveExeconStore)moDBExecutiDyna *unc (sntry
+fcution log ets an exeg persisnLoxecutioeE
+}
+
+// Sav, niln executions
+	retur
+	}
+on)xecutixecutions, eappend(executions = )
+
+		edTimeUnix, 0xecItem.Ennix(e time.U.EndTime =ution		exec, 0)
+meUnixartTixecItem.Sttime.Unix(eTime = tartecution.S	extatus
+	m.ExecutionScIteution := exe		exece.Time
+ck to tims bax timestampUnirt 		// Conve
+		}
+
+, err): %w"xecutionl eunmarsha"failed to rf(rol, fmt.Erturn ni		rel {
+	= ni err !cItem);exe(item, &lMap.Unmarshadbattribute:= dynamo
+		if err }`
+		dTime"`json:"En64 int  ix TimeUn
+			EndTime"`:"Start64 `jsonUnix int	StartTimes
+		Statu.Execution			runtime{
+uct trem sIt	var execItems {
+	lt.range resu:= or _, item 
+	flt.Items))su 0, len(reatus,nStime.Executioake([]runtions := mecuttions
+	exexecuct xtra/ E	/
+r)
+	}
+ er %w", executions:led to query("faifmt.Errorfrn nil, 	retu nil {
+		if err !=
+
+})ng
+	cendiese dtTimby Stare), // Sort ol(fals     aws.Bo   orward:  dexF	ScanIn
+	es(),Valuexpr.teValues: Attribu	Expressionames(),
+	:  expr.NibuteNamesonAttrssi
+		Expreon(),onditi.KeyCion:    expritionExpress
+		KeyCond,ntIndex")Accous.String("  aw           exName:    nd
+		Ie),ableNamcT.exews.String(s      a    Name:       
+		TableeryInput{ynamodb.Qury(&dueient.Q:= s.clsult, err tions
+	recuxe Query e
+	}
+
+	//err), ion: %w"d expressled to builfairrorf(" nil, fmt.E	return	
+rr != nil {)
+	if e.Build(ion(keyCond)onditithKeyCr().WewBuildeexpression.Nxpr, err := ntID))
+	eue(accouression.Valal(exp").EquccountID("A.Keyonressid := expyCon
+	kepressionte query ex{
+	// Crea, error) tustaxecutionSruntime.E string) ([]s(accountIDtion) ListExecuutionStoreExec *DynamoDB
+func (saccounts for an ionll executns returns aListExecutiol
+}
+
+// n, nirn executioretu)
+
+	dTimeUnix, 0tem.Ene.Unix(ie = timTimEndion.execut)
+	 0meUnix,item.StartTi.Unix(me= titartTime ion.Ss
+	executonStatuecuti item.Ex:=ecution e.Time
+	ex back to timestampst Unix tim/ Conver	}
+
+	/err)
+, ution: %w"shal execar to unmrf("failed fmt.Errotus{},onStatime.Executi	return run
+	il { nrr !=; e&item)lt.Item, lMap(resurshate.Unmaodbattriburr := dynam	if e}
+Time"`
+	json:"End int64 `nix  eUEndTim		`
+StartTime"son:"ix int64 `jmeUn
+		StartTiStatuscutionuntime.Exe		r struct {
+emn
+	var itexecutioal marsh
+	// Unund
+	}
+NotForExecutionus{}, EronStatcutiruntime.Exe
+		return nil {m == teult.I resif	rr)
+	}
+
+ion: %w", eecut to get exrf("failedt.Erro, fmStatus{}ution.Execrn runtime
+		retu != nil {rr eif	
+
+},
+	})},
+		),
+			ionIDg(executaws.Strin			S: ID": {
+	e{
+			"tributeValuynamodb.Atp[string]*d		Key: maableName),
+ng(s.execTriame: aws.SteNTabl
+		ItemInput{namodb.Gettem(&dylient.GetIerr := s.c
+	result, ecution	// Get ex{
+ error) utionStatus,ntime.Execru) (ID string(executiontExecutionGeStore) ionxecutmoDBEDynanc (s *
+fudataution ves exec retrieonutietExec
+// Gn nil
+}
+etur
+	rrr)
+	}
+on: %w", eutixecsave eailed to ("f fmt.Errorfurn
+		retnil {r != er	if 
+	})
+
+    av,m:  
+		Iteme),bleNacTaxe.String(s.eleName: aws	Tabt{
+	npub.PutItemIodem(&dynamclient.PutIt	_, err = s.ecution
+Save ex}
+
+	// ", err)
+	: %wxecutionmarshal e to failed("rfrroeturn fmt.E		r {
+rr != nilem)
+	if ealMap(itshttribute.Marnamodbarr := dy	av, eon
+l executi/ Marsha
+	}
+
+	/count",ault-acdefcountID: "Ac
+		unt IDult accose a defas, we'll uposesting pur// For tex(),
+		e.Uni.EndTimon   executix:  dTimeUni	Enix(),
+	StartTime.Untion.nix:   execurtTimeU	Stacution,
+	xenStatus: ecutio		Exe	}{
+
+countID"``json:"AcntID string 
+		Accouer parametxt or afrom contehis d get tn, we woultio applicaa real	// In e it
+	sn't havs doeatuxecutionStmoDB, but EtID for DynaAccoun: We need 
+		// Note"`eson:"EndTim64 `jix   int		EndTimeUnme"`
+Tison:"Start int64 `jtTimeUnix		Startus
+cutionStame.Exe
+		runti {= struct	item :estamps
+nix timlds to Uiet time f	// Converor {
+s) errnStatucutioime.Exeion runton(execututiSaveExecnStore) DBExecutioynamoc (s *Dfunon data
+s executin persistExecutioave
+
+// S
+}", err) %wexists:le ion logs tab execut check ifed tororf("fail.Er	return fmt
+	}
+
+n nil
+
+		retur	}, err)
+	 %w"ation: table crelogsxecution for ewait ailed to f("f.Errormtrn f	retu		 != nil {
+f err
+		i		})
+me),
+bleNaing(s.logsTaaws.Str	TableName: 
+		leInput{.DescribeTabnamodb(&dyistsableExntilTWaitU = s.client.		errreated
+e c table to b/ Wait for
+		/
+		}
+ %w", err) logs table:xecutionate eo cref("failed trorrn fmt.Er	retunil {
+		if err != 		)
+
+		}"),
+PER_REQUESTAY_ng("PriMode: aws.St			Billing
+},
+				},"),
+			Eing("RANGStr   aws.Type:    	Key
+				estamp"),tring("TimeName: aws.Stribut	At						{
+
+		
+				},H"),"HASring(      aws.St		KeyType: 	"),
+		ionIDg("ExecutStrinteName: aws.	Attribu
+					{			Element{
+b.KeySchema: []*dynamodeySchema	K			},
+		
+
+				},N"),String(": aws.teTypetribu				Atp"),
+	tammesing("Ti: aws.StrtributeName			At{
+				
+		},				"S"),
+ing( aws.StrributeType:	Att
+				"),ecutionID("Ex.StringuteName: awsibttr
+					A		{		ition{
+efinAttributeDamodb.*dyn: []eDefinitionsutrib,
+			Attme)gsTableNa(s.loStringaws.ableName: 			Tut{
+TableInpreate.CmodbynateTable(&d.client.Crea_, err = stable
+		reate 	// Ction {
+	epoundExcotFourceNrrCodeResodb.E == dynam.Code()& aerr &okor); wserr.Errerr.(aaerr, ok := 
+	if  found"le not is "taborrrck if e	// Che
+	}
+
+urn nil	ret
+	existsle / Tab		/ {
+ nil
+	if err ==
+e),
+	})ableNamlogsTws.String(s.bleName: a{
+		TaableInputcribeT.Desdbble(&dynamot.DescribeTa= s.clien :_, err
+	exists if table 
+	// Checkror {Table() erutionLogsxectializeE) iniutionStorexecBEs *DynamoDnc ('t exist
+fut doesnable if is tution loghe exec tates creogsTabletionLxecuizeE
+// initial)
+}
+ %w", errle exists:ecutions tabcheck if ex"failed to (mt.Errorf	return f
+	}
+
+ileturn n
+		r	}
+	w", err)
+ion: % creations tableor executed to wait ffailErrorf("n fmt.			returil {
+err != n	if 	
+		})
+
+me),NaxecTables.String(s.eleName: aw			TabableInput{
+escribeTnamodb.D(&dytseExisaitUntilTabllient.Wr = s.cated
+		erto be crer table / Wait fo
+
+		/rr)
+		} eble: %w",ions tautxec to create e("failedn fmt.Errorf			retur != nil {
+	if err
+
+	),
+		})REQUEST"("PAY_PER_ng: aws.StriBillingMode		},
+				},
+						},
+	
+		"ALL"),String(Type: aws.	Projection					n{
+ioctProje: &dynamodb.	Projection
+								},		},
+	),
+				"RANGE"ws.String(       ape:				KeyTy			tTime"),
+ing("Staraws.StrteName: 	Attribu				
+				{
+							},
+			ASH"),ing("H.Stre:       aws	KeyTyp						"),
+IDccount.String("Awse: attributeNam				A{
+									Element{
+ySchemamodb.Ke[]*dynaema: 		KeySch),
+			ountIndex"AccString("e: aws.NamIndex			{
+				dex{
+		lSecondaryInGlobamodb.ynaxes: []*dryIndeonda	GlobalSec	},
+				},
+	"),
+			g("HASH  aws.Strin:     			KeyType	"),
+	ng("ID: aws.StriameeNttribut	A					{
+nt{
+			lemeKeySchemaEodb.: []*dynam		KeySchema},
+				},
+			"),
+	g("Nin: aws.StrypeributeTtt		A
+			rtTime"),"Sta(s.String: awibuteNametr		At			{
+				},
+		
+		),g("S".Strin awsype:uteTribtt		A	
+		"),countID"Acws.String(uteName: arib	Att					{
+					},
+	S"),
+	ing("ws.Str aeType:but	Attri
+				,g("ID")StrinteName: aws.ribuAtt					{
+	on{
+			buteDefiniti.Attri*dynamodbns: []finitioteDebu
+			AttriableName),g(s.execTws.StrinbleName: at{
+			TanputeTableInamodb.Creable(&dyeTaCreats.client.= 
+		_, err ablete t
+		// Creaption {oundExcerceNotFErrCodeResou== dynamodb.e() aerr.Cod && rror); okrr.(awserr.E ok := eerr,d"
+	if aot foun ntable error is "/ Check if	}
+
+	/turn nil
+	re
+	xists	// Table e
+	= nil {rr =)
+
+	if e,
+	}e)ableNamcTxe.eaws.String(s	TableName: 	leInput{
+cribeTabdb.Desable(&dynamoribeTlient.Desc err := s.c	_,ble exists
+k if ta/ Checr {
+	/errole() abExecutionsTzeinitialionStore) utiamoDBExecDyn (s *t
+funcxisit doesn't etable if xecutions  the eatesonsTable cretizeExecu/ initiali
+}
+
+/n nil}
+
+	returrr
+	turn e	re
+	l {= nile(); err !onLogsTabExecutis.initialize	if err := table
+ion logs e execut/ Initializ	}
+
+	/ err
+return	l {
+	 err != niTable();tionseculizeExnitiar := s.i	if erle
+tions tab execuializeit{
+	// Inze() error ) InitialicutionStore*DynamoDBExenc (s t
+fuexisdon't y les if theamoDB tabates the Dyne cre// Initializ
+	}
+}
+
+gs",n_loxecutioix + "erefblePme: taeNagsTabl
+		loecutions",efix + "extablePrbleName: Taec	ex
+	x,ablePrefirefix:   t		tableP   client,
+client:     Store{
+		Execution&DynamoDBrn reture {
+	ExecutionSto *DynamoDBix string)ablePrefDB, todb.Dynamoyname(client *decutionStorynamoDBExewDc N store
+funoncutiynamoDB exew Dtes a ne creatorecutionSoDBExeDynam
+}
+
+// NewringName st	logsTable string
+Nameble
+	execTa  stringblePrefix B
+	taDynamoDmodb.yna   *dlient     	c {
+cte struxecutionStorynamoDBE Dtypeg DynamoDB
+usine rfacore intexecutionStements the Eore implnStcutioynamoDBExe// Dnil
+}
+
+
+
+	return err)
+	},  %w"te secret:ed to delerrorf("failmt.Eurn fret	d
+		}
+	unFocretNotreturn ErrSe			
+ {ExceptionCheckFailedalnditioneCoErrCodynamodb.() == dr.Codek && aerrror); orr.(awserr.E := eerr, ok
+		if arr != nil {
+	if e
+	})
+	},"Key"),
+	tring(": aws.S	"#kg{
+		g]*strinin: map[stramesonAttributeN		Expressik)"),
+_exists(#tebuD attrintID) ANts(Accouis_ex"attributes.String(ssion: awtionExpre		Condi},
+		},
+y),
+			String(ke aws.
+				S:{"Key": 		},
+		ntID),
+		ng(accous.Stri aw				S:tID": {
+oun			"AccValue{
+ibutettr.A]*dynamodbap[string m
+		Key:ame),ng(s.tableNs.Striame: aw
+		TableNt{teItemInpu.Deleamodbem(&dynDeleteIt.client., err := sret
+	_lete sec	// De
+r {tring) erro key saccountID,Secret(eteStore) Delcret *DynamoDBSeet
+func (soves a secrecret remteS
+// Deleil
+}
+n secrets, n	returet)
+	}
+
+secr, d(secretsets = appen		secr	}
+", err)
+	%wcret: hal seed to unmars("failfmt.Errorfturn nil, {
+			re err != nil secret);(item, &arshalMapttribute.Unm dynamodbar :=		if ercret
+uth.Set ar secre {
+		varesult.Items := range temor _, iems))
+	fen(result.It, 0, lcret[]auth.Se= make(crets :	sect secrets
+/ Extra}
+
+	/rr)
+	", es: %wuery secreto q tiledrf("faroErrn nil, fmt.tu		re
+ != nil {err	})
+
+	if s(),
+: expr.ValueributeValuesressionAtt,
+		Expexpr.Names()uteNames:  essionAttrib),
+		ExpryCondition(r.Kexpsion:    editionExpres
+		KeyConName),ing(s.tables.Str aw              Name:  Table{
+		b.QueryInputoddynamuery(&nt.Qr := s.cliesult, errets
+	re/ Query sec
+
+	/
+	}r)", eron: %wld expressied to buirrorf("failt.En nil, fm		returil {
+ err != n()
+	ifBuild).on(keyCondonditir().WithKeyCwBuildeon.Ne expressierr :=r, ))
+	expccountID.Value(aonal(expressintID").EquAccoun.Key("essio:= expr	keyCond ssion
+rete query exp
+	// Creaerror) {th.Secret, ng) ([]autritID screts(accounore) ListSeBSecretSt(s *DynamoDt
+func  accouns for anll secreturns aretistSecrets 
+
+// L
+}ecret, nilrn s
+
+	retu, err)
+	}: %w"crethal sed to unmars"failerf(fmt.Errot{}, reuth.Sec	return a	
+il {!= n; err m, &secret)result.ItenmarshalMap(attribute.Udb dynamo:=t
+	if err th.Secreecret auet
+	var scral se// Unmarsh	}
+
+	d
+retNotFounrrSecet{}, Eauth.Secr		return  == nil {
+em.Itsult
+
+	if re
+	}rr), e %w"et secret:failed to gt.Errorf("Secret{}, fmuth.	return a	!= nil {
+ err 
+	if
+	})
+
+		},
+			},ring(key),.St	S: aws
+			 {		"Key":			},
+,
+	ountID)accaws.String(	S: 		: {
+	ID"count			"Aclue{
+.AttributeVaynamodbp[string]*dy: ma		KeleName),
+ing(s.tabStrleName: aws.	Tabput{
+	temIndb.GetInamoItem(&dy.client.Getlt, err := s	resut secret
+) {
+	// Geret, errorecing) (auth.StID, key strt(accounrere) GetSecBSecretStonamoD(s *Dyunc 
+fves a secretecret retrie}
+
+// GetS nil
+turnre
+	}
+
+	, err): %w" secretiled to saverf("faErro fmt.eturnl {
+		rnierr != f 
+
+	i	})
+m:      av,		Ite
+ableName),.String(s.teName: awsTablnput{
+		db.PutItemIm(&dynamont.PutIte= s.clie	_, err ret
+// Save sec	}
+
+	", err)
+ secret: %wo marshaled tfailf("n fmt.Erroreturl {
+		rif err != ni(secret)
+	MarshalMapbattribute.odr := dynam
+	av, ercretshal se
+	// Marrror {cret) eth.Sesecret aueSecret(etStore) SavnamoDBSecrc (s *Dy secret
+fun a persistsetSecrve Sa
+}
+
+//err)w",  %exists:e if tabl check led to"faiorf(turn fmt.Err}
+
+	re nil
+	eturn
+		r}
+	 err)
+	 %w",le creation:wait for tabed to rorf("failrn fmt.Er		retu
+	 {!= nilf err 		i
+
+		})eName),
+ng(s.table: aws.StrileNam
+			TabableInput{b.DescribeTmodynaxists(&dableEaitUntilT s.client.Wrr =
+		e be createdto for table  Wait	//}
+
+			", err)
+table: %wate d to creilef("farn fmt.Error	retu		il {
+!= nf err 
+		i	})
+T"),
+	EQUESPAY_PER_Rs.String("ingMode: aw
+			Bill		},
+			},	
+	"),g("RANGE aws.StrinyType:      			Keey"),
+		"King( aws.StributeName:ttr			A					{
+		},
+			"HASH"),
+.String(awse:       			KeyTyp	ntID"),
+	ccouString("As.ame: aw	AttributeN								{
+t{
+menSchemaElenamodb.Key]*dyKeySchema: [					},
+					},
+"),
+"Ss.String(pe: awributeTy	Att			,
+	")"Keying(ame: aws.StrteN	Attribu								{
+		},
+
+		"S"), aws.String(buteType:		Attri),
+			"AccountID".String(: awseNamebut	Attri{
+				{
+				onuteDefinitib.Attribnamods: []*dynitionibuteDefi		Attr	bleName),
+.taaws.String(same: TableNput{
+			TableIn.CreatenamodbeTable(&dynt.Creatlies.c = 
+		_, errte table// Crea
+		tion {xcepNotFoundEResourcerrCodeodb.E= dynam.Code() =aerrror); ok && r.(awserr.Ereraerr, ok := 
+	if  not found""tabler is erroif k  Chec
+
+	//	}
+lreturn ni		s
+xist/ Table el {
+		/r == nier	if 
+
+,
+	}).tableName)s.String(seName: aw{
+		TablleInputcribeTab.DesdynamodbibeTable(&scrient.Deerr := s.cl	_, sts
+xible ef ta	// Check i
+or {ize() erralitie) IntStorynamoDBSecreunc (s *D't exist
+fdoesn it ifoDB table es the Dynameatitialize cr/ In
+
+/",
+	}
+} "secretsblePrefix +  tame: 	tableNax,
+	fiix: tablePre		tablePrefnt,
+ clielient:     re{
+		ctStoecreynamoDBSreturn &Dre {
+	Stocret*DynamoDBSe string) ixefablePrynamoDB, tb.D *dynamodtore(clientamoDBSecretSNewDynore
+func  secret stynamoDBates a new Dre creetStoDynamoDBSecr
+
+// Newstring
+}ableName   g
+	tefix strin	tableProDB
+modb.Dynam *dynat     ienruct {
+	clore stStoDBSecret
+type DynamynamoDBace using Dre interfSecretStos the mentmpletore icretSBSeamoDyn
+}
+
+// Ds, nilioneturn vers
+	}
+
+	rn)
+		}versio, *rsions= append(veersions 			vil {
+version != nif ].S
+		ersion" := item["Vion	vers
+	ms {lt.Ite range resur _, item :=
+	folt.Items)) len(resuring, 0,= make([]stversions :	ns
+tract versio// Ex
+	}
+
+	", err)ersions: %w flow v queryiled torrorf("fa.El, fmt niurn
+		retr != nil {)
+
+	if erlues(),
+	} expr.VauteValues:essionAttribExpr
+		pr.Names(),  exeNames:ibutessionAttr		Exprdition(),
+yCon    expr.KenExpression:onditio
+		KeyCs"),rsion+ "_veableName s.String(s.t         aw        	TableName:
+	ryInput{namodb.Quet.Query(&dyr := s.clienult, ersions
+	resery flow verQu
+	// rr)
+	}
+on: %w", eessid exprd to buil"faileorf(il, fmt.Errturn nil {
+		re err != nif
+	d()ond).Buil(keyCnditionyCoer().WithKeNewBuildon.= expressi :, err)))
+	exprflowID.Value(xpression).Equal(e"FlowID"on.Key(xpressiAnd(e
+		ntID)).Value(accousion.expresal(ID").EquccountKey("Aexpression.	keyCond := 
+pressione query ex/ Creat{
+	/, error)  ([]stringD string)wItID, flosions(accoun ListFlowVerwStore)loynamoDBF
+func (s *D flowsions of arns all ver retuFlowVersions/ List nil
+}
+
+/finition),em.Dee(itturn []byt
+
+	re)
+	}, errm: %w"on ite versial flowshto unmarrf("failed Erro nil, fmt.		return= nil {
+em); err !t.Item, &italMap(resulnmarshtribute.U= dynamodbat err :
+	}
+	ifon"`initi `json:"Deftion stringni {
+		Defistruct	var item l item
+hars	// Unmad
+	}
+
+FlowNotFounurn nil, Err	retil {
+	m == nult.Ite	if res	}
+
+ err)
+",ion: %wt flow versto gef("failed rort.Er fmreturn nil,
+		 {= nil	if err !	})
+
+,
+		},
+,
+			}version)aws.String(S: 
+				ion": {ers
+			"V	},
+		flowID),ing( aws.Str		S:": {
+				"FlowID	
+			},
+ID),count(acing.Str		S: aws{
+		countID": 		"Ac	
+uteValue{db.Attrib]*dynamongtriKey: map[s"),
+		 "_versionsleName +g(s.tabStriname: aws.		TableNtemInput{
+GetIdb.m(&dynamolient.GetIter := s.cer
+	result, low versiont f/ Ge
+	/error) {byte, ([]ion string) ers, flowID, vuntID(accoersiontFlowVre) GelowSto *DynamoDBFc (son
+funfinitiflow de of a oncific versis a speretrieveVersion / GetFlowil
+}
+
+/ n
+
+	return
+	}", err): %wlow versionve fled to sa"faiErrorf(mt.n fturil {
+		re n	if err !=	})
+
+onAV,
+versi      
+		Item:sions"),ame + "_vering(s.tableName: aws.Str
+		TableNput{emInItdynamodb.PutPutItem(& s.client.r =	_, erw version
+ave flo	}
+
+	// S", err)
+: %wsion itemverhal flow ed to marsrorf("failt.Errn fm
+		retul { niif err !=
+	tem)ionIalMap(versribute.Marshtt= dynamodbaV, err :onAsier
+	vtemversion iarshal 	// M
+	}
+
+now,reatedAt:   		Cition),
+inng(deftri sition: 		Defin,
+ioniptscrtadata.DeMeadata.ption: met	Descrision,
+	  veron:   
+		VersiowID,    flFlowID:  
+		D,  accountIountID: 
+		Acc	}{mpty"`
+teeatedBy,omi"Crg `json:edBy   strin	Creat"`
+	treatedA  `json:"C64t   int		CreatedA
+tion"`:"Defining `jsonn  strinitio
+		Deficription"`n:"Desjso `ringription st	Desc"`
+	n:"Version`jsog in   strion  ers		V
+"`"FlowIDing `json:str      
+		FlowIDD"`"AccountIon: string `jsID  
+		Accountstruct {= nItem :ioe
+	versns tablsioflow_verion in the the versThen, store 
+
+	// 	}%w", err)
+date flow: led to up"fai(fmt.Errorf
+		return  nil {err !=	if )
+
+
+	}:      av,	Item,
+	ableName)g(s.trine: aws.StTableNam
+		temInput{odb.PutIamm(&dynPutIte s.client. err =	_,ow
+te fl Upda	//
+	}
+", err)
+ item: %wal flowrshiled to marrorf("fareturn fmt.E	 {
+	f err != nil	iitem)
+MarshalMap(attribute.dynamodbr := 	av, eral item
+	// MarshatedAt
+
+ngItem.CreexistiAt = m.Created
+	}
+	itew", err) %ting flow:marshal exiso un"failed torf(n fmt.Erreturl {
+		rerr != nim); Iteexistingm, &teult.IhalMap(resibute.Unmarsbattr := dynamoderr
+	if DBFlowItemdynamogItem 	var existinme
+ creation tiveeser, prting flow	// Exisd
+	}
+
+owNotFounreturn ErrFl
+		 nil {tem ==esult.I
+
+	if r
+	} %w", err)flow exists: check if led toErrorf("faifmt.	return nil {
+	if err != 	})
+
+			},
+			},
+
+flowID),g(Strin	S: aws.: {
+			"FlowID"
+			,
+			},untID)ring(accoSt	S: aws.": {
+			ountID
+			"Accalue{b.AttributeVmod*dynag]in: map[stre),
+		Keys.tableNam.String(ame: aws	TableN
+	Input{etItem.Gamodb&dynent.GetItem(r := s.clilt, er
+	resusady existflow alreheck if }
+
+	// Cow,
+	  n: 	UpdatedAtersion,
+	    vrsion: 	Veion,
+	.Descriptdataetadata.Mtation: meDescrip,
+		ta.NameMetadaetadata.  m    Name:  
+		nition),(defitring son: tiini		DefflowID,
+owID:      
+		FlaccountID,ID:   	AccountwItem{
+	FloDB:= dynamo	item x()
+ow().Uni.Nme	now := ti version
+ewith the nd wcorlow rehe main f, update t	// First"
+	}
+
+tion = "ta.Descripetada.MmetadataD
+		me = flowINa.Metadata.metadataalues
+		use empty vadata, just ract metcan't extwe 		// If = nil {
+ta); err !adametition, &shal(defin json.Unmar err :=}
+
+	ifadata"`
+	met`json:"		} ion"`
+`json:"versng ion     stri			Versn"`
+io:"descript `jsonption stringscri	De"`
+		nameing `json:"       str			Name truct {
+ta s	Metada
+	ruct {str metadata 	vaefinition
+he d tfrommetadata  Extract rror {
+	//string) ete, version inition []bytring, defowID sflaccountID, on(aveFlowVersi) SStoreynamoDBFlow (s *Duncon
+fefiniti of a flow d new versions asisterVersion p/ SaveFlow
+
+/nil
+}List, ata metadurn	}
+
+	retata)
+metadataList, etadt = append(madataLis
+		met	}
+,
+	datedAtlowItem.UpatedAt:   f		Upd,
+	edAtm.CreatowIteAt:   flted			Creasion,
+owItem.Verion:     fl
+			Versn,riptiowItem.Descn: flo	DescriptioName,
+		 flowItem.  	Name:     D,
+		AccountIowItem.:   flntID		AccoulowID,
+	tem.F   flowI    			ID:   tadata{
+FlowMeta := dameta	}
+
+		)
+	 errem: %w",low it fnmarshaliled to ufaorf("fmt.Errurn nil, 	ret		l {
+err != ni&flowItem); ap(item, alMarshnmattribute.Uodbam:= dyn		if err 
+lowItemdynamoDBFr flowItem 		vaems {
+e result.Ittem := rangfor _, i))
+	sult.Itemsn(reta, 0, leadae([]FlowMetist := makmetadataL
+	alow metadat Extract f
+	//
+	}
+", err)ows: %w to query fledilf("fa, fmt.Error	return nil	= nil {
+if err !	})
+
+
+	tion(),ecpr.Proj:      exressionojectionExp	Pr,
+	alues()r.Vxpes: euteValuttribExpressionAes(),
+		r.NamxpteNames:  enAttribuessio	Exprn(),
+	KeyConditio:    expr.sionExpresConditionKeyName),
+		bles.ta aws.String(        me:        leNaTabInput{
+		b.Queryery(&dynamodient.Querr := s.clsult, 
+	rery flows
+
+	// Que)
+	}: %w", errpressionbuild exto failed mt.Errorf("l, f	return ni {
+	ilrr != nif e
+	roj).Build()n(pithProjectiokeyCond).Wition(Cond).WithKeyilder(ssion.NewBuexprer := , erexpr	"),
+	)
+Ated"UpdatName(sion.pres	ex
+	"),edAtCreat("sion.Nameexpres
+		ersion"),e("V.Namression	expn"),
+	scriptiome("Deon.Na	expressiame"),
+	e("Nsion.Names
+		exprtID"),ccounName("Axpression."),
+		e"FlowIDion.Name(ss
+		expreesList(n.Namressioproj := expountID))
+	.Value(accl(expressiontID").Equa"Accounssion.Key(= expre
+	keyCond :pression exuery q Create//or) {
+	, errFlowMetadatastring) ([]a(accountID thMetadatowsWi) ListFlwStore*DynamoDBFlot
+func (s un an accotadata forh meit w flowsllns aturhMetadata resWitFlow// List, nil
+}
+
+ metadataurn	ret
+
+	}
+.UpdatedAt,item   datedAt:dAt,
+		Uptem.Create   idAt:	Create	sion,
+Ver    item.ion: erson,
+		Vtitem.Descrip: iion	DescriptName,
+	    item.    
+		Name:ccountID, item.A:  ccountID	AowID,
+	     item.FlID:     
+		owMetadata{tadata := Fldata
+	meFlowMetavert to on	// Crr)
+	}
+
+", em: %wl flow iteo unmarshaed t("failrf.Erro{}, fmtMetadataowrn Fl {
+		retu nilr !=item); erem, &ap(result.ItlMarsharibute.Unmattodbdynam= err :em
+	if DBFlowItitem dynamo
+	var emUnmarshal it	// 
+
+	}
+FoundErrFlowNotadata{}, owMeturn Fl{
+		retItem == nil  result.
+	}
+
+	if err)data: %w",flow metaled to get rf("faiErro{}, fmt.tadatarn FlowMe		retu nil {
+!=if err })
+
+			},
+	ion"),
+erstring("V aws.S	"#ver": "),
+		ptioncriDess.String(""#desc": aw
+			"),me"Na.String( aws	"#name":ing{
+		ing]*str map[strNames:utettribressionA		Exp
+At"),dAt, Updatedr, Createveme, #desc, #tID, #na Accounng("FlowID,Striession: aws.ectionExpr	Proj	},
+	},
+	ID),
+			g(flowrin		S: aws.St		ID": {
+			"Flow	},
+tID),
+		accounws.String(				S: auntID": {
+		"Accoe{
+	ibuteValutrAt]*dynamodb.ing map[str
+		Key:tableName),.String(s.me: awsleNa{
+		TabnputetItemIb.Gdynamodnt.GetItem(&:= s.clielt, err esuw
+	r	// Get floerror) {
+data, owMetastring) (FlwID ntID, flo(accouwMetadatatore) GetFlomoDBFlowSunc (s *Dynaa flow
+f for adataetrieves metata rwMetadlo GetF
+//}
+eturn nil
+
+	}
+
+	r		} err)
+ version,%s: %w",low version  delete fed toailorf("fmt.Erreturn f			r nil {
+if err !=	})
+
+		
+	},	},
+			
+			sion),ing(ver	S: aws.Str				": {
+ion		"Vers	},
+		D),
+			g(flowIrin	S: aws.St				D": {
+	"FlowI		
+					},tID),
+ccounws.String(a				S: a{
+	": 	"AccountID			Value{
+tedb.Attribuing]*dynamoy: map[str,
+			Ke_versions")bleName + "s.tag(aws.StrinbleName: 	Tat{
+		teItemInpudb.DeleamoeteItem(&dynelnt.Dclie:= s.		_, err sions {
+er:= range vversion for _, 
+	ersionelete each v
+	// D	}
+w", err)
+eletion: %sions for dlow verlist f"failed to orf(mt.Errturn f
+		rel {err != ni	if D, flowID)
+ns(accountIwVersio:= s.ListFlo err s,	version versions
+ to get all query First, flow
+	//s of theionte all vers	// Dele}
+
+", err)
+	%wow:  delete fltod ("failemt.Errorfreturn f		}
+		otFound
+ErrFlowNrn 		retu {
+	ceptionedExFaileckditionalCheConrrCod dynamodb.E==()  aerr.Code&&ok ror); Er.(awserr.:= errk r, of aeril {
+		ierr != n
+	if 
+"),
+	})owID)s(Flxiste_ebut) AND attricountIDte_exists(Acttriburing("aws.St: apressiontionEx		Condi
+		},
+
+			},flowID),String(s.		S: aw		{
+"FlowID": 	},
+			ntID),
+		ng(accouStri: aws.	S			": {
+AccountIDe{
+			"buteValuodb.Attri*dynamp[string]		Key: maeName),
+(s.tablngrie: aws.StbleNam
+		TaeItemInput{db.Deletem(&dynamoleteItclient.De := s._, erre flow
+	et
+	// Delor {) errngtri swIDflontID, ow(accou) DeleteFlStoreDBFlow *Dynamofunc (srsions
+ all its ven anddefinitioflow moves a ow reeFlDelet/ }
+
+/, nil
+wIDs	return flo
+}
+	}
+
+		s, *flowID)(flowIDppendflowIDs = a
+			= nil {	if flowID !	D"].S
+["FlowIowID := item	fl
+	lt.Items {ange resuitem := r	for _, .Items))
+(resultring, 0, lenake([]stlowIDs := m
+	fw IDs Extract flo
+
+	//", err)
+	} %wuery flows: to qrf("failed.Errofmtl, turn ni
+		re= nil {	if err !
+
+es(),
+	})s: expr.ValuributeValuepressionAtt(),
+		Exmespr.Na  exbuteNames:rittnAressioxp
+		Eon(),eyConditi.Kon:    exprssinExpreitio	KeyConde),
+	Namleing(s.tab  aws.Str        :       me	TableNa
+	eryInput{dynamodb.Quent.Query(& s.cli err :=
+	result,Query flows
+
+	// r)
+	} %w", eression:ild expred to buil"fa(Errorft.turn nil, fm	rel {
+	 ni err !=)
+	ifild(ond).Buon(keyCthKeyConditiWiuilder().ession.NewBerr := expr
+	expr, untID))(accolueession.Vapr").Equal(exountIDccKey("Axpression.ond := e
+	keyCionessy exprreate quer
+	// Cerror) { ([]string, ring)tID staccounows( ListFlowStore)BFl (s *DynamoDnt
+funcaccouan Ds for  all flow Iows returnstFl
+// Lisl
+}
+nition), efini.Dbyte(item	return []
+
+
+	}", err)m: %ww itershal flomaailed to unErrorf("frn nil, fmt.etu		ril {
+ nem); err !=&itm, teesult.IarshalMap(rbute.Unmdbattrinamoerr := dy
+	if oDBFlowItemr item dynam
+	vaal itemshUnmar	// nd
+	}
+
+rrFlowNotFoueturn nil, E	ril {
+	m == nsult.Ite	if re}
+
+
+	r) %w", er get flow:failed torrorf("mt.Eil, f		return n
+ {= nil err !
+
+	if		},
+	})			},
+ID),
+ng(flowtri.S			S: aws
+	": {lowID
+			"F		},ID),
+	ntng(accou.Stri: aws				S{
+ntID": ccou
+			"Aue{uteValtribdynamodb.At[string]*Key: map
+		bleName),.String(s.taleName: awsab	T
+	tItemInput{Geynamodb.&dnt.GetItem(:= s.clieerr ult, 
+	resGet flowor) {
+	// ([]byte, errg) rin, flowID stw(accountIDetFloore) GDBFlowSt *Dynamon
+func (sinitioflow defeves a tFlow retri
+// Ge
+rn nil
+}
+
+	retuerr)
+	}sion: %w", ow versave flled to Errorf("faiturn fmt.l {
+		re!= ni
+	if err ,
+	})
+nAVsioem:      ver),
+		Itrsions"e + "_veg(s.tableNams.StrinawableName: 	T	t{
+ItemInpuPutb.namoddyem(&ient.PutItcl	_, err = s.sion
+e flow ver
+	// Saverr)
+	}
+m: %w", ion iteersal flow vled to marshrf("fait.Errofm	return l {
+	 != ni)
+	if errversionItemrshalMap(Maribute.dynamodbattAV, err := 	versionrsion item
+arshal ve	// M
+w,
+	}
+no   At:	Created	
+inition),eftring(dn:  sitio
+		Definription,etadata.Descetadata.Mn: mcriptio
+		Desrsion,veon:     Versi		  flowID,
+wID:    		FlountID,
+ntID:   accoAccou	}{
+		`
+pty"dBy,omitemeateon:"Crstring `jsedBy   CreatAt"`
+		ated `json:"Cret64 atedAt   in		Cre
+finition"`:"Deonring `jsition  stefin	D"`
+	escription"D:string `jsonption ri	Descsion"`
+	 `json:"Vern     string
+		VersioFlowID"` `json:"   stringlowID   		FuntID"`
+on:"Accojs  string `ntID 	Accout {
+	em := struc	versionItion
+a versve as 	// Also sa
+
+	}r)
+ow: %w", erve fl to sa"failedmt.Errorf(	return fnil {
+	 err != )
+
+	ifv,
+	}tem:      a),
+		IleName(s.tabtringaws.SableName: 		TemInput{
+ItPutdb.&dynamotItem(.client.Pu= sw
+	_, err // Save flo	}
+
+	w", err)
+ow item: %l flshamar to f("failedn fmt.Errorur		ret= nil {
+ !	if erritem)
+arshalMap(.Mributeamodbatterr := dynm
+	av, arshal ite
+
+	// MatedAt
+	}ngItem.Cre existieatedAt =.Cr
+		item}rr)
+		w", elow: %ing fexistl marshaled to unrrorf("fain fmt.E			retur nil {
+tem); err !=&existingIem, p(result.It.UnmarshalMaattribute := dynamodbif err
+		FlowItemamoDBynngItem dxisti evar time
+		ionerve creat, presisting flowEx {
+		// } else
+	edAt = nowm.Creat	ite
+	owNew fl	// 
+	 {tem == nil	if result.I	}
+
+err)
+ists: %w", k if flow exchecled to "faif(t.Error	return fm	!= nil {
+ err 	})
+
+	if	},
+		},
+	flowID),
+	s.String(aw	S:  {
+			":"FlowID			},
+		ID),
+	ing(accountws.Str	S: a: {
+			"AccountID"		lue{
+	tributeVadb.Atynamong]*dy: map[stri		Keme),
+bleNatring(s.taeName: aws.S
+		TabltItemInput{modb.GeItem(&dynant.Get= s.clie err :s
+	result,y exist flow alreadif/ Check 	/
+
+,
+	}At:   now	Updated
+	version,n:     	Version,
+	Descriptioata.tadata.Metadon: meDescripti		e,
+etadata.Namata.Mmetad  ame:      	N,
+	finition)ing(de  stron:iti
+		Defin flowID,     lowID:
+		FID,ntcouountID:   ac		AccFlowItem{
+dynamoDBitem := x()
+	niow().U time.N:=
+	now  flow item	// Create	}
+
+ano())
+().UnixNow, time.N"tf("v%dprin= fmt.Sersion 
+		von == "" {	if versi.Version
+ata.Metadata= metad :
+	versioncifiedf not speversion ierate a 
+	// Gen}
+"
+	1.0.0= "ta.Version tadaata.Me
+		metadn = ""scriptioata.Deta.Metad	metada
+	wID floame =etadata.N	metadata.Malues
+	use empty vta, just t metadan't extracf we ca {
+		// Inil= a); err !adatetn, &mefinitiohal(dson.Unmars := j
+	if err
+	}
+"metadata"`		} `json:on"`
+"versi `json:ng    stri		Version `
+	tion"on:"descrip string `jstion		Descrip"`
+	ame:"njsong `  strin  	Name    uct {
+		a strMetadatruct {
+		str metadata vation
+	finie deata from thct metad/ Extra
+	/rror {e) eytn []bitioefinring, dD, flowID stntIoulow(acceFore) SavFlowStamoDB*Dyns tion
+func (iniw defts a flopersisSaveFlow // 
+}
+
+"`atedAtson:"Upd64  `jtedAt   int	UpdaedAt"`
+eat`json:"Cr64   int  reatedAtion"`
+	Cson:"Versstring `jon     
+	Versin"`escriptio"Dn:ing `jsoion str
+	Descript"Name"` `json:   stringme     	Na"`
+initionn:"Defng `jsotion  striDefiniD"`
+	json:"FlowIing `  str  
+	FlowID  ID"`ccountn:"A `jso stringccountID  	Astruct {
+wItem BFlonamoD
+type dyBn DynamoDem i flow itts aresenrepwItem BFlodynamoDr)
+}
+
+//  %w", ere exists:ns tablersiok if flow v checd toileorf("faturn fmt.Err
+	}
+
+	rereturn nil
+
+		err)
+		} %w", creation:table  versions ait for flowo wed t"fail.Errorf(n fmtretur			 {
+ err != nil	if			})
+
+me),
+bleNaTaversionsring(ws.StleName: a
+			Tabnput{bleIscribeTadynamodb.Deists(&lTableExUntiit.client.Warr = sted
+		eto be crea for table it
+		// Wa)
+		}
+err%w",  table: onsrsilow vereate ffailed to crrorf(" fmt.Ern	retuil {
+		if err != n				})
+
+"),
+_REQUESTg("PAY_PER.Strinode: awsingMll
+			Bi},
+			},,
+							}"),
+		L.String("ALonType: awsProjecti					
+	rojection{db.Pmodynaection: &	Proj				},
+				,
+						}	,
+ANGE")g("RStrinaws.      ype: 		KeyT				
+	"),ersiong("Ve: aws.StrinamteN	Attribu				
+						{,
+							}
+	H"),tring("HAS    aws.S:   		KeyType				,
+	owID")ng("FlStrieName: aws.ttribut						A		{
+					t{
+emaElemenodb.KeySchma: []*dynameySche				K"),
+	VersionIndexString("xName: aws.	Inde							{
+ndex{
+	condaryIlobalSeb.G*dynamodyIndexes: []alSecondar
+			Glob,},
+			}
+				GE"),g("RANin aws.Strpe:      KeyTy	
+				FlowID"),ing("me: aws.Str	AttributeNa					{
+
+						},
+	H"),HAS"ing(aws.Str      Type: 				Key),
+	untID"("Accongws.Striame: aAttributeN								{
+
+	nt{ElemeSchemaeyynamodb.KSchema: []*d	Key
+					},		},
+		
+"S"),ring(: aws.StpeibuteTyttr			A"),
+		ioners"Vtring(eName: aws.S	Attribut							{
+	,
+
+				}"),ng("SStriType: aws.buteAttri
+					"FlowID"),ring(ws.SteName: aAttribut			
+			{		
+					},,
+g("S")ws.Strinype: attributeT					A"),
+IDAccountng("rime: aws.SteNatribut	At{
+								on{
+nitieDefiodb.Attributam[]*dynons: itibuteDefin			Attriame),
+nsTableN(versio: aws.Stringame	TableN
+		Input{teTablemodb.Creable(&dynaeateTa s.client.Crr =e
+		_, erate tabl		// Cren {
+ndExceptioourceNotFourCodeResmodb.Er== dyna() Code ok && aerr.ror);rr.Ererr.(awse:= ok 	if aerr, t found"
+ nole"tab error is if// Check 
+		}
+rn nil
+		retuexists
+Table 	// nil {
+	 == 	if err
+	})
+
+me),NaleersionsTabg(vine: aws.StrTableNam
+		eTableInput{ibscrnamodb.De&dyble(scribeTat.De.clien	_, err := ss
+e existif tabl	// Check 
+
+"_versions" + ames.tableNName := Table	versionsror {
+ ersTable()ersionizeFlowV) initialretowSDBFloamo *Dynst
+func (sdoesn't exif it ble iversions taflow e s th createonsTablersilowVezeFinitialir)
+}
+
+// s: %w", er exist if tabled to check"failet.Errorf(n fmur
+
+	retn nil
+	}
+		retur
+		})
+erron: %w", ble creatit for tad to wai("failerrorffmt.En 		retur
+	r != nil {
+		if er})
+
+		ableName),ing(s.t: aws.StreName
+			TableInput{beTabldb.Descriists(&dynamoilTableExient.WaitUnterr = s.cld
+		o be createor table t f	// Wait
+
+	rr)
+		}: %w", ebleate tacreailed to Errorf("furn fmt.
+			retrr != nil {if e	})
+
+		UEST"),
+	PAY_PER_REQs.String("gMode: awlin,
+			Bil		}		},
+			E"),
+("RANGtrings.S       awpe:			KeyTy"),
+		"FlowIDring(me: aws.StibuteNattr					A		{
+},
+				"),
+		tring("HASH       aws.Spe:				KeyTy
+	ccountID"),s.String("A: awbuteName			Attri
+			{			t{
+lemenKeySchemaEmodb.dynaySchema: []*		Ke		},
+			},
+	S"),
+		.String(": awsTypeute			Attrib		D"),
+"FlowIring(St: aws.teNametribu		At			{
+		
+		},				
+ng("S"),pe: aws.StriibuteTy	Attr				"),
+DcountI("Acws.StringibuteName: a		Attr	{
+						nition{
+Defidb.Attributenamo: []*dynitionsteDefibu			AttrileName),
+s.tabing(.StrbleName: aws	Ta		
+bleInput{db.CreateTa(&dynamoeateTable.Crent s.cli err =	_,
+	Create table
+		// Exception {FoundesourceNotCodeRamodb.Errode() == dynok && aerr.C.Error);  err.(awserrr, ok :="
+	if aerounde not fablor is "tk if err/ Chec}
+
+	/ nil
+	turnsts
+		re exile	// Tabl {
+	r == niif er	})
+
+	leName),
+tring(s.tab aws.Sme:bleNaTa		eInput{
+cribeTabldb.Desamo(&dynleabscribeTent.Deli, err := s.c exists
+	_tableck if 
+	// Cheerror {sTable() eFlowinitialize) oDBFlowStorynam*Dt
+func (s  exisoesn'tit dle if ows tab fl theable createsFlowsTitialize
+}
+
+// ineturn nil
+	rrr
+	}
+	return el {
+	r != ni); ersionsTable(wVertializeFlo.inierr := s	if 
+sions tablee flow verInitializ
+	// rr
+	}
+eturn e	r	= nil {
+ble(); err !owsTatializeFl:= s.inie
+	if err ows tabln fle mainitializ Ior {
+	//ize() err) InitialwStoreDBFlo*Dynamo
+func (s don't exist they ables ifDB t Dynamotheeates  cr Initialize
+}
+
+//ows",
+	}refix + "fl tablePe:  	tableNam
+	blePrefix, taablePrefix:ent,
+		t:      cliient		cl{
+BFlowStoren &DynamoD
+	returStore {lowDBFing) *DynamolePrefix str, tabDynamoDB*dynamodb.ore(client StmoDBFlowna
+func NewDylow storeDynamoDB ftes a new tore creaamoDBFlowS
+// NewDyn
+}
+me   string	tableNaing
+x str	tablePrefiamoDB
+.Dyn*dynamodbient       {
+	cltore structmoDBFlowSpe DynaB
+tyDynamoDe using re interfache FlowStolements te impBFlowStormoD
+// Dyna
+}
+Storep.account	return ore {
+() AccountStAccountStoreGetBProvider) DynamoDfunc (p * data
+nt accouforstore  a returnse countStor/ GetAc
+/ore
+}
+.executionSt	return pe {
+Storon() ExecutinStoreGetExecutioer) BProvidDynamoD
+func (p *axecution dat for eurns a storetore retnStExecutio
+}
+
+// GetStorecrern p.sere {
+	retuSecretStoStore() etSecretider) GmoDBProvc (p *Dynaecrets
+funr sre foturns a storee tStor// GetSecre
+}
+
+flowStoreurn p.
+	retFlowStore {wStore() er) GetFloDBProvid*Dynamounc (p 
+fitionsflow definre for  a stoeturnsowStore r
+
+// GetFl nil
+}returnent
+	 clioDB Dynam forg to closehin{
+	// Notr rro Close() eovider)DynamoDBPr
+func (p *urcesans up reso cle/ Close
+
+/ nil
+}urn
+	reterr)
+	}
+ore: %w", count stize ac initialled toai.Errorf("freturn fmt {
+		 != nil(); errInitializeuntStore.acco:= p.	if err 	}
+
+err)
+e: %w", n storxecutiotialize eled to inirrorf("faireturn fmt.E{
+		= nil ); err !.Initialize(ecutionStore := p.ex	if err}
+
+ err)
+	: %w",re stoize secretd to initialf("failet.Error		return fm nil {
+r !=e(); er.Initializtore.secretS := prr}
+
+	if e	
+%w", err)tore:  flow szeitiali in"failed tot.Errorf(	return fmil {
+	(); err != nizere.InitialwStoerr := p.flotores
+	if  size allialitIn
+	// error {lize() InitiaProvider) p *DynamoDB
+func ( backendgetora sp thelize sets unitia
+
+// Il
+} ni provider,eturn
+	rPrefix)
+.Tablent, configore(cliecountStmoDBAcna NewDytStore =coun.acrovider	p
+blePrefix)onfig.Ta(client, cutionStorenamoDBExec= NewDyonStore ecuti.ex	provider
+ePrefix)blonfig.Taent, ctore(clitSreynamoDBSectore = NewDder.secretS	proviix)
+Prefg.Tablelient, confitore(cFlowSDB NewDynamo =.flowStoreoviderores
+	pre st/ Creat	}
+
+	/lePrefix,
+g.Tabfi: conablePrefixient,
+		tt:      cllien
+		cr{videronamoDBP:= &Dyider 	provrovider
+ peate)
+
+	// CrNew(sessb.mod dynant :=iet
+	cloDB cliennamreate Dy/ C
+	/
+err)
+	}ion: %w",  AWS sess createed torf("fail, fmt.Erro	return nil nil {
+	!=r 	if erig)
+ConfSession(awssession.News, err := sion
+	sesCreate ses/ 	/
+	}
+
+point)Ending(config.aws.Str= t ig.Endpoinnf	awsCo
+	 != "" {nt.Endpoi	if configovided
+ if pr DynamoDBfor local endpoint / Set
+
+	/	}	)
+"",
+	ey,
+			SecretK		config.ssKey,
+	config.Acceals(
+			ntiCredeewStaticentials.Ntials = credg.CredenawsConfi	"" {
+	cretKey != g.Seconfi!= "" && ey ssKg.Accenfif co
+	if providedials ientredet c
+	// S
+	}
+.Region),(configStringon: aws.g{
+		Regi.Config := &awsawsConfi session
+	e AWS	// Creatr) {
+erroider, rovoDBP) (*DynamiderConfigamoDBProvig Dynr(confdeviPromoDBnc NewDynarovider
+fu ptoragew DynamoDB sreates a neer camoDBProvid NewDyn
+}
+
+//namoDBlocal Dyl, for  Optiona  string //t  g
+	Endpoinrin strefixng
+	TableP striecretKey  g
+	S   strinessKey	Acc
+ring      st
+	Regiong struct {ConfimoDBProvidere Dynatypr
+rovidemoDB pynan for the Dconfigurationtains onfig coderCoDBProviynam// D
+
+ring
+}Prefix    stre
+	tableountStoDynamoDBAcc   *countStore	actore
+BExecutionSnamoDore *DycutionSt
+	exetoreretSynamoDBSec   *DStore e
+	secretorowStynamoDBFlre      *DtowS	floB
+db.DynamoD*dynamo     	client    ruct {
+er strovidDynamoDBPpe DynamoDB
+tye using terfaceProvider inag Stornts theider implemenamoDBProv
+)
+
+// Dy/runtime"r/pkgowrunneartin/fltcm"github.com/	"
+hner/pkg/autrtin/flowrun.com/tcmathub
+	"gision"xpres/dynamodb/eice/serv-sdk-go/awsm/awsgithub.co"	e"
+ibutamodbattramodb/dyne/dynic-sdk-go/serv/awscom/awsb.	"githudb"
+namoice/dyo/serv-gsdks-/awcom/awsb.githu"
+	"ssiono/aws/ses/aws-sdk-g/awb.com
+	"githuentials"s/credk-go/awws-sdb.com/aws/a
+	"githu"/aws/awserrdk-gos/aws-sawb.com/"githu
+	-go/aws"sdkws/aws-/acom"github.me"
+
+	"
+	"timt"
+	"foding/jsonencort (
+	"e
+
+imporagpackage st
