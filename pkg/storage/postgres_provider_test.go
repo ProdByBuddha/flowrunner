@@ -50,6 +50,21 @@ func TestPostgreSQLProvider(t *testing.T) {
 	err = provider.Initialize()
 	assert.NoError(t, err)
 
+	// Clean up any previous test data
+	accountID := "test-account-pg"
+	_, err = provider.db.Exec("DELETE FROM execution_logs WHERE execution_id IN (SELECT id FROM executions WHERE account_id = $1)", accountID)
+	assert.NoError(t, err)
+	_, err = provider.db.Exec("DELETE FROM executions WHERE account_id = $1", accountID)
+	assert.NoError(t, err)
+	_, err = provider.db.Exec("DELETE FROM flow_versions WHERE account_id = $1", accountID)
+	assert.NoError(t, err)
+	_, err = provider.db.Exec("DELETE FROM flows WHERE account_id = $1", accountID)
+	assert.NoError(t, err)
+	_, err = provider.db.Exec("DELETE FROM secrets WHERE account_id = $1", accountID)
+	assert.NoError(t, err)
+	_, err = provider.db.Exec("DELETE FROM accounts WHERE id = $1", accountID)
+	assert.NoError(t, err)
+
 	// Test getting stores
 	assert.NotNil(t, provider.GetFlowStore())
 	assert.NotNil(t, provider.GetSecretStore())

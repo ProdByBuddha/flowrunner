@@ -75,6 +75,14 @@ func cleanupTables(t *testing.T, provider *DynamoDBProvider) {
 		})
 		if err != nil {
 			t.Logf("Failed to delete table %s: %v", table, err)
+		} else {
+			// Wait for table to be deleted
+			werr := provider.client.WaitUntilTableNotExists(&dynamodb.DescribeTableInput{
+				TableName: aws.String(table),
+			})
+			if werr != nil {
+				t.Logf("Failed to wait for table %s to be deleted: %v", table, werr)
+			}
 		}
 	}
 }
