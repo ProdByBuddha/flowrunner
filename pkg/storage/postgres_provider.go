@@ -692,6 +692,11 @@ func (s *PostgreSQLExecutionStore) GetExecution(executionID string) (runtime.Exe
 		execution.Progress = progress.Float64
 	}
 
+	// Initialize Results map if nil
+	if execution.Results == nil {
+		execution.Results = make(map[string]interface{})
+	}
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return runtime.ExecutionStatus{}, ErrExecutionNotFound
@@ -706,6 +711,7 @@ func (s *PostgreSQLExecutionStore) GetExecution(executionID string) (runtime.Exe
 
 	// Unmarshal results if present
 	if len(resultsJSON) > 0 {
+		execution.Results = make(map[string]interface{})
 		if err := json.Unmarshal(resultsJSON, &execution.Results); err != nil {
 			return runtime.ExecutionStatus{}, fmt.Errorf("failed to unmarshal execution results: %w", err)
 		}
@@ -746,6 +752,7 @@ func (s *PostgreSQLExecutionStore) ListExecutions(accountID string) ([]runtime.E
 		var accountID string         // Local variable for account ID
 		var errorText sql.NullString // Use sql.NullString for nullable fields
 		var currentNode sql.NullString
+		var progress sql.NullFloat64 // Use sql.NullFloat64 for nullable float fields
 		if err := rows.Scan(
 			&execution.ID,
 			&execution.FlowID,
@@ -755,7 +762,7 @@ func (s *PostgreSQLExecutionStore) ListExecutions(accountID string) ([]runtime.E
 			&endTime,
 			&errorText,
 			&resultsJSON,
-			&execution.Progress,
+			&progress,
 			&currentNode,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan execution: %w", err)

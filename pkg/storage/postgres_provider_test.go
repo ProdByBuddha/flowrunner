@@ -176,6 +176,10 @@ func testPostgreSQLExecutionStore(t *testing.T, store *PostgreSQLExecutionStore)
 
 	// We need to manually set the account ID in the database for PostgreSQL tests
 	// This would normally be handled by the application layer
+
+	// First, delete any existing execution with the same ID
+	_, _ = store.db.Exec("DELETE FROM executions WHERE id = $1", executionID)
+
 	resultsJSON := `{"key": "value"}`
 	_, err := store.db.Exec(
 		"INSERT INTO executions (id, flow_id, account_id, status, start_time, results) VALUES ($1, $2, $3, $4, $5, $6::jsonb)",
