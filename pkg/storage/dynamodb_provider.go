@@ -1,0 +1,1383 @@
+package storage
+
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
+	"github.com/tcmartin/flowrunner/pkg/auth"
+	"github.com/tcmartin/flowrunner/pkg/runtime"
+)
+
+// DynamoDBProvider implements the StorageProvider interface using DynamoDB
+type DynamoDBProvider struct {
+	client         *dynamodb.DynamoDB
+	flowStore      *DynamoDBFlowStore
+	secretStore    *DynamoDBSecretStore
+	executionStore *DynamoDBExecutionStore
+	accountStore   *DynamoDBAccountStore
+	tablePrefix    string
+}
+
+// DynamoDBProviderConfig contains configuration for the DynamoDB provider
+type DynamoDBProviderConfig struct {
+	Region      string
+	AccessKey   string
+	SecretKey   string
+	TablePrefix string
+	Endpoint    string // Optional, for local DynamoDB
+}
+
+// NewDynamoDBProvider creates a new DynamoDB storage provider
+func NewDynamoDBProvider(config DynamoDBProviderConfig) (*DynamoDBProvider, error) {
+	// Create AWS session
+	awsConfig := &aws.Config{
+		Region: aws.String(config.Region),
+	}
+
+	// Set credentials if provided
+	if config.AccessKey != "" && config.SecretKey != "" {
+		awsConfig.Credentials = credentials.NewStaticCredentials(
+			config.AccessKey,
+			config.SecretKey,
+			"",
+		)
+	}
+
+	// Set endpoint for local DynamoDB if provided
+	if config.Endpoint != "" {
+		awsConfig.Endpoint = aws.String(config.Endpoint)
+	}
+
+	// Create session
+	sess, err := session.NewSession(awsConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create AWS session: %w", err)
+	}
+
+	// Create DynamoDB client
+	client := dynamodb.New(sess)
+
+	// Create provider
+	provider := &DynamoDBProvider{
+		client:      client,
+		tablePrefix: config.TablePrefix,
+	}
+
+	// Create stores
+	provider.flowStore = NewDynamoDBFlowStore(client, config.TablePrefix)
+	provider.secretStore = NewDynamoDBSecretStore(client, config.TablePrefix)
+	provider.executionStore = NewDynamoDBExecutionStore(client, config.TablePrefix)
+	provider.accountStore = NewDynamoDBAccountStore(client, config.TablePrefix)
+
+	return provider, nil
+}
+
+// Initialize sets up the storage backend
+func (p *DynamoDBProvider) Initialize() error {
+	// Initialize all stores
+	if err := p.flowStore.Initialize(); err != nil {
+		return fmt.Errorf("failed to initialize flow store: %w", err)
+	}
+
+	if err := p.secretStore.Initialize(); err != nil {
+		return fmt.Errorf("failed to initialize secret store: %w", err)
+	}
+
+	if err := p.executionStore.Initialize(); err != nil {
+		return fmt.Errorf("failed to initialize execution store: %w", err)
+	}
+
+	if err := p.accountStore.Initialize(); err != nil {
+		return fmt.Errorf("failed to initialize account store: %w", err)
+	}
+
+	return nil
+}
+
+// Close cleans up resources
+func (p *DynamoDBProvider) Close() error {
+	// Nothing to close for DynamoDB client
+	return nil
+}
+
+// GetFlowStore returns a store for flow definitions
+func (p *DynamoDBProvider) GetFlowStore() FlowStore {
+	return p.flowStore
+}
+
+// GetSecretStore returns a store for secrets
+func (p *DynamoDBProvider) GetSecretStore() SecretStore {
+	return p.secretStore
+}
+
+// GetExecutionStore returns a store for execution data
+func (p *DynamoDBProvider) GetExecutionStore() ExecutionStore {
+	return p.executionStore
+}
+
+// GetAccountStore returns a store for account data
+func (p *DynamoDBProvider) GetAccountStore() AccountStore {
+	return p.accountStore
+}
+
+// DynamoDBFlowStore implements the FlowStore interface using DynamoDB
+type DynamoDBFlowStore struct {
+	client      *dynamodb.DynamoDB
+	tablePrefix string
+	tableName   string
+}
+
+// NewDynamoDBFlowStore creates a new DynamoDB flow store
+func NewDynamoDBFlowStore(client *dynamodb.DynamoDB, tablePrefix string) *DynamoDBFlowStore {
+	return &DynamoDBFlowStore{
+		client:      client,
+		tablePrefix: tablePrefix,
+		tableName:   tablePrefix + "flows",
+	}
+}
+
+// Initialize creates the DynamoDB table if it doesn't exist
+func (s *DynamoDBFlowStore) Initialize() error {
+	// Check if table exists
+	_, err := s.client.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(s.tableName),
+	})
+
+	if err == nil {
+		// Table exists
+		return nil
+	}
+
+	// Check if error is "table not found"
+	if aerr, ok := err.(awserr.Error); ok && aerr.Code() == dynamodb.ErrCodeResourceNotFoundException {
+		// Create table
+		_, err = s.client.CreateTable(&dynamodb.CreateTableInput{
+			TableName: aws.String(s.tableName),
+			AttributeDefinitions: []*dynamodb.AttributeDefinition{
+				{
+					AttributeName: aws.String("AccountID"),
+					AttributeType: aws.String("S"),
+				},
+				{
+					AttributeName: aws.String("FlowID"),
+					AttributeType: aws.String("S"),
+				},
+			},
+			KeySchema: []*dynamodb.KeySchemaElement{
+				{
+					AttributeName: aws.String("AccountID"),
+					KeyType:       aws.String("HASH"),
+				},
+				{
+					AttributeName: aws.String("FlowID"),
+					KeyType:       aws.String("RANGE"),
+				},
+			},
+			BillingMode: aws.String("PAY_PER_REQUEST"),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to create table: %w", err)
+		}
+
+		// Wait for table to be created
+		err = s.client.WaitUntilTableExists(&dynamodb.DescribeTableInput{
+			TableName: aws.String(s.tableName),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to wait for table creation: %w", err)
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("failed to check if table exists: %w", err)
+}
+
+// dynamoDBFlowItem represents a flow item in DynamoDB
+type dynamoDBFlowItem struct {
+	AccountID   string `json:"AccountID"`
+	FlowID      string `json:"FlowID"`
+	Definition  string `json:"Definition"`
+	Name        string `json:"Name"`
+	Description string `json:"Description"`
+	Version     string `json:"Version"`
+	CreatedAt   int64  `json:"CreatedAt"`
+	UpdatedAt   int64  `json:"UpdatedAt"`
+}
+
+// SaveFlow persists a flow definition
+func (s *DynamoDBFlowStore) SaveFlow(accountID, flowID string, definition []byte) error {
+	// Extract metadata from the definition
+	var metadata struct {
+		Metadata struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			Version     string `json:"version"`
+		} `json:"metadata"`
+	}
+
+	if err := json.Unmarshal(definition, &metadata); err != nil {
+		// If we can't extract metadata, just use empty values
+		metadata.Metadata.Name = flowID
+		metadata.Metadata.Description = ""
+		metadata.Metadata.Version = "1.0.0"
+	}
+
+	// Create flow item
+	now := time.Now().Unix()
+	item := dynamoDBFlowItem{
+		AccountID:   accountID,
+		FlowID:      flowID,
+		Definition:  string(definition),
+		Name:        metadata.Metadata.Name,
+		Description: metadata.Metadata.Description,
+		Version:     metadata.Metadata.Version,
+		UpdatedAt:   now,
+	}
+
+	// Check if flow already exists
+	result, err := s.client.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"AccountID": {
+				S: aws.String(accountID),
+			},
+			"FlowID": {
+				S: aws.String(flowID),
+			},
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to check if flow exists: %w", err)
+	}
+
+	if result.Item == nil {
+		// New flow
+		item.CreatedAt = now
+	} else {
+		// Existing flow, preserve creation time
+		var existingItem dynamoDBFlowItem
+		if err := dynamodbattribute.UnmarshalMap(result.Item, &existingItem); err != nil {
+			return fmt.Errorf("failed to unmarshal existing flow: %w", err)
+		}
+		item.CreatedAt = existingItem.CreatedAt
+	}
+
+	// Marshal item
+	av, err := dynamodbattribute.MarshalMap(item)
+	if err != nil {
+		return fmt.Errorf("failed to marshal flow item: %w", err)
+	}
+
+	// Save flow
+	_, err = s.client.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(s.tableName),
+		Item:      av,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to save flow: %w", err)
+	}
+
+	return nil
+}
+
+// GetFlow retrieves a flow definition
+func (s *DynamoDBFlowStore) GetFlow(accountID, flowID string) ([]byte, error) {
+	// Get flow
+	result, err := s.client.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"AccountID": {
+				S: aws.String(accountID),
+			},
+			"FlowID": {
+				S: aws.String(flowID),
+			},
+		},
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get flow: %w", err)
+	}
+
+	if result.Item == nil {
+		return nil, ErrFlowNotFound
+	}
+
+	// Unmarshal item
+	var item dynamoDBFlowItem
+	if err := dynamodbattribute.UnmarshalMap(result.Item, &item); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal flow item: %w", err)
+	}
+
+	return []byte(item.Definition), nil
+}
+
+// ListFlows returns all flow IDs for an account
+func (s *DynamoDBFlowStore) ListFlows(accountID string) ([]string, error) {
+	// Create query expression
+	keyCond := expression.Key("AccountID").Equal(expression.Value(accountID))
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	// Query flows
+	result, err := s.client.Query(&dynamodb.QueryInput{
+		TableName:                 aws.String(s.tableName),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query flows: %w", err)
+	}
+
+	// Extract flow IDs
+	flowIDs := make([]string, 0, len(result.Items))
+	for _, item := range result.Items {
+		flowID := item["FlowID"].S
+		if flowID != nil {
+			flowIDs = append(flowIDs, *flowID)
+		}
+	}
+
+	return flowIDs, nil
+}
+
+// DeleteFlow removes a flow definition
+func (s *DynamoDBFlowStore) DeleteFlow(accountID, flowID string) error {
+	// Delete flow
+	_, err := s.client.DeleteItem(&dynamodb.DeleteItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"AccountID": {
+				S: aws.String(accountID),
+			},
+			"FlowID": {
+				S: aws.String(flowID),
+			},
+		},
+		ConditionExpression: aws.String("attribute_exists(AccountID) AND attribute_exists(FlowID)"),
+	})
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+			return ErrFlowNotFound
+		}
+		return fmt.Errorf("failed to delete flow: %w", err)
+	}
+
+	return nil
+}
+
+// GetFlowMetadata retrieves metadata for a flow
+func (s *DynamoDBFlowStore) GetFlowMetadata(accountID, flowID string) (FlowMetadata, error) {
+	// Get flow
+	result, err := s.client.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"AccountID": {
+				S: aws.String(accountID),
+			},
+			"FlowID": {
+				S: aws.String(flowID),
+			},
+		},
+		ProjectionExpression: aws.String("FlowID, AccountID, #name, #desc, #ver, CreatedAt, UpdatedAt"),
+		ExpressionAttributeNames: map[string]*string{
+			"#name": aws.String("Name"),
+			"#desc": aws.String("Description"),
+			"#ver":  aws.String("Version"),
+		},
+	})
+
+	if err != nil {
+		return FlowMetadata{}, fmt.Errorf("failed to get flow metadata: %w", err)
+	}
+
+	if result.Item == nil {
+		return FlowMetadata{}, ErrFlowNotFound
+	}
+
+	// Unmarshal item
+	var item dynamoDBFlowItem
+	if err := dynamodbattribute.UnmarshalMap(result.Item, &item); err != nil {
+		return FlowMetadata{}, fmt.Errorf("failed to unmarshal flow item: %w", err)
+	}
+
+	// Convert to FlowMetadata
+	metadata := FlowMetadata{
+		ID:          item.FlowID,
+		AccountID:   item.AccountID,
+		Name:        item.Name,
+		Description: item.Description,
+		Version:     item.Version,
+		CreatedAt:   item.CreatedAt,
+		UpdatedAt:   item.UpdatedAt,
+	}
+
+	return metadata, nil
+}
+
+// ListFlowsWithMetadata returns all flows with metadata for an account
+func (s *DynamoDBFlowStore) ListFlowsWithMetadata(accountID string) ([]FlowMetadata, error) {
+	// Create query expression
+	keyCond := expression.Key("AccountID").Equal(expression.Value(accountID))
+	proj := expression.NamesList(
+		expression.Name("FlowID"),
+		expression.Name("AccountID"),
+		expression.Name("Name"),
+		expression.Name("Description"),
+		expression.Name("Version"),
+		expression.Name("CreatedAt"),
+		expression.Name("UpdatedAt"),
+	)
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).WithProjection(proj).Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	// Query flows
+	result, err := s.client.Query(&dynamodb.QueryInput{
+		TableName:                 aws.String(s.tableName),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query flows: %w", err)
+	}
+
+	// Extract flow metadata
+	metadataList := make([]FlowMetadata, 0, len(result.Items))
+	for _, item := range result.Items {
+		var flowItem dynamoDBFlowItem
+		if err := dynamodbattribute.UnmarshalMap(item, &flowItem); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal flow item: %w", err)
+		}
+
+		metadata := FlowMetadata{
+			ID:          flowItem.FlowID,
+			AccountID:   flowItem.AccountID,
+			Name:        flowItem.Name,
+			Description: flowItem.Description,
+			Version:     flowItem.Version,
+			CreatedAt:   flowItem.CreatedAt,
+			UpdatedAt:   flowItem.UpdatedAt,
+		}
+
+		metadataList = append(metadataList, metadata)
+	}
+
+	return metadataList, nil
+}
+
+// DynamoDBSecretStore implements the SecretStore interface using DynamoDB
+type DynamoDBSecretStore struct {
+	client      *dynamodb.DynamoDB
+	tablePrefix string
+	tableName   string
+}
+
+// NewDynamoDBSecretStore creates a new DynamoDB secret store
+func NewDynamoDBSecretStore(client *dynamodb.DynamoDB, tablePrefix string) *DynamoDBSecretStore {
+	return &DynamoDBSecretStore{
+		client:      client,
+		tablePrefix: tablePrefix,
+		tableName:   tablePrefix + "secrets",
+	}
+}
+
+// Initialize creates the DynamoDB table if it doesn't exist
+func (s *DynamoDBSecretStore) Initialize() error {
+	// Check if table exists
+	_, err := s.client.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(s.tableName),
+	})
+
+	if err == nil {
+		// Table exists
+		return nil
+	}
+
+	// Check if error is "table not found"
+	if aerr, ok := err.(awserr.Error); ok && aerr.Code() == dynamodb.ErrCodeResourceNotFoundException {
+		// Create table
+		_, err = s.client.CreateTable(&dynamodb.CreateTableInput{
+			TableName: aws.String(s.tableName),
+			AttributeDefinitions: []*dynamodb.AttributeDefinition{
+				{
+					AttributeName: aws.String("AccountID"),
+					AttributeType: aws.String("S"),
+				},
+				{
+					AttributeName: aws.String("Key"),
+					AttributeType: aws.String("S"),
+				},
+			},
+			KeySchema: []*dynamodb.KeySchemaElement{
+				{
+					AttributeName: aws.String("AccountID"),
+					KeyType:       aws.String("HASH"),
+				},
+				{
+					AttributeName: aws.String("Key"),
+					KeyType:       aws.String("RANGE"),
+				},
+			},
+			BillingMode: aws.String("PAY_PER_REQUEST"),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to create table: %w", err)
+		}
+
+		// Wait for table to be created
+		err = s.client.WaitUntilTableExists(&dynamodb.DescribeTableInput{
+			TableName: aws.String(s.tableName),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to wait for table creation: %w", err)
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("failed to check if table exists: %w", err)
+}
+
+// SaveSecret persists a secret
+func (s *DynamoDBSecretStore) SaveSecret(secret auth.Secret) error {
+	// Marshal secret
+	av, err := dynamodbattribute.MarshalMap(secret)
+	if err != nil {
+		return fmt.Errorf("failed to marshal secret: %w", err)
+	}
+
+	// Save secret
+	_, err = s.client.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(s.tableName),
+		Item:      av,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to save secret: %w", err)
+	}
+
+	return nil
+}
+
+// GetSecret retrieves a secret
+func (s *DynamoDBSecretStore) GetSecret(accountID, key string) (auth.Secret, error) {
+	// Get secret
+	result, err := s.client.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"AccountID": {
+				S: aws.String(accountID),
+			},
+			"Key": {
+				S: aws.String(key),
+			},
+		},
+	})
+
+	if err != nil {
+		return auth.Secret{}, fmt.Errorf("failed to get secret: %w", err)
+	}
+
+	if result.Item == nil {
+		return auth.Secret{}, ErrSecretNotFound
+	}
+
+	// Unmarshal secret
+	var secret auth.Secret
+	if err := dynamodbattribute.UnmarshalMap(result.Item, &secret); err != nil {
+		return auth.Secret{}, fmt.Errorf("failed to unmarshal secret: %w", err)
+	}
+
+	return secret, nil
+}
+
+// ListSecrets returns all secrets for an account
+func (s *DynamoDBSecretStore) ListSecrets(accountID string) ([]auth.Secret, error) {
+	// Create query expression
+	keyCond := expression.Key("AccountID").Equal(expression.Value(accountID))
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	// Query secrets
+	result, err := s.client.Query(&dynamodb.QueryInput{
+		TableName:                 aws.String(s.tableName),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query secrets: %w", err)
+	}
+
+	// Extract secrets
+	secrets := make([]auth.Secret, 0, len(result.Items))
+	for _, item := range result.Items {
+		var secret auth.Secret
+		if err := dynamodbattribute.UnmarshalMap(item, &secret); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal secret: %w", err)
+		}
+		secrets = append(secrets, secret)
+	}
+
+	return secrets, nil
+}
+
+// DeleteSecret removes a secret
+func (s *DynamoDBSecretStore) DeleteSecret(accountID, key string) error {
+	// Delete secret
+	_, err := s.client.DeleteItem(&dynamodb.DeleteItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"AccountID": {
+				S: aws.String(accountID),
+			},
+			"Key": {
+				S: aws.String(key),
+			},
+		},
+		ConditionExpression: aws.String("attribute_exists(AccountID) AND attribute_exists(#k)"),
+		ExpressionAttributeNames: map[string]*string{
+			"#k": aws.String("Key"),
+		},
+	})
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+			return ErrSecretNotFound
+		}
+		return fmt.Errorf("failed to delete secret: %w", err)
+	}
+
+	return nil
+}
+
+// DynamoDBExecutionStore implements the ExecutionStore interface using DynamoDB
+type DynamoDBExecutionStore struct {
+	client        *dynamodb.DynamoDB
+	tablePrefix   string
+	execTableName string
+	logsTableName string
+}
+
+// NewDynamoDBExecutionStore creates a new DynamoDB execution store
+func NewDynamoDBExecutionStore(client *dynamodb.DynamoDB, tablePrefix string) *DynamoDBExecutionStore {
+	return &DynamoDBExecutionStore{
+		client:        client,
+		tablePrefix:   tablePrefix,
+		execTableName: tablePrefix + "executions",
+		logsTableName: tablePrefix + "execution_logs",
+	}
+}
+
+// Initialize creates the DynamoDB tables if they don't exist
+func (s *DynamoDBExecutionStore) Initialize() error {
+	// Initialize executions table
+	if err := s.initializeExecutionsTable(); err != nil {
+		return err
+	}
+
+	// Initialize execution logs table
+	if err := s.initializeExecutionLogsTable(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// initializeExecutionsTable creates the executions table if it doesn't exist
+func (s *DynamoDBExecutionStore) initializeExecutionsTable() error {
+	// Check if table exists
+	_, err := s.client.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(s.execTableName),
+	})
+
+	if err == nil {
+		// Table exists
+		return nil
+	}
+
+	// Check if error is "table not found"
+	if aerr, ok := err.(awserr.Error); ok && aerr.Code() == dynamodb.ErrCodeResourceNotFoundException {
+		// Create table
+		_, err = s.client.CreateTable(&dynamodb.CreateTableInput{
+			TableName: aws.String(s.execTableName),
+			AttributeDefinitions: []*dynamodb.AttributeDefinition{
+				{
+					AttributeName: aws.String("ID"),
+					AttributeType: aws.String("S"),
+				},
+				{
+					AttributeName: aws.String("AccountID"),
+					AttributeType: aws.String("S"),
+				},
+				{
+					AttributeName: aws.String("StartTime"),
+					AttributeType: aws.String("N"),
+				},
+			},
+			KeySchema: []*dynamodb.KeySchemaElement{
+				{
+					AttributeName: aws.String("ID"),
+					KeyType:       aws.String("HASH"),
+				},
+			},
+			GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
+				{
+					IndexName: aws.String("AccountIndex"),
+					KeySchema: []*dynamodb.KeySchemaElement{
+						{
+							AttributeName: aws.String("AccountID"),
+							KeyType:       aws.String("HASH"),
+						},
+						{
+							AttributeName: aws.String("StartTime"),
+							KeyType:       aws.String("RANGE"),
+						},
+					},
+					Projection: &dynamodb.Projection{
+						ProjectionType: aws.String("ALL"),
+					},
+				},
+			},
+			BillingMode: aws.String("PAY_PER_REQUEST"),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to create executions table: %w", err)
+		}
+
+		// Wait for table to be created
+		err = s.client.WaitUntilTableExists(&dynamodb.DescribeTableInput{
+			TableName: aws.String(s.execTableName),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to wait for executions table creation: %w", err)
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("failed to check if executions table exists: %w", err)
+}
+
+// initializeExecutionLogsTable creates the execution logs table if it doesn't exist
+func (s *DynamoDBExecutionStore) initializeExecutionLogsTable() error {
+	// Check if table exists
+	_, err := s.client.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(s.logsTableName),
+	})
+
+	if err == nil {
+		// Table exists
+		return nil
+	}
+
+	// Check if error is "table not found"
+	if aerr, ok := err.(awserr.Error); ok && aerr.Code() == dynamodb.ErrCodeResourceNotFoundException {
+		// Create table
+		_, err = s.client.CreateTable(&dynamodb.CreateTableInput{
+			TableName: aws.String(s.logsTableName),
+			AttributeDefinitions: []*dynamodb.AttributeDefinition{
+				{
+					AttributeName: aws.String("ExecutionID"),
+					AttributeType: aws.String("S"),
+				},
+				{
+					AttributeName: aws.String("Timestamp"),
+					AttributeType: aws.String("N"),
+				},
+			},
+			KeySchema: []*dynamodb.KeySchemaElement{
+				{
+					AttributeName: aws.String("ExecutionID"),
+					KeyType:       aws.String("HASH"),
+				},
+				{
+					AttributeName: aws.String("Timestamp"),
+					KeyType:       aws.String("RANGE"),
+				},
+			},
+			BillingMode: aws.String("PAY_PER_REQUEST"),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to create execution logs table: %w", err)
+		}
+
+		// Wait for table to be created
+		err = s.client.WaitUntilTableExists(&dynamodb.DescribeTableInput{
+			TableName: aws.String(s.logsTableName),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to wait for execution logs table creation: %w", err)
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("failed to check if execution logs table exists: %w", err)
+}
+
+// SaveExecution persists execution data
+func (s *DynamoDBExecutionStore) SaveExecution(execution runtime.ExecutionStatus) error {
+	// Convert time fields to Unix timestamps
+	item := struct {
+		runtime.ExecutionStatus
+		StartTimeUnix int64 `json:"StartTime"`
+		EndTimeUnix   int64 `json:"EndTime"`
+	}{
+		ExecutionStatus: execution,
+		StartTimeUnix:   execution.StartTime.Unix(),
+		EndTimeUnix:     execution.EndTime.Unix(),
+	}
+
+	// Marshal execution
+	av, err := dynamodbattribute.MarshalMap(item)
+	if err != nil {
+		return fmt.Errorf("failed to marshal execution: %w", err)
+	}
+
+	// Save execution
+	_, err = s.client.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(s.execTableName),
+		Item:      av,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to save execution: %w", err)
+	}
+
+	return nil
+}
+
+// GetExecution retrieves execution data
+func (s *DynamoDBExecutionStore) GetExecution(executionID string) (runtime.ExecutionStatus, error) {
+	// Get execution
+	result, err := s.client.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(s.execTableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"ID": {
+				S: aws.String(executionID),
+			},
+		},
+	})
+
+	if err != nil {
+		return runtime.ExecutionStatus{}, fmt.Errorf("failed to get execution: %w", err)
+	}
+
+	if result.Item == nil {
+		return runtime.ExecutionStatus{}, ErrExecutionNotFound
+	}
+
+	// Unmarshal execution
+	var item struct {
+		runtime.ExecutionStatus
+		StartTimeUnix int64 `json:"StartTime"`
+		EndTimeUnix   int64 `json:"EndTime"`
+	}
+	if err := dynamodbattribute.UnmarshalMap(result.Item, &item); err != nil {
+		return runtime.ExecutionStatus{}, fmt.Errorf("failed to unmarshal execution: %w", err)
+	}
+
+	// Convert Unix timestamps back to time.Time
+	execution := item.ExecutionStatus
+	execution.StartTime = time.Unix(item.StartTimeUnix, 0)
+	execution.EndTime = time.Unix(item.EndTimeUnix, 0)
+
+	return execution, nil
+}
+
+// ListExecutions returns all executions for an account
+func (s *DynamoDBExecutionStore) ListExecutions(accountID string) ([]runtime.ExecutionStatus, error) {
+	// Create query expression
+	keyCond := expression.Key("AccountID").Equal(expression.Value(accountID))
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	// Query executions
+	result, err := s.client.Query(&dynamodb.QueryInput{
+		TableName:                 aws.String(s.execTableName),
+		IndexName:                 aws.String("AccountIndex"),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ScanIndexForward:          aws.Bool(false), // Sort by StartTime descending
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query executions: %w", err)
+	}
+
+	// Extract executions
+	executions := make([]runtime.ExecutionStatus, 0, len(result.Items))
+	for _, item := range result.Items {
+		var execItem struct {
+			runtime.ExecutionStatus
+			StartTimeUnix int64 `json:"StartTime"`
+			EndTimeUnix   int64 `json:"EndTime"`
+		}
+		if err := dynamodbattribute.UnmarshalMap(item, &execItem); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal execution: %w", err)
+		}
+
+		// Convert Unix timestamps back to time.Time
+		execution := execItem.ExecutionStatus
+		execution.StartTime = time.Unix(execItem.StartTimeUnix, 0)
+		execution.EndTime = time.Unix(execItem.EndTimeUnix, 0)
+
+		executions = append(executions, execution)
+	}
+
+	return executions, nil
+}
+
+// SaveExecutionLog persists an execution log entry
+func (s *DynamoDBExecutionStore) SaveExecutionLog(executionID string, log runtime.ExecutionLog) error {
+	// Convert time field to Unix timestamp
+	item := struct {
+		ExecutionID string `json:"ExecutionID"`
+		Timestamp   int64  `json:"Timestamp"`
+		NodeID      string `json:"NodeID"`
+		Event       string `json:"Event"`
+		Data        string `json:"Data"`
+	}{
+		ExecutionID: executionID,
+		Timestamp:   log.Timestamp.UnixNano(),
+		NodeID:      log.NodeID,
+		Event:       log.Event,
+	}
+
+	// Marshal log data to JSON
+	if log.Data != nil {
+		dataJSON, err := json.Marshal(log.Data)
+		if err != nil {
+			return fmt.Errorf("failed to marshal log data: %w", err)
+		}
+		item.Data = string(dataJSON)
+	}
+
+	// Marshal log entry
+	av, err := dynamodbattribute.MarshalMap(item)
+	if err != nil {
+		return fmt.Errorf("failed to marshal log entry: %w", err)
+	}
+
+	// Save log entry
+	_, err = s.client.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(s.logsTableName),
+		Item:      av,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to save log entry: %w", err)
+	}
+
+	return nil
+}
+
+// GetExecutionLogs retrieves logs for an execution
+func (s *DynamoDBExecutionStore) GetExecutionLogs(executionID string) ([]runtime.ExecutionLog, error) {
+	// Create query expression
+	keyCond := expression.Key("ExecutionID").Equal(expression.Value(executionID))
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	// Query logs
+	result, err := s.client.Query(&dynamodb.QueryInput{
+		TableName:                 aws.String(s.logsTableName),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ScanIndexForward:          aws.Bool(true), // Sort by Timestamp ascending
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query logs: %w", err)
+	}
+
+	// Extract logs
+	logs := make([]runtime.ExecutionLog, 0, len(result.Items))
+	for _, item := range result.Items {
+		var logItem struct {
+			ExecutionID string `json:"ExecutionID"`
+			Timestamp   int64  `json:"Timestamp"`
+			NodeID      string `json:"NodeID"`
+			Event       string `json:"Event"`
+			Data        string `json:"Data"`
+		}
+		if err := dynamodbattribute.UnmarshalMap(item, &logItem); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal log entry: %w", err)
+		}
+
+		// Create log entry
+		log := runtime.ExecutionLog{
+			Timestamp: time.Unix(0, logItem.Timestamp),
+			NodeID:    logItem.NodeID,
+			Event:     logItem.Event,
+		}
+
+		// Unmarshal data if present
+		if logItem.Data != "" {
+			var data map[string]interface{}
+			if err := json.Unmarshal([]byte(logItem.Data), &data); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal log data: %w", err)
+			}
+			log.Data = data
+		}
+
+		logs = append(logs, log)
+	}
+
+	return logs, nil
+}
+
+// DynamoDBAccountStore implements the AccountStore interface using DynamoDB
+type DynamoDBAccountStore struct {
+	client      *dynamodb.DynamoDB
+	tablePrefix string
+	tableName   string
+}
+
+// NewDynamoDBAccountStore creates a new DynamoDB account store
+func NewDynamoDBAccountStore(client *dynamodb.DynamoDB, tablePrefix string) *DynamoDBAccountStore {
+	return &DynamoDBAccountStore{
+		client:      client,
+		tablePrefix: tablePrefix,
+		tableName:   tablePrefix + "accounts",
+	}
+}
+
+// Initialize creates the DynamoDB table if it doesn't exist
+func (s *DynamoDBAccountStore) Initialize() error {
+	// Check if table exists
+	_, err := s.client.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(s.tableName),
+	})
+
+	if err == nil {
+		// Table exists
+		return nil
+	}
+
+	// Check if error is "table not found"
+	if aerr, ok := err.(awserr.Error); ok && aerr.Code() == dynamodb.ErrCodeResourceNotFoundException {
+		// Create table
+		_, err = s.client.CreateTable(&dynamodb.CreateTableInput{
+			TableName: aws.String(s.tableName),
+			AttributeDefinitions: []*dynamodb.AttributeDefinition{
+				{
+					AttributeName: aws.String("ID"),
+					AttributeType: aws.String("S"),
+				},
+				{
+					AttributeName: aws.String("Username"),
+					AttributeType: aws.String("S"),
+				},
+				{
+					AttributeName: aws.String("APIToken"),
+					AttributeType: aws.String("S"),
+				},
+			},
+			KeySchema: []*dynamodb.KeySchemaElement{
+				{
+					AttributeName: aws.String("ID"),
+					KeyType:       aws.String("HASH"),
+				},
+			},
+			GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
+				{
+					IndexName: aws.String("UsernameIndex"),
+					KeySchema: []*dynamodb.KeySchemaElement{
+						{
+							AttributeName: aws.String("Username"),
+							KeyType:       aws.String("HASH"),
+						},
+					},
+					Projection: &dynamodb.Projection{
+						ProjectionType: aws.String("ALL"),
+					},
+				},
+				{
+					IndexName: aws.String("TokenIndex"),
+					KeySchema: []*dynamodb.KeySchemaElement{
+						{
+							AttributeName: aws.String("APIToken"),
+							KeyType:       aws.String("HASH"),
+						},
+					},
+					Projection: &dynamodb.Projection{
+						ProjectionType: aws.String("ALL"),
+					},
+				},
+			},
+			BillingMode: aws.String("PAY_PER_REQUEST"),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to create accounts table: %w", err)
+		}
+
+		// Wait for table to be created
+		err = s.client.WaitUntilTableExists(&dynamodb.DescribeTableInput{
+			TableName: aws.String(s.tableName),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to wait for accounts table creation: %w", err)
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("failed to check if accounts table exists: %w", err)
+}
+
+// SaveAccount persists an account
+func (s *DynamoDBAccountStore) SaveAccount(account auth.Account) error {
+	// Convert time fields to Unix timestamps
+	item := struct {
+		auth.Account
+		CreatedAtUnix int64 `json:"CreatedAt"`
+		UpdatedAtUnix int64 `json:"UpdatedAt"`
+	}{
+		Account:       account,
+		CreatedAtUnix: account.CreatedAt.Unix(),
+		UpdatedAtUnix: account.UpdatedAt.Unix(),
+	}
+
+	// Marshal account
+	av, err := dynamodbattribute.MarshalMap(item)
+	if err != nil {
+		return fmt.Errorf("failed to marshal account: %w", err)
+	}
+
+	// Save account
+	_, err = s.client.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(s.tableName),
+		Item:      av,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to save account: %w", err)
+	}
+
+	return nil
+}
+
+// GetAccount retrieves an account
+func (s *DynamoDBAccountStore) GetAccount(accountID string) (auth.Account, error) {
+	// Get account
+	result, err := s.client.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"ID": {
+				S: aws.String(accountID),
+			},
+		},
+	})
+
+	if err != nil {
+		return auth.Account{}, fmt.Errorf("failed to get account: %w", err)
+	}
+
+	if result.Item == nil {
+		return auth.Account{}, ErrAccountNotFound
+	}
+
+	// Unmarshal account
+	var item struct {
+		auth.Account
+		CreatedAtUnix int64 `json:"CreatedAt"`
+		UpdatedAtUnix int64 `json:"UpdatedAt"`
+	}
+	if err := dynamodbattribute.UnmarshalMap(result.Item, &item); err != nil {
+		return auth.Account{}, fmt.Errorf("failed to unmarshal account: %w", err)
+	}
+
+	// Convert Unix timestamps back to time.Time
+	account := item.Account
+	account.CreatedAt = time.Unix(item.CreatedAtUnix, 0)
+	account.UpdatedAt = time.Unix(item.UpdatedAtUnix, 0)
+
+	return account, nil
+}
+
+// GetAccountByUsername retrieves an account by username
+func (s *DynamoDBAccountStore) GetAccountByUsername(username string) (auth.Account, error) {
+	// Create query expression
+	keyCond := expression.Key("Username").Equal(expression.Value(username))
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
+	if err != nil {
+		return auth.Account{}, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	// Query accounts
+	result, err := s.client.Query(&dynamodb.QueryInput{
+		TableName:                 aws.String(s.tableName),
+		IndexName:                 aws.String("UsernameIndex"),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+	})
+
+	if err != nil {
+		return auth.Account{}, fmt.Errorf("failed to query accounts: %w", err)
+	}
+
+	if len(result.Items) == 0 {
+		return auth.Account{}, ErrAccountNotFound
+	}
+
+	// Unmarshal account
+	var item struct {
+		auth.Account
+		CreatedAtUnix int64 `json:"CreatedAt"`
+		UpdatedAtUnix int64 `json:"UpdatedAt"`
+	}
+	if err := dynamodbattribute.UnmarshalMap(result.Items[0], &item); err != nil {
+		return auth.Account{}, fmt.Errorf("failed to unmarshal account: %w", err)
+	}
+
+	// Convert Unix timestamps back to time.Time
+	account := item.Account
+	account.CreatedAt = time.Unix(item.CreatedAtUnix, 0)
+	account.UpdatedAt = time.Unix(item.UpdatedAtUnix, 0)
+
+	return account, nil
+}
+
+// GetAccountByToken retrieves an account by API token
+func (s *DynamoDBAccountStore) GetAccountByToken(token string) (auth.Account, error) {
+	// Create query expression
+	keyCond := expression.Key("APIToken").Equal(expression.Value(token))
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
+	if err != nil {
+		return auth.Account{}, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	// Query accounts
+	result, err := s.client.Query(&dynamodb.QueryInput{
+		TableName:                 aws.String(s.tableName),
+		IndexName:                 aws.String("TokenIndex"),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+	})
+
+	if err != nil {
+		return auth.Account{}, fmt.Errorf("failed to query accounts: %w", err)
+	}
+
+	if len(result.Items) == 0 {
+		return auth.Account{}, ErrAccountNotFound
+	}
+
+	// Unmarshal account
+	var item struct {
+		auth.Account
+		CreatedAtUnix int64 `json:"CreatedAt"`
+		UpdatedAtUnix int64 `json:"UpdatedAt"`
+	}
+	if err := dynamodbattribute.UnmarshalMap(result.Items[0], &item); err != nil {
+		return auth.Account{}, fmt.Errorf("failed to unmarshal account: %w", err)
+	}
+
+	// Convert Unix timestamps back to time.Time
+	account := item.Account
+	account.CreatedAt = time.Unix(item.CreatedAtUnix, 0)
+	account.UpdatedAt = time.Unix(item.UpdatedAtUnix, 0)
+
+	return account, nil
+}
+
+// ListAccounts returns all accounts
+func (s *DynamoDBAccountStore) ListAccounts() ([]auth.Account, error) {
+	// Scan accounts
+	result, err := s.client.Scan(&dynamodb.ScanInput{
+		TableName: aws.String(s.tableName),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan accounts: %w", err)
+	}
+
+	// Extract accounts
+	accounts := make([]auth.Account, 0, len(result.Items))
+	for _, item := range result.Items {
+		var accItem struct {
+			auth.Account
+			CreatedAtUnix int64 `json:"CreatedAt"`
+			UpdatedAtUnix int64 `json:"UpdatedAt"`
+		}
+		if err := dynamodbattribute.UnmarshalMap(item, &accItem); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal account: %w", err)
+		}
+
+		// Convert Unix timestamps back to time.Time
+		account := accItem.Account
+		account.CreatedAt = time.Unix(accItem.CreatedAtUnix, 0)
+		account.UpdatedAt = time.Unix(accItem.UpdatedAtUnix, 0)
+
+		accounts = append(accounts, account)
+	}
+
+	return accounts, nil
+}
+
+// DeleteAccount removes an account
+func (s *DynamoDBAccountStore) DeleteAccount(accountID string) error {
+	// Delete account
+	_, err := s.client.DeleteItem(&dynamodb.DeleteItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"ID": {
+				S: aws.String(accountID),
+			},
+		},
+		ConditionExpression: aws.String("attribute_exists(ID)"),
+	})
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+			return ErrAccountNotFound
+		}
+		return fmt.Errorf("failed to delete account: %w", err)
+	}
+
+	return nil
+}
