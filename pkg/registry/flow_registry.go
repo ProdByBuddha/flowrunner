@@ -94,7 +94,7 @@ func (r *FlowRegistryService) List(accountID string) ([]FlowInfo, error) {
 	return flowInfos, nil
 }
 
-// Update modifies an existing flow definition
+// Update modifies an existing flow definition and creates a new version
 func (r *FlowRegistryService) Update(accountID string, id string, yamlContent string) error {
 	// Check if the flow exists and belongs to the account
 	_, err := r.flowStore.GetFlow(accountID, id)
@@ -113,9 +113,15 @@ func (r *FlowRegistryService) Update(accountID string, id string, yamlContent st
 		return fmt.Errorf("%w: %v", ErrInvalidYAML, err)
 	}
 
-	// Update flow definition with updated metadata
-	// Note: The FlowStore implementation should handle updating the metadata
-	if err := r.flowStore.SaveFlow(accountID, id, []byte(yamlContent)); err != nil {
+	// Generate a version string based on the flow definition version or timestamp
+	version := flowDef.Metadata.Version
+	if version == "" {
+		// If no version is specified in the YAML, generate one based on timestamp
+		version = fmt.Sprintf("v%d", time.Now().UnixNano())
+	}
+
+	// Update flow definition with updated metadata and save as a new version
+	if err := r.flowStore.SaveFlowVersion(accountID, id, []byte(yamlContent), version); err != nil {
 		return fmt.Errorf("failed to update flow: %w", err)
 	}
 
@@ -136,4 +142,60 @@ func (r *FlowRegistryService) Delete(accountID string, id string) error {
 	}
 
 	return nil
+}
+
+// GetVersion retrieves a specific version of a flow definition
+func (r *FlowRegistryService) GetVersion(accountID string, id string, version string) (string, error) {
+	// Get the flow definition for the specific version
+	flowBytes, err := r.flowStore.GetFlowVersion(accountID, id, version)
+	if err != nil {
+		return "", fmt.Errorf("failed to get flow version: %w", err)
+	}
+
+	return string(flowBytes), nil
+}
+
+// ListVersions returns all versions of a flow
+func (r *FlowRegistryService) ListVersions(accountID string, id string) ([]FlowVersionInfo, error) {
+	// Check if the flow exists and belongs to the account
+	_, err := r.flowStore.GetFlow(accountID, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get flow: %w", err)
+	}
+
+	// Get all versions for the flow
+	versions, err := r.flowStore.ListFlowVersions(accountID, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list flow versions: %w", err)
+	}
+
+	// Convert to FlowVersionInfo
+	versionInfos := make([]FlowVersionInfo, 0, len(versions))
+	for _, version := range versions {
+		// Get the flow definition for this version to extract metadata
+		flowBytes, err := r.flowStore.GetFlowVersion(accountID, id, version)
+		if err != nil {
+			// Skip versions that can't be retrieved
+			continue
+		}
+
+		// Parse the YAML to extract metadata
+		flowDef := &loader.FlowDefinition{}
+		if err := yaml.Unmarshal(flowBytes, flowDef); err != nil {
+			// Skip versions with invalid YAML
+			continue
+		}
+
+		// Create version info
+		versionInfo := FlowVersionInfo{
+			FlowID:      id,
+			Version:     version,
+			Description: flowDef.Metadata.Description,
+			CreatedAt:   time.Unix(0, 0), // We don't have this information in the current implementation
+		}
+
+		versionInfos = append(versionInfos, versionInfo)
+	}
+
+	return versionInfos, nil
 }

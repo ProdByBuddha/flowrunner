@@ -32,13 +32,22 @@ type FlowStore interface {
 	// SaveFlow persists a flow definition
 	SaveFlow(accountID, flowID string, definition []byte) error
 
-	// GetFlow retrieves a flow definition
+	// SaveFlowVersion persists a new version of a flow definition
+	SaveFlowVersion(accountID, flowID string, definition []byte, version string) error
+
+	// GetFlow retrieves a flow definition (latest version)
 	GetFlow(accountID, flowID string) ([]byte, error)
+
+	// GetFlowVersion retrieves a specific version of a flow definition
+	GetFlowVersion(accountID, flowID, version string) ([]byte, error)
+
+	// ListFlowVersions returns all versions of a flow
+	ListFlowVersions(accountID, flowID string) ([]string, error)
 
 	// ListFlows returns all flow IDs for an account
 	ListFlows(accountID string) ([]string, error)
 
-	// DeleteFlow removes a flow definition
+	// DeleteFlow removes a flow definition and all its versions
 	DeleteFlow(accountID, flowID string) error
 
 	// GetFlowMetadata retrieves metadata for a flow
@@ -62,7 +71,7 @@ type FlowMetadata struct {
 	// Description of the flow
 	Description string `json:"description"`
 
-	// Version of the flow
+	// Version of the flow (latest version)
 	Version string `json:"version"`
 
 	// CreatedAt is when the flow was created
@@ -70,6 +79,27 @@ type FlowMetadata struct {
 
 	// UpdatedAt is when the flow was last updated
 	UpdatedAt int64 `json:"updated_at"`
+}
+
+// FlowVersion contains information about a specific version of a flow
+type FlowVersion struct {
+	// FlowID is the ID of the flow
+	FlowID string `json:"flow_id"`
+
+	// Version is the version identifier
+	Version string `json:"version"`
+
+	// Description is the version description
+	Description string `json:"description"`
+
+	// CreatedAt is when the version was created
+	CreatedAt int64 `json:"created_at"`
+
+	// CreatedBy is the user who created the version
+	CreatedBy string `json:"created_by,omitempty"`
+
+	// Definition is the flow definition for this version
+	Definition []byte `json:"definition"`
 }
 
 // SecretStore manages secret persistence

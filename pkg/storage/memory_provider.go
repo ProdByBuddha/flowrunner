@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -71,6 +72,7 @@ func (p *MemoryProvider) GetAccountStore() AccountStore {
 type MemoryFlowStore struct {
 	flows    map[string]map[string][]byte
 	metadata map[string]map[string]FlowMetadata
+	versions map[string]map[string]map[string]FlowVersion // accountID -> flowID -> version -> FlowVersion
 	mu       sync.RWMutex
 }
 
@@ -79,6 +81,7 @@ func NewMemoryFlowStore() *MemoryFlowStore {
 	return &MemoryFlowStore{
 		flows:    make(map[string]map[string][]byte),
 		metadata: make(map[string]map[string]FlowMetadata),
+		versions: make(map[string]map[string]map[string]FlowVersion),
 	}
 }
 
@@ -91,10 +94,28 @@ func (s *MemoryFlowStore) SaveFlow(accountID, flowID string, definition []byte) 
 	if _, ok := s.flows[accountID]; !ok {
 		s.flows[accountID] = make(map[string][]byte)
 		s.metadata[accountID] = make(map[string]FlowMetadata)
+		s.versions[accountID] = make(map[string]map[string]FlowVersion)
+	}
+
+	// Create flow versions map if it doesn't exist
+	if _, ok := s.versions[accountID][flowID]; !ok {
+		s.versions[accountID][flowID] = make(map[string]FlowVersion)
 	}
 
 	// Store the flow definition
 	s.flows[accountID][flowID] = definition
+
+	// Generate a version number based on timestamp
+	version := fmt.Sprintf("v%d", time.Now().UnixNano())
+
+	// Create or update flow version
+	flowVersion := FlowVersion{
+		FlowID:     flowID,
+		Version:    version,
+		CreatedAt:  time.Now().Unix(),
+		Definition: definition,
+	}
+	s.versions[accountID][flowID][version] = flowVersion
 
 	// Update or create metadata
 	meta, ok := s.metadata[accountID][flowID]
@@ -107,7 +128,8 @@ func (s *MemoryFlowStore) SaveFlow(accountID, flowID string, definition []byte) 
 		}
 	}
 
-	// Update metadata
+	// Update metadata with new version
+	meta.Version = version
 	meta.UpdatedAt = time.Now().Unix()
 	s.metadata[accountID][flowID] = meta
 
@@ -154,7 +176,7 @@ func (s *MemoryFlowStore) ListFlows(accountID string) ([]string, error) {
 	return flowIDs, nil
 }
 
-// DeleteFlow removes a flow definition
+// DeleteFlow removes a flow definition and all its versions
 func (s *MemoryFlowStore) DeleteFlow(accountID, flowID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -170,9 +192,12 @@ func (s *MemoryFlowStore) DeleteFlow(accountID, flowID string) error {
 		return ErrFlowNotFound
 	}
 
-	// Delete flow and metadata
+	// Delete flow, metadata, and all versions
 	delete(accountFlows, flowID)
 	delete(s.metadata[accountID], flowID)
+	if _, ok := s.versions[accountID]; ok {
+		delete(s.versions[accountID], flowID)
+	}
 
 	return nil
 }
@@ -518,4 +543,100 @@ func (s *MemoryAccountStore) DeleteAccount(accountID string) error {
 	delete(s.accountsByToken, account.APIToken)
 
 	return nil
+}
+
+// SaveFlowVersion persists a new version of a flow definition
+func (s *MemoryFlowStore) SaveFlowVersion(accountID, flowID string, definition []byte, version string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Create account maps if they don't exist
+	if _, ok := s.flows[accountID]; !ok {
+		s.flows[accountID] = make(map[string][]byte)
+		s.metadata[accountID] = make(map[string]FlowMetadata)
+		s.versions[accountID] = make(map[string]map[string]FlowVersion)
+	}
+
+	// Create flow versions map if it doesn't exist
+	if _, ok := s.versions[accountID][flowID]; !ok {
+		s.versions[accountID][flowID] = make(map[string]FlowVersion)
+	}
+
+	// Store the flow definition as the current version
+	s.flows[accountID][flowID] = definition
+
+	// Create or update flow version
+	flowVersion := FlowVersion{
+		FlowID:     flowID,
+		Version:    version,
+		CreatedAt:  time.Now().Unix(),
+		Definition: definition,
+	}
+	s.versions[accountID][flowID][version] = flowVersion
+
+	// Update metadata
+	meta, ok := s.metadata[accountID][flowID]
+	if !ok {
+		// New flow, create metadata
+		meta = FlowMetadata{
+			ID:        flowID,
+			AccountID: accountID,
+			CreatedAt: time.Now().Unix(),
+		}
+	}
+
+	// Update metadata with new version
+	meta.Version = version
+	meta.UpdatedAt = time.Now().Unix()
+	s.metadata[accountID][flowID] = meta
+
+	return nil
+}
+
+// GetFlowVersion retrieves a specific version of a flow definition
+func (s *MemoryFlowStore) GetFlowVersion(accountID, flowID, version string) ([]byte, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// Check if account exists
+	if _, ok := s.versions[accountID]; !ok {
+		return nil, ErrFlowNotFound
+	}
+
+	// Check if flow exists
+	if _, ok := s.versions[accountID][flowID]; !ok {
+		return nil, ErrFlowNotFound
+	}
+
+	// Check if version exists
+	flowVersion, ok := s.versions[accountID][flowID][version]
+	if !ok {
+		return nil, ErrFlowNotFound
+	}
+
+	return flowVersion.Definition, nil
+}
+
+// ListFlowVersions returns all versions of a flow
+func (s *MemoryFlowStore) ListFlowVersions(accountID, flowID string) ([]string, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// Check if account exists
+	if _, ok := s.versions[accountID]; !ok {
+		return []string{}, nil
+	}
+
+	// Check if flow exists
+	if _, ok := s.versions[accountID][flowID]; !ok {
+		return []string{}, nil
+	}
+
+	// Get all versions
+	versions := make([]string, 0, len(s.versions[accountID][flowID]))
+	for version := range s.versions[accountID][flowID] {
+		versions = append(versions, version)
+	}
+
+	return versions, nil
 }

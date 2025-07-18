@@ -65,7 +65,7 @@
     - Support multi-tenant isolation
     - _Requirements: 1.3, 1.4, 1.5, 3.1, 3.3_
 
-  - [ ] 4.2 Implement flow versioning
+  - [x] 4.2 Implement flow versioning
 
     - Add version tracking for flow definitions
     - Support retrieving specific versions

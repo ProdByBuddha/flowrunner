@@ -147,10 +147,23 @@ func (s *PostgreSQLFlowStore) Initialize() error {
 			updated_at TIMESTAMP NOT NULL
 		);
 		CREATE INDEX IF NOT EXISTS flows_account_id_idx ON flows (account_id);
+		
+		CREATE TABLE IF NOT EXISTS flow_versions (
+			flow_id TEXT NOT NULL,
+			account_id TEXT NOT NULL,
+			version TEXT NOT NULL,
+			description TEXT,
+			definition BYTEA NOT NULL,
+			created_at TIMESTAMP NOT NULL,
+			created_by TEXT,
+			PRIMARY KEY (flow_id, account_id, version)
+		);
+		CREATE INDEX IF NOT EXISTS flow_versions_flow_id_idx ON flow_versions (flow_id);
+		CREATE INDEX IF NOT EXISTS flow_versions_account_id_idx ON flow_versions (account_id);
 	`)
 
 	if err != nil {
-		return fmt.Errorf("failed to create flows table: %w", err)
+		return fmt.Errorf("failed to create flows tables: %w", err)
 	}
 
 	return nil
@@ -174,6 +187,12 @@ func (s *PostgreSQLFlowStore) SaveFlow(accountID, flowID string, definition []by
 		metadata.Metadata.Version = "1.0.0"
 	}
 
+	// Generate a version if not specified
+	version := metadata.Metadata.Version
+	if version == "" {
+		version = fmt.Sprintf("v%d", time.Now().UnixNano())
+	}
+
 	// Check if flow already exists
 	var exists bool
 	err := s.db.QueryRow("SELECT EXISTS(SELECT 1 FROM flows WHERE flow_id = $1)", flowID).Scan(&exists)
@@ -187,7 +206,7 @@ func (s *PostgreSQLFlowStore) SaveFlow(accountID, flowID string, definition []by
 		// Update existing flow
 		_, err = s.db.Exec(
 			"UPDATE flows SET account_id = $1, name = $2, description = $3, version = $4, definition = $5, updated_at = $6 WHERE flow_id = $7",
-			accountID, metadata.Metadata.Name, metadata.Metadata.Description, metadata.Metadata.Version, definition, now, flowID,
+			accountID, metadata.Metadata.Name, metadata.Metadata.Description, version, definition, now, flowID,
 		)
 		if err != nil {
 			return fmt.Errorf("failed to update flow: %w", err)
@@ -196,11 +215,20 @@ func (s *PostgreSQLFlowStore) SaveFlow(accountID, flowID string, definition []by
 		// Insert new flow
 		_, err = s.db.Exec(
 			"INSERT INTO flows (flow_id, account_id, name, description, version, definition, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-			flowID, accountID, metadata.Metadata.Name, metadata.Metadata.Description, metadata.Metadata.Version, definition, now, now,
+			flowID, accountID, metadata.Metadata.Name, metadata.Metadata.Description, version, definition, now, now,
 		)
 		if err != nil {
 			return fmt.Errorf("failed to insert flow: %w", err)
 		}
+	}
+
+	// Also save as a version
+	_, err = s.db.Exec(
+		"INSERT INTO flow_versions (flow_id, account_id, version, description, definition, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+		flowID, accountID, version, metadata.Metadata.Description, definition, now,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to save flow version: %w", err)
 	}
 
 	return nil
@@ -1071,4 +1099,110 @@ func (s *PostgreSQLAccountStore) DeleteAccount(accountID string) error {
 	}
 
 	return nil
+}
+
+// SaveFlowVersion persists a new version of a flow definition
+func (s *PostgreSQLFlowStore) SaveFlowVersion(accountID, flowID string, definition []byte, version string) error {
+	// Extract metadata from the definition
+	var metadata struct {
+		Metadata struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			Version     string `json:"version"`
+		} `json:"metadata"`
+	}
+
+	if err := json.Unmarshal(definition, &metadata); err != nil {
+		// If we can't extract metadata, just use empty values
+		metadata.Metadata.Name = flowID
+		metadata.Metadata.Description = ""
+	}
+
+	now := time.Now()
+
+	// First, update the main flow record with the new version
+	_, err := s.db.Exec(
+		"UPDATE flows SET name = $1, description = $2, version = $3, definition = $4, updated_at = $5 WHERE account_id = $6 AND flow_id = $7",
+		metadata.Metadata.Name, metadata.Metadata.Description, version, definition, now, accountID, flowID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update flow with new version: %w", err)
+	}
+
+	// Check if this version already exists
+	var exists bool
+	err = s.db.QueryRow(
+		"SELECT EXISTS(SELECT 1 FROM flow_versions WHERE account_id = $1 AND flow_id = $2 AND version = $3)",
+		accountID, flowID, version,
+	).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("failed to check if version exists: %w", err)
+	}
+
+	if exists {
+		// Update existing version
+		_, err = s.db.Exec(
+			"UPDATE flow_versions SET description = $1, definition = $2, created_at = $3 WHERE account_id = $4 AND flow_id = $5 AND version = $6",
+			metadata.Metadata.Description, definition, now, accountID, flowID, version,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to update flow version: %w", err)
+		}
+	} else {
+		// Insert new version
+		_, err = s.db.Exec(
+			"INSERT INTO flow_versions (flow_id, account_id, version, description, definition, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+			flowID, accountID, version, metadata.Metadata.Description, definition, now,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to save flow version: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// GetFlowVersion retrieves a specific version of a flow definition
+func (s *PostgreSQLFlowStore) GetFlowVersion(accountID, flowID, version string) ([]byte, error) {
+	var definition []byte
+	err := s.db.QueryRow(
+		"SELECT definition FROM flow_versions WHERE account_id = $1 AND flow_id = $2 AND version = $3",
+		accountID, flowID, version,
+	).Scan(&definition)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrFlowNotFound
+		}
+		return nil, fmt.Errorf("failed to get flow version: %w", err)
+	}
+
+	return definition, nil
+}
+
+// ListFlowVersions returns all versions of a flow
+func (s *PostgreSQLFlowStore) ListFlowVersions(accountID, flowID string) ([]string, error) {
+	rows, err := s.db.Query(
+		"SELECT version FROM flow_versions WHERE account_id = $1 AND flow_id = $2 ORDER BY created_at DESC",
+		accountID, flowID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list flow versions: %w", err)
+	}
+	defer rows.Close()
+
+	var versions []string
+	for rows.Next() {
+		var version string
+		if err := rows.Scan(&version); err != nil {
+			return nil, fmt.Errorf("failed to scan flow version: %w", err)
+		}
+		versions = append(versions, version)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating flow version rows: %w", err)
+	}
+
+	return versions, nil
 }

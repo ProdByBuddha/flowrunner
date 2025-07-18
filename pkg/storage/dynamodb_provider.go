@@ -144,8 +144,23 @@ func NewDynamoDBFlowStore(client *dynamodb.DynamoDB, tablePrefix string) *Dynamo
 	}
 }
 
-// Initialize creates the DynamoDB table if it doesn't exist
+// Initialize creates the DynamoDB tables if they don't exist
 func (s *DynamoDBFlowStore) Initialize() error {
+	// Initialize main flows table
+	if err := s.initializeFlowsTable(); err != nil {
+		return err
+	}
+
+	// Initialize flow versions table
+	if err := s.initializeFlowVersionsTable(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// initializeFlowsTable creates the flows table if it doesn't exist
+func (s *DynamoDBFlowStore) initializeFlowsTable() error {
 	// Check if table exists
 	_, err := s.client.DescribeTable(&dynamodb.DescribeTableInput{
 		TableName: aws.String(s.tableName),
@@ -203,6 +218,89 @@ func (s *DynamoDBFlowStore) Initialize() error {
 	return fmt.Errorf("failed to check if table exists: %w", err)
 }
 
+// initializeFlowVersionsTable creates the flow versions table if it doesn't exist
+func (s *DynamoDBFlowStore) initializeFlowVersionsTable() error {
+	versionsTableName := s.tableName + "_versions"
+
+	// Check if table exists
+	_, err := s.client.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(versionsTableName),
+	})
+
+	if err == nil {
+		// Table exists
+		return nil
+	}
+
+	// Check if error is "table not found"
+	if aerr, ok := err.(awserr.Error); ok && aerr.Code() == dynamodb.ErrCodeResourceNotFoundException {
+		// Create table
+		_, err = s.client.CreateTable(&dynamodb.CreateTableInput{
+			TableName: aws.String(versionsTableName),
+			AttributeDefinitions: []*dynamodb.AttributeDefinition{
+				{
+					AttributeName: aws.String("AccountID"),
+					AttributeType: aws.String("S"),
+				},
+				{
+					AttributeName: aws.String("FlowID"),
+					AttributeType: aws.String("S"),
+				},
+				{
+					AttributeName: aws.String("Version"),
+					AttributeType: aws.String("S"),
+				},
+			},
+			KeySchema: []*dynamodb.KeySchemaElement{
+				{
+					AttributeName: aws.String("AccountID"),
+					KeyType:       aws.String("HASH"),
+				},
+				{
+					AttributeName: aws.String("FlowID"),
+					KeyType:       aws.String("RANGE"),
+				},
+			},
+			GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
+				{
+					IndexName: aws.String("VersionIndex"),
+					KeySchema: []*dynamodb.KeySchemaElement{
+						{
+							AttributeName: aws.String("FlowID"),
+							KeyType:       aws.String("HASH"),
+						},
+						{
+							AttributeName: aws.String("Version"),
+							KeyType:       aws.String("RANGE"),
+						},
+					},
+					Projection: &dynamodb.Projection{
+						ProjectionType: aws.String("ALL"),
+					},
+				},
+			},
+			BillingMode: aws.String("PAY_PER_REQUEST"),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to create flow versions table: %w", err)
+		}
+
+		// Wait for table to be created
+		err = s.client.WaitUntilTableExists(&dynamodb.DescribeTableInput{
+			TableName: aws.String(versionsTableName),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to wait for flow versions table creation: %w", err)
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("failed to check if flow versions table exists: %w", err)
+}
+
 // dynamoDBFlowItem represents a flow item in DynamoDB
 type dynamoDBFlowItem struct {
 	AccountID   string `json:"AccountID"`
@@ -233,6 +331,12 @@ func (s *DynamoDBFlowStore) SaveFlow(accountID, flowID string, definition []byte
 		metadata.Metadata.Version = "1.0.0"
 	}
 
+	// Generate a version if not specified
+	version := metadata.Metadata.Version
+	if version == "" {
+		version = fmt.Sprintf("v%d", time.Now().UnixNano())
+	}
+
 	// Create flow item
 	now := time.Now().Unix()
 	item := dynamoDBFlowItem{
@@ -241,7 +345,7 @@ func (s *DynamoDBFlowStore) SaveFlow(accountID, flowID string, definition []byte
 		Definition:  string(definition),
 		Name:        metadata.Metadata.Name,
 		Description: metadata.Metadata.Description,
-		Version:     metadata.Metadata.Version,
+		Version:     version,
 		UpdatedAt:   now,
 	}
 
@@ -288,6 +392,40 @@ func (s *DynamoDBFlowStore) SaveFlow(accountID, flowID string, definition []byte
 
 	if err != nil {
 		return fmt.Errorf("failed to save flow: %w", err)
+	}
+
+	// Also save as a version
+	versionItem := struct {
+		AccountID   string `json:"AccountID"`
+		FlowID      string `json:"FlowID"`
+		Version     string `json:"Version"`
+		Description string `json:"Description"`
+		Definition  string `json:"Definition"`
+		CreatedAt   int64  `json:"CreatedAt"`
+		CreatedBy   string `json:"CreatedBy,omitempty"`
+	}{
+		AccountID:   accountID,
+		FlowID:      flowID,
+		Version:     version,
+		Description: metadata.Metadata.Description,
+		Definition:  string(definition),
+		CreatedAt:   now,
+	}
+
+	// Marshal version item
+	versionAV, err := dynamodbattribute.MarshalMap(versionItem)
+	if err != nil {
+		return fmt.Errorf("failed to marshal flow version item: %w", err)
+	}
+
+	// Save flow version
+	_, err = s.client.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(s.tableName + "_versions"),
+		Item:      versionAV,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to save flow version: %w", err)
 	}
 
 	return nil
@@ -358,7 +496,7 @@ func (s *DynamoDBFlowStore) ListFlows(accountID string) ([]string, error) {
 	return flowIDs, nil
 }
 
-// DeleteFlow removes a flow definition
+// DeleteFlow removes a flow definition and all its versions
 func (s *DynamoDBFlowStore) DeleteFlow(accountID, flowID string) error {
 	// Delete flow
 	_, err := s.client.DeleteItem(&dynamodb.DeleteItemInput{
@@ -379,6 +517,32 @@ func (s *DynamoDBFlowStore) DeleteFlow(accountID, flowID string) error {
 			return ErrFlowNotFound
 		}
 		return fmt.Errorf("failed to delete flow: %w", err)
+	}
+
+	// Delete all versions of the flow
+	// First, query to get all versions
+	versions, err := s.ListFlowVersions(accountID, flowID)
+	if err != nil {
+		return fmt.Errorf("failed to list flow versions for deletion: %w", err)
+	}
+
+	// Delete each version
+	for _, version := range versions {
+		_, err := s.client.DeleteItem(&dynamodb.DeleteItemInput{
+			TableName: aws.String(s.tableName + "_versions"),
+			Key: map[string]*dynamodb.AttributeValue{
+				"AccountID": {
+					S: aws.String(accountID),
+				},
+				"FlowID": {
+					S: aws.String(flowID),
+				},
+			},
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to delete flow version %s: %w", version, err)
+		}
 	}
 
 	return nil
@@ -1390,3 +1554,186 @@ func (s *DynamoDBAccountStore) DeleteAccount(accountID string) error {
 
 	return nil
 }
+
+// SaveFlowVersion persists a new version of a flow definition
+func (s *DynamoDBFlowStore) SaveFlowVersion(accountID, flowID string, definition []byte, version string) error {
+	// Extract metadata from the definition
+	var metadata struct {
+		Metadata struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			Version     string `json:"version"`
+		} `json:"metadata"`
+	}
+
+	if err := json.Unmarshal(definition, &metadata); err != nil {
+		// If we can't extract metadata, just use empty values
+		metadata.Metadata.Name = flowID
+		metadata.Metadata.Description = ""
+	}
+
+	// First, update the main flow record with the new version
+	now := time.Now().Unix()
+	item := dynamoDBFlowItem{
+		AccountID:   accountID,
+		FlowID:      flowID,
+		Definition:  string(definition),
+		Name:        metadata.Metadata.Name,
+		Description: metadata.Metadata.Description,
+		Version:     version,
+		UpdatedAt:   now,
+	}
+
+	// Check if flow already exists
+	result, err := s.client.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(s.tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"AccountID": {
+				S: aws.String(accountID),
+			},
+			"FlowID": {
+				S: aws.String(flowID),
+			},
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to check if flow exists: %w", err)
+	}
+
+	if result.Item == nil {
+		return ErrFlowNotFound
+	}
+
+	// Existing flow, preserve creation time
+	var existingItem dynamoDBFlowItem
+	if err := dynamodbattribute.UnmarshalMap(result.Item, &existingItem); err != nil {
+		return fmt.Errorf("failed to unmarshal existing flow: %w", err)
+	}
+	item.CreatedAt = existingItem.CreatedAt
+
+	// Marshal item
+	av, err := dynamodbattribute.MarshalMap(item)
+	if err != nil {
+		return fmt.Errorf("failed to marshal flow item: %w", err)
+	}
+
+	// Update flow
+	_, err = s.client.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(s.tableName),
+		Item:      av,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to update flow: %w", err)
+	}
+
+	// Then, store the version in the flow_versions table
+	versionItem := struct {
+		AccountID   string `json:"AccountID"`
+		FlowID      string `json:"FlowID"`
+		Version     string `json:"Version"`
+		Description string `json:"Description"`
+		Definition  string `json:"Definition"`
+		CreatedAt   int64  `json:"CreatedAt"`
+		CreatedBy   string `json:"CreatedBy,omitempty"`
+	}{
+		AccountID:   accountID,
+		FlowID:      flowID,
+		Version:     version,
+		Description: metadata.Metadata.Description,
+		Definition:  string(definition),
+		CreatedAt:   now,
+	}
+
+	// Marshal version item
+	versionAV, err := dynamodbattribute.MarshalMap(versionItem)
+	if err != nil {
+		return fmt.Errorf("failed to marshal flow version item: %w", err)
+	}
+
+	// Save flow version
+	_, err = s.client.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(s.tableName + "_versions"),
+		Item:      versionAV,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to save flow version: %w", err)
+	}
+
+	return nil
+}
+
+// GetFlowVersion retrieves a specific version of a flow definition
+func (s *DynamoDBFlowStore) GetFlowVersion(accountID, flowID, version string) ([]byte, error) {
+	// Get flow version
+	result, err := s.client.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(s.tableName + "_versions"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"AccountID": {
+				S: aws.String(accountID),
+			},
+			"FlowID": {
+				S: aws.String(flowID),
+			},
+			"Version": {
+				S: aws.String(version),
+			},
+		},
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get flow version: %w", err)
+	}
+
+	if result.Item == nil {
+		return nil, ErrFlowNotFound
+	}
+
+	// Unmarshal item
+	var item struct {
+		Definition string `json:"Definition"`
+	}
+	if err := dynamodbattribute.UnmarshalMap(result.Item, &item); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal flow version item: %w", err)
+	}
+
+	return []byte(item.Definition), nil
+}
+
+// ListFlowVersions returns all versions of a flow
+func (s *DynamoDBFlowStore) ListFlowVersions(accountID, flowID string) ([]string, error) {
+	// Create query expression
+	keyCond := expression.Key("AccountID").Equal(expression.Value(accountID)).
+		And(expression.Key("FlowID").Equal(expression.Value(flowID)))
+	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build expression: %w", err)
+	}
+
+	// Query flow versions
+	result, err := s.client.Query(&dynamodb.QueryInput{
+		TableName:                 aws.String(s.tableName + "_versions"),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query flow versions: %w", err)
+	}
+
+	// Extract versions
+	versions := make([]string, 0, len(result.Items))
+	for _, item := range result.Items {
+		version := item["Version"].S
+		if version != nil {
+			versions = append(versions, *version)
+		}
+	}
+
+	return versions, nil
+}
+
+// SaveFlowVersion persists a new version of a flow definition
