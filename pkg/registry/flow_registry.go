@@ -88,6 +88,10 @@ func (r *FlowRegistryService) List(accountID string) ([]FlowInfo, error) {
 			Version:     metadata.Version,
 			CreatedAt:   time.Unix(metadata.CreatedAt, 0),
 			UpdatedAt:   time.Unix(metadata.UpdatedAt, 0),
+			Tags:        metadata.Tags,
+			Category:    metadata.Category,
+			Status:      metadata.Status,
+			Custom:      metadata.Custom,
 		}
 	}
 

@@ -55,6 +55,12 @@ type FlowStore interface {
 
 	// ListFlowsWithMetadata returns all flows with metadata for an account
 	ListFlowsWithMetadata(accountID string) ([]FlowMetadata, error)
+	
+	// UpdateFlowMetadata updates the metadata for a flow
+	UpdateFlowMetadata(accountID, flowID string, metadata FlowMetadata) error
+	
+	// SearchFlows searches for flows based on metadata filters
+	SearchFlows(accountID string, filters map[string]interface{}) ([]FlowMetadata, error)
 }
 
 // FlowMetadata contains information about a stored flow
@@ -79,6 +85,18 @@ type FlowMetadata struct {
 
 	// UpdatedAt is when the flow was last updated
 	UpdatedAt int64 `json:"updated_at"`
+	
+	// Tags for categorizing and searching flows
+	Tags []string `json:"tags,omitempty"`
+	
+	// Category for grouping flows
+	Category string `json:"category,omitempty"`
+	
+	// Status of the flow (e.g., "draft", "published", "archived")
+	Status string `json:"status,omitempty"`
+	
+	// Custom metadata fields
+	Custom map[string]interface{} `json:"custom,omitempty"`
 }
 
 // FlowVersion contains information about a specific version of a flow

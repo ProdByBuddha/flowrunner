@@ -1,0 +1,4 @@
+# github.com/tcmartin/flowrunner/pkg/storage
+pkg/storage/flow_metadata.go:31:31: undefined: time
+FAIL	github.com/tcmartin/flowrunner/pkg/registry [build failed]
+FAIL

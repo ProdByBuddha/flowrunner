@@ -1,0 +1,13 @@
+=== RUN   TestFlowVersioningAndMetadata
+    final_verification_test.go:32: Created flow with ID: test-flow-1752866596977219000
+    final_verification_test.go:47: Successfully updated metadata
+    final_verification_test.go:67: Successfully created version 1.1.0
+    final_verification_test.go:74: Found 2 versions
+    final_verification_test.go:76: Version 0: 1.0.0
+    final_verification_test.go:76: Version 1: 1.1.0
+    final_verification_test.go:84: Successfully retrieved version 1.0.0: 160 bytes
+    final_verification_test.go:90: Successfully retrieved version 1.1.0: 197 bytes
+    final_verification_test.go:100: Found 1 flows matching metadata criteria
+--- PASS: TestFlowVersioningAndMetadata (0.00s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/registry	0.303s
