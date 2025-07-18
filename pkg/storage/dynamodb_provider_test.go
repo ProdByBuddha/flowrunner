@@ -184,6 +184,14 @@ func TestDynamoDBFlowStore(t *testing.T) {
 	})
 	if err != nil {
 		t.Logf("Failed to delete table %s: %v", store.tableName, err)
+	} else {
+		// Wait for table to be deleted
+		werr := client.WaitUntilTableNotExists(&dynamodb.DescribeTableInput{
+			TableName: aws.String(store.tableName),
+		})
+		if werr != nil {
+			t.Logf("Failed to wait for table %s to be deleted: %v", store.tableName, werr)
+		}
 	}
 }
 
