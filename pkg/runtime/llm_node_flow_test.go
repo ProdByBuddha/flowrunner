@@ -271,6 +271,28 @@ Best regards,
 		return "success", nil
 	}
 
+	// Add a post-processing function to the LLM node to update the email body
+	llmNodeWrapper.post = func(shared, params, result interface{}) (flowlib.Action, error) {
+		// Extract the LLM response
+		llmResult, ok := result.(map[string]interface{})
+		if !ok {
+			return "", fmt.Errorf("expected map[string]interface{}, got %T", result)
+		}
+
+		// Get the content from the LLM response
+		content, ok := llmResult["content"].(string)
+		if !ok {
+			return "", fmt.Errorf("expected string content in LLM response")
+		}
+
+		// Update the email node parameters with the LLM-generated content
+		emailParams := emailNode.(*NodeWrapper).Params()
+		emailParams["body"] = content
+		emailNode.(*NodeWrapper).SetParams(emailParams)
+
+		return flowlib.DefaultAction, nil
+	}
+
 	// Create a flow with the nodes
 	// HTTP -> LLM -> Email
 	httpNode.Next("success", llmNode)

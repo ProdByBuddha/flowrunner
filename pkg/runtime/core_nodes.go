@@ -24,6 +24,8 @@ func CoreNodeTypes() map[string]NodeFactory {
 		"email.receive": NewIMAPNodeWrapper,
 		"agent":         NewAgentNodeWrapper,
 		"webhook":       NewWebhookNodeWrapper,
+		"dynamodb":      NewDynamoDBNodeWrapper,
+		"postgres":      NewPostgresNodeWrapper,
 	}
 }
 

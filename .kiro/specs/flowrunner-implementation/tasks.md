@@ -9,14 +9,14 @@
 
 - [ ] 2. Implement YAML loader and schema validation
 
-  - [ ] 2.1 Define YAML schema for flow definitions
+  - [x] 2.1 Define YAML schema for flow definitions
 
     - Create schema for nodes, edges, parameters, and metadata
     - Support JavaScript hooks in schema
     - Support expression evaluation syntax
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 2.2 Implement YAML parser and validator
+  - [x] 2.2 Implement YAML parser and validator
 
     - Create parser that converts YAML to internal representation
     - Implement validation logic for schema conformance
@@ -43,14 +43,14 @@
     - Support basic CRUD operations for all entity types
     - _Requirements: 1.3, 1.4, 1.5_
 
-  - [ ] 3.3 Implement DynamoDB storage provider
+  - [x] 3.3 Implement DynamoDB storage provider
 
     - Create DynamoDB table schemas for all entity types
     - Implement provider using AWS SDK
     - Add configuration for AWS credentials and region
     - _Requirements: 1.3, 1.4, 1.5_
 
-  - [ ] 3.4 Implement PostgreSQL storage provider
+  - [x] 3.4 Implement PostgreSQL storage provider
     - Create database schema for all entity types
     - Implement provider using database/sql or ORM
     - Add connection pooling and retry logic
@@ -173,14 +173,14 @@
 
 - [ ] 9. Implement core node types
 
-  - [ ] 9.1 Create HTTP request node
+  - [x] 9.1 Create HTTP request node
 
     - Implement configurable HTTP client
     - Support all HTTP methods
     - Add response parsing options
     - _Requirements: 4.3_
 
-  - [ ] 9.2 Implement email nodes (SMTP/IMAP)
+  - [x] 9.2 Implement email nodes (SMTP/IMAP)
 
     - Create email sending capability
     - Add email receiving and filtering
@@ -199,13 +199,13 @@
     - Support basic operations (get, set, delete)
     - Add query capabilities
     - _Requirements: 4.3_
-  - [ ] 9.5 Implement DynamoDB store node
+  - [x] 9.5 Implement DynamoDB store node
     - Create DynamoDB client integration
     - Support CRUD operations for items
     - Add query and scan capabilities
     - Support batch operations
     - _Requirements: 4.3_
-  - [ ] 9.6 Implement PostgreSQL store node
+  - [x] 9.6 Implement PostgreSQL store node
 
     - Create PostgreSQL client integration
     - Support SQL query execution
@@ -213,12 +213,22 @@
     - Implement parameterized queries
     - _Requirements: 4.3_
 
-  - [ ] 9.7 Create AI agent node
+  - [x] 9.7 Create AI agent node
     - Implement agent with reasoning capabilities
     - Support tool use and multi-step reasoning
     - Add context management
     - _Requirements: 4.3_
-  - [ ] 9.8 Implement RAG (Retrieval-Augmented Generation) node
+  - [x] 9.8 Implement cron node
+    - Create scheduling capabilities
+    - Support cron expression syntax
+    - Add job management (create, list, delete)
+    - _Requirements: 4.3_
+  - [x] 9.9 Implement wait node
+    - Support duration-based waiting
+    - Add time-based waiting until specific timestamp
+    - Implement conditional waiting
+    - _Requirements: 4.3_
+  - [ ] 9.10 Implement RAG (Retrieval-Augmented Generation) node
     - Create vector database integration
     - Support document chunking and embedding
     - Implement semantic search capabilities
