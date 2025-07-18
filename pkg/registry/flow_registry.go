@@ -49,19 +49,8 @@ func (r *FlowRegistryService) Create(accountID string, name string, yamlContent 
 	flowID := fmt.Sprintf("%s-%d", name, time.Now().UnixNano())
 
 	// Create flow metadata and save it with the flow definition
-	now := time.Now().Unix()
-	metadata := storage.FlowMetadata{
-		ID:          flowID,
-		AccountID:   accountID,
-		Name:        flowDef.Metadata.Name,
-		Description: flowDef.Metadata.Description,
-		Version:     flowDef.Metadata.Version,
-		CreatedAt:   now,
-		UpdatedAt:   now,
-	}
-
-	// Save the flow definition with metadata
 	// Note: The FlowStore implementation should handle storing the metadata
+	// We don't need to explicitly pass the metadata as the FlowStore will extract it from the YAML content
 	if err := r.flowStore.SaveFlow(accountID, flowID, []byte(yamlContent)); err != nil {
 		return "", fmt.Errorf("failed to save flow: %w", err)
 	}
