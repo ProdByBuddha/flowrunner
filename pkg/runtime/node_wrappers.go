@@ -50,6 +50,27 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 
 		// Store the result in the shared context if it's a map
 		if sharedMap, ok := shared.(map[string]interface{}); ok {
+			// Store the result with a type-specific key
+			nodeType := "result"
+			if typeParam, ok := params["type"].(string); ok {
+				nodeType = typeParam
+			} else {
+				// Try to determine the node type from the parameters
+				if _, ok := params["url"]; ok {
+					nodeType = "http"
+				} else if _, ok := params["smtp_host"]; ok {
+					nodeType = "email"
+				} else if _, ok := params["model"]; ok {
+					nodeType = "llm"
+				} else if _, ok := params["operation"]; ok {
+					nodeType = "store"
+				}
+			}
+
+			// Store the result with the node type as the key
+			sharedMap[nodeType+"_result"] = result
+
+			// Also store in the generic "result" key for backward compatibility
 			sharedMap["result"] = result
 		}
 
