@@ -650,7 +650,10 @@ func (s *PostgreSQLExecutionStore) GetExecution(executionID string) (runtime.Exe
 	var resultsJSON []byte
 	var endTime sql.NullTime
 
-	var accountID string // We'll ignore this since ExecutionStatus doesn't have AccountID
+	var accountID string         // We'll ignore this since ExecutionStatus doesn't have AccountID
+	var errorText sql.NullString // Use sql.NullString for nullable fields
+	var currentNode sql.NullString
+	var progress sql.NullFloat64 // Use sql.NullFloat64 for nullable float fields
 	err := s.db.QueryRow(
 		`SELECT 
 			id, 
@@ -672,11 +675,22 @@ func (s *PostgreSQLExecutionStore) GetExecution(executionID string) (runtime.Exe
 		&execution.Status,
 		&execution.StartTime,
 		&endTime,
-		&execution.Error,
+		&errorText,
 		&resultsJSON,
-		&execution.Progress,
-		&execution.CurrentNode,
+		&progress,
+		&currentNode,
 	)
+
+	// Handle nullable fields
+	if errorText.Valid {
+		execution.Error = errorText.String
+	}
+	if currentNode.Valid {
+		execution.CurrentNode = currentNode.String
+	}
+	if progress.Valid {
+		execution.Progress = progress.Float64
+	}
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -729,7 +743,9 @@ func (s *PostgreSQLExecutionStore) ListExecutions(accountID string) ([]runtime.E
 		var resultsJSON []byte
 		var endTime sql.NullTime
 
-		var accountID string // Local variable for account ID
+		var accountID string         // Local variable for account ID
+		var errorText sql.NullString // Use sql.NullString for nullable fields
+		var currentNode sql.NullString
 		if err := rows.Scan(
 			&execution.ID,
 			&execution.FlowID,
@@ -737,10 +753,10 @@ func (s *PostgreSQLExecutionStore) ListExecutions(accountID string) ([]runtime.E
 			&execution.Status,
 			&execution.StartTime,
 			&endTime,
-			&execution.Error,
+			&errorText,
 			&resultsJSON,
 			&execution.Progress,
-			&execution.CurrentNode,
+			&currentNode,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan execution: %w", err)
 		}

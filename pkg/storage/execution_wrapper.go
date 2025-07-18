@@ -35,7 +35,7 @@ type AccountAwareExecutionStore interface {
 
 // Helper function to get account ID from execution store if it supports it
 func GetAccountID(store ExecutionStore, executionID string) (string, bool) {
-	if accountAware, ok := store.(AccountAwareExecutionStore); ok {
+	if _, ok := store.(AccountAwareExecutionStore); ok {
 		// If the store implements the extended interface, use it
 		return "", false // Not implemented yet
 	}

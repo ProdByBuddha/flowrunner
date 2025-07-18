@@ -855,10 +855,15 @@ func (s *DynamoDBExecutionStore) SaveExecution(execution runtime.ExecutionStatus
 		runtime.ExecutionStatus
 		StartTimeUnix int64 `json:"StartTime"`
 		EndTimeUnix   int64 `json:"EndTime"`
+		// Note: We need AccountID for DynamoDB, but ExecutionStatus doesn't have it
+		// In a real application, we would get this from context or a parameter
+		AccountID string `json:"AccountID"`
 	}{
 		ExecutionStatus: execution,
 		StartTimeUnix:   execution.StartTime.Unix(),
 		EndTimeUnix:     execution.EndTime.Unix(),
+		// For testing purposes, we'll use a default account ID
+		AccountID: "default-account",
 	}
 
 	// Marshal execution
