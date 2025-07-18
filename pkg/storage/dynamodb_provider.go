@@ -971,13 +971,15 @@ func (s *DynamoDBExecutionStore) SaveExecutionLog(executionID string, log runtim
 		ExecutionID string `json:"ExecutionID"`
 		Timestamp   int64  `json:"Timestamp"`
 		NodeID      string `json:"NodeID"`
-		Event       string `json:"Event"`
+		Level       string `json:"Level"`
+		Message     string `json:"Message"`
 		Data        string `json:"Data"`
 	}{
 		ExecutionID: executionID,
 		Timestamp:   log.Timestamp.UnixNano(),
 		NodeID:      log.NodeID,
-		Event:       log.Event,
+		Level:       log.Level,
+		Message:     log.Message,
 	}
 
 	// Marshal log data to JSON
@@ -1037,7 +1039,8 @@ func (s *DynamoDBExecutionStore) GetExecutionLogs(executionID string) ([]runtime
 			ExecutionID string `json:"ExecutionID"`
 			Timestamp   int64  `json:"Timestamp"`
 			NodeID      string `json:"NodeID"`
-			Event       string `json:"Event"`
+			Level       string `json:"Level"`
+			Message     string `json:"Message"`
 			Data        string `json:"Data"`
 		}
 		if err := dynamodbattribute.UnmarshalMap(item, &logItem); err != nil {
@@ -1048,7 +1051,8 @@ func (s *DynamoDBExecutionStore) GetExecutionLogs(executionID string) ([]runtime
 		log := runtime.ExecutionLog{
 			Timestamp: time.Unix(0, logItem.Timestamp),
 			NodeID:    logItem.NodeID,
-			Event:     logItem.Event,
+			Level:     logItem.Level,
+			Message:   logItem.Message,
 		}
 
 		// Unmarshal data if present

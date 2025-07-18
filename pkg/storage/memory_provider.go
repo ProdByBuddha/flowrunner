@@ -310,7 +310,7 @@ func (s *MemorySecretStore) DeleteSecret(accountID, key string) error {
 
 // MemoryExecutionStore implements the ExecutionStore interface using in-memory storage
 type MemoryExecutionStore struct {
-	executions map[string]runtime.ExecutionStatus
+	executions map[string]ExecutionWrapper
 	logs       map[string][]runtime.ExecutionLog
 	mu         sync.RWMutex
 }
@@ -318,7 +318,7 @@ type MemoryExecutionStore struct {
 // NewMemoryExecutionStore creates a new in-memory execution store
 func NewMemoryExecutionStore() *MemoryExecutionStore {
 	return &MemoryExecutionStore{
-		executions: make(map[string]runtime.ExecutionStatus),
+		executions: make(map[string]ExecutionWrapper),
 		logs:       make(map[string][]runtime.ExecutionLog),
 	}
 }
@@ -328,8 +328,17 @@ func (s *MemoryExecutionStore) SaveExecution(execution runtime.ExecutionStatus) 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// Get existing wrapper if it exists to preserve the account ID
+	var accountID string
+	if wrapper, ok := s.executions[execution.ID]; ok {
+		accountID = wrapper.AccountID
+	}
+
 	// Store the execution
-	s.executions[execution.ID] = execution
+	s.executions[execution.ID] = ExecutionWrapper{
+		ExecutionStatus: execution,
+		AccountID:       accountID,
+	}
 
 	return nil
 }
@@ -340,12 +349,12 @@ func (s *MemoryExecutionStore) GetExecution(executionID string) (runtime.Executi
 	defer s.mu.RUnlock()
 
 	// Check if execution exists
-	execution, ok := s.executions[executionID]
+	wrapper, ok := s.executions[executionID]
 	if !ok {
 		return runtime.ExecutionStatus{}, ErrExecutionNotFound
 	}
 
-	return execution, nil
+	return wrapper.ExecutionStatus, nil
 }
 
 // ListExecutions returns all executions for an account
@@ -355,9 +364,9 @@ func (s *MemoryExecutionStore) ListExecutions(accountID string) ([]runtime.Execu
 
 	// Get all executions for the account
 	executionList := make([]runtime.ExecutionStatus, 0)
-	for _, execution := range s.executions {
-		if execution.AccountID == accountID {
-			executionList = append(executionList, execution)
+	for _, wrapper := range s.executions {
+		if wrapper.AccountID == accountID {
+			executionList = append(executionList, wrapper.ExecutionStatus)
 		}
 	}
 
