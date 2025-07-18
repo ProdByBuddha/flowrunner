@@ -47,17 +47,19 @@ nodes:
 	v1YAML, err := registry.GetVersion("account1", flowID, "1.0.0")
 	if err != nil {
 		t.Errorf("Expected no error getting version 1.0.0, got %v", err)
-	}
-	if v1YAML != yamlContent {
-		t.Errorf("Expected original content for version 1.0.0, got different content")
+	} else {
+		if v1YAML != yamlContent {
+			t.Errorf("Expected original content for version 1.0.0, got different content")
+		}
 	}
 
 	v2YAML, err := registry.GetVersion("account1", flowID, "1.1.0")
 	if err != nil {
 		t.Errorf("Expected no error getting version 1.1.0, got %v", err)
-	}
-	if v2YAML != updatedYAML {
-		t.Errorf("Expected updated content for version 1.1.0, got different content")
+	} else {
+		if v2YAML != updatedYAML {
+			t.Errorf("Expected updated content for version 1.1.0, got different content")
+		}
 	}
 
 	// Test listing versions

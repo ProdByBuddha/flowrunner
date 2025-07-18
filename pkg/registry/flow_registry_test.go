@@ -7,6 +7,7 @@ import (
 
 	"github.com/tcmartin/flowlib"
 	"github.com/tcmartin/flowrunner/pkg/storage"
+	"gopkg.in/yaml.v3"
 )
 
 // MockFlowStore is a mock implementation of storage.FlowStore for testing
@@ -32,18 +33,42 @@ func (m *MockFlowStore) SaveFlow(accountID, flowID string, definition []byte) er
 	}
 	m.flows[accountID][flowID] = definition
 
-	// Generate a version
+	// Parse the YAML to extract version info (simplified for testing)
+	var flowDef struct {
+		Metadata struct {
+			Name        string `yaml:"name"`
+			Description string `yaml:"description"`
+			Version     string `yaml:"version"`
+		} `yaml:"metadata"`
+	}
+	
+	// Default version if parsing fails
 	version := "1.0.0"
+	name := "Test Flow"
+	description := ""
+	
+	// Try to parse version from YAML
+	if err := yaml.Unmarshal(definition, &flowDef); err == nil {
+		if flowDef.Metadata.Version != "" {
+			version = flowDef.Metadata.Version
+		}
+		if flowDef.Metadata.Name != "" {
+			name = flowDef.Metadata.Name
+		}
+		description = flowDef.Metadata.Description
+	}
+	
 	now := time.Now().Unix()
 
-	// Extract metadata from the definition (simplified for testing)
+	// Create metadata with parsed information
 	meta := storage.FlowMetadata{
-		ID:        flowID,
-		AccountID: accountID,
-		Name:      "Test Flow",
-		Version:   version,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:          flowID,
+		AccountID:   accountID,
+		Name:        name,
+		Description: description,
+		Version:     version,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 	m.metadata[accountID][flowID] = meta
 
@@ -108,8 +133,25 @@ func (m *MockFlowStore) SaveFlowVersion(accountID, flowID string, definition []b
 	// Update the main flow definition to latest version
 	m.flows[accountID][flowID] = definition
 
-	// Update metadata
+	// Parse the YAML to extract metadata (simplified for testing)
+	var flowDef struct {
+		Metadata struct {
+			Name        string `yaml:"name"`
+			Description string `yaml:"description"`
+		} `yaml:"metadata"`
+	}
+	
+	// Get existing metadata and update it
 	meta := m.metadata[accountID][flowID]
+	
+	// Try to parse metadata from YAML
+	if err := yaml.Unmarshal(definition, &flowDef); err == nil {
+		if flowDef.Metadata.Name != "" {
+			meta.Name = flowDef.Metadata.Name
+		}
+		meta.Description = flowDef.Metadata.Description
+	}
+	
 	meta.Version = version
 	meta.UpdatedAt = time.Now().Unix()
 	m.metadata[accountID][flowID] = meta
@@ -183,14 +225,20 @@ func (m *MockYAMLLoader) Validate(yamlContent string) error {
 	if m.validateFunc != nil {
 		return m.validateFunc(yamlContent)
 	}
-	return nil
+	// Basic validation - check if it's valid YAML
+	var data interface{}
+	err := yaml.Unmarshal([]byte(yamlContent), &data)
+	return err
 }
 
 func (m *MockYAMLLoader) Parse(yamlContent string) (*flowlib.Flow, error) {
 	if m.parseFunc != nil {
 		return m.parseFunc(yamlContent)
 	}
-	return nil, nil
+	
+	// Create a simple flow for testing
+	flow := &flowlib.Flow{}
+	return flow, nil
 }
 
 func TestFlowRegistryCreate(t *testing.T) {
