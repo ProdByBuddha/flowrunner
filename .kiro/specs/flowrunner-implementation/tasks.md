@@ -56,7 +56,7 @@
     - Add connection pooling and retry logic
     - _Requirements: 1.3, 1.4, 1.5_
 
-- [-] 4. Implement flow registry and management
+- [x] 4. Implement flow registry and management
 
   - [x] 4.1 Create flow registry service
 
@@ -71,7 +71,7 @@
     - Support retrieving specific versions
     - _Requirements: 1.3, 1.4_
 
-  - [ ] 4.3 Add flow metadata management
+  - [x] 4.3 Add flow metadata management
     - Store and retrieve flow metadata
     - Support searching and filtering flows
     - _Requirements: 1.3, 1.4, 8.4_
