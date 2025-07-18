@@ -97,6 +97,60 @@ func (m *MockFlowStore) DeleteFlow(accountID, flowID string) error {
 	return nil
 }
 
+func (m *MockFlowStore) SaveFlowVersion(accountID, flowID string, definition []byte, version string) error {
+	if _, ok := m.flows[accountID]; !ok {
+		return errors.New("account not found")
+	}
+	if _, ok := m.flows[accountID][flowID]; !ok {
+		return errors.New("flow not found")
+	}
+
+	// Update the main flow definition to latest version
+	m.flows[accountID][flowID] = definition
+
+	// Update metadata
+	meta := m.metadata[accountID][flowID]
+	meta.Version = version
+	meta.UpdatedAt = time.Now().Unix()
+	m.metadata[accountID][flowID] = meta
+
+	// Store the version
+	if _, ok := m.versions[accountID][flowID]; !ok {
+		m.versions[accountID][flowID] = make(map[string][]byte)
+	}
+	m.versions[accountID][flowID][version] = definition
+
+	return nil
+}
+
+func (m *MockFlowStore) GetFlowVersion(accountID, flowID, version string) ([]byte, error) {
+	if _, ok := m.versions[accountID]; !ok {
+		return nil, errors.New("account not found")
+	}
+	if _, ok := m.versions[accountID][flowID]; !ok {
+		return nil, errors.New("flow not found")
+	}
+	if def, ok := m.versions[accountID][flowID][version]; ok {
+		return def, nil
+	}
+	return nil, errors.New("flow version not found")
+}
+
+func (m *MockFlowStore) ListFlowVersions(accountID, flowID string) ([]string, error) {
+	if _, ok := m.versions[accountID]; !ok {
+		return nil, errors.New("account not found")
+	}
+	if _, ok := m.versions[accountID][flowID]; !ok {
+		return nil, errors.New("flow not found")
+	}
+
+	versions := make([]string, 0, len(m.versions[accountID][flowID]))
+	for version := range m.versions[accountID][flowID] {
+		versions = append(versions, version)
+	}
+	return versions, nil
+}
+
 func (m *MockFlowStore) GetFlowMetadata(accountID, flowID string) (storage.FlowMetadata, error) {
 	if _, ok := m.metadata[accountID]; !ok {
 		return storage.FlowMetadata{}, errors.New("account not found")
@@ -410,65 +464,7 @@ nodes:
 	}
 }
 
-// SaveFlowVersion persists a new version of a flow definition
-func (m *MockFlowStore) SaveFlowVersion(accountID, flowID string, definition []byte, version string) error {
-	if _, ok := m.flows[accountID]; !ok {
-		return errors.New("account not found")
-	}
-	if _, ok := m.flows[accountID][flowID]; !ok {
-		return errors.New("flow not found")
-	}
-
-	// Update the main flow with the new version
-	m.flows[accountID][flowID] = definition
-
-	// Update metadata with the new version
-	meta := m.metadata[accountID][flowID]
-	meta.Version = version
-	meta.UpdatedAt = time.Now().Unix()
-	m.metadata[accountID][flowID] = meta
-
-	// Store the version
-	if _, ok := m.versions[accountID]; !ok {
-		m.versions[accountID] = make(map[string]map[string][]byte)
-	}
-	if _, ok := m.versions[accountID][flowID]; !ok {
-		m.versions[accountID][flowID] = make(map[string][]byte)
-	}
-	m.versions[accountID][flowID][version] = definition
-
-	return nil
-}
-
-// GetFlowVersion retrieves a specific version of a flow definition
-func (m *MockFlowStore) GetFlowVersion(accountID, flowID, version string) ([]byte, error) {
-	if _, ok := m.versions[accountID]; !ok {
-		return nil, errors.New("account not found")
-	}
-	if _, ok := m.versions[accountID][flowID]; !ok {
-		return nil, errors.New("flow not found")
-	}
-	if def, ok := m.versions[accountID][flowID][version]; ok {
-		return def, nil
-	}
-	return nil, errors.New("flow version not found")
-}
-
-// ListFlowVersions returns all versions of a flow
-func (m *MockFlowStore) ListFlowVersions(accountID, flowID string) ([]string, error) {
-	if _, ok := m.versions[accountID]; !ok {
-		return []string{}, nil
-	}
-	if _, ok := m.versions[accountID][flowID]; !ok {
-		return []string{}, nil
-	}
-
-	versions := make([]string, 0, len(m.versions[accountID][flowID]))
-	for version := range m.versions[accountID][flowID] {
-		versions = append(versions, version)
-	}
-	return versions, nil
-}
+// These methods are already implemented above
 func TestFlowRegistryVersioning(t *testing.T) {
 	mockStore := NewMockFlowStore()
 	mockLoader := &MockYAMLLoader{}
