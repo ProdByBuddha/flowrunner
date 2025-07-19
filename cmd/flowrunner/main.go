@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/tcmartin/flowrunner/pkg/api"
+	"github.com/tcmartin/flowrunner/pkg/auth"
 	"github.com/tcmartin/flowrunner/pkg/config"
 	"github.com/tcmartin/flowrunner/pkg/loader"
 	"github.com/tcmartin/flowrunner/pkg/registry"
@@ -303,8 +304,26 @@ func NewApp(cfg *config.Config) (*App, error) {
 		accountService = accountService.WithJWTService(cfg.Auth.JWTSecret, cfg.Auth.TokenExpiration)
 	}
 
+	// Create secret vault service with encryption
+	var secretVault auth.ExtendedSecretVault
+	if cfg.Auth.EncryptionKey != "" {
+		// Convert hex key to bytes
+		encryptionKey, err := services.EncryptionKeyFromHex(cfg.Auth.EncryptionKey)
+		if err != nil {
+			return nil, fmt.Errorf("invalid encryption key: %w", err)
+		}
+
+		secretVaultService, err := services.NewExtendedSecretVaultService(storageProvider.GetSecretStore(), encryptionKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create secret vault service: %w", err)
+		}
+		secretVault = secretVaultService
+	} else {
+		return nil, fmt.Errorf("encryption key is required for secret vault")
+	}
+
 	// Create API server
-	server := api.NewServer(cfg, flowRegistry, accountService)
+	server := api.NewServer(cfg, flowRegistry, accountService, secretVault)
 
 	return &App{
 		config:          cfg,

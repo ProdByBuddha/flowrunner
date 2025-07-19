@@ -117,8 +117,43 @@ func main() {
 
 	flowCmd.AddCommand(flowListCmd, flowCreateCmd, flowGetCmd, flowUpdateCmd, flowDeleteCmd)
 
+	// Secret commands
+	secretCmd := &cobra.Command{
+		Use:   "secret",
+		Short: "Secret management",
+	}
+
+	secretListCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List secret keys",
+		Run:   listSecrets,
+	}
+
+	secretGetCmd := &cobra.Command{
+		Use:   "get [key]",
+		Short: "Get a secret value",
+		Args:  cobra.ExactArgs(1),
+		Run:   getSecret,
+	}
+
+	secretSetCmd := &cobra.Command{
+		Use:   "set [key] [value]",
+		Short: "Set a secret value",
+		Args:  cobra.ExactArgs(2),
+		Run:   setSecret,
+	}
+
+	secretDeleteCmd := &cobra.Command{
+		Use:   "delete [key]",
+		Short: "Delete a secret",
+		Args:  cobra.ExactArgs(1),
+		Run:   deleteSecret,
+	}
+
+	secretCmd.AddCommand(secretListCmd, secretGetCmd, secretSetCmd, secretDeleteCmd)
+
 	// Add commands to root
-	rootCmd.AddCommand(accountCmd, flowCmd)
+	rootCmd.AddCommand(accountCmd, flowCmd, secretCmd)
 
 	// Execute
 	if err := rootCmd.Execute(); err != nil {
@@ -653,4 +688,340 @@ func deleteFlow(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println("Flow deleted successfully")
+}
+
+// Secret management functions
+
+// listSecrets lists all secret keys for the authenticated account
+func listSecrets(cmd *cobra.Command, args []string) {
+	if serverURL == "" {
+		fmt.Println("Error: Server URL is required")
+		os.Exit(1)
+	}
+
+	// Get account info to get account ID
+	accountID, err := getAccountID()
+	if err != nil {
+		fmt.Printf("Error getting account ID: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create request
+	req, err := http.NewRequest(
+		http.MethodGet,
+		fmt.Sprintf("%s/api/v1/accounts/%s/secrets/keys", serverURL, accountID),
+		nil,
+	)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Add authentication
+	if token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	} else if username != "" && password != "" {
+		req.SetBasicAuth(username, password)
+	} else {
+		fmt.Println("Error: Authentication required")
+		os.Exit(1)
+	}
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	// Read response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Error: %s\n", body)
+		os.Exit(1)
+	}
+
+	// Parse and display response
+	var response map[string]interface{}
+	if err := json.Unmarshal(body, &response); err != nil {
+		fmt.Printf("Error parsing response: %v\n", err)
+		os.Exit(1)
+	}
+
+	keys := response["keys"].([]interface{})
+	total := response["total"].(float64)
+
+	fmt.Printf("Found %d secret(s):\n", int(total))
+	for _, key := range keys {
+		fmt.Printf("  %s\n", key)
+	}
+}
+
+// getSecret retrieves and displays a secret value
+func getSecret(cmd *cobra.Command, args []string) {
+	if serverURL == "" {
+		fmt.Println("Error: Server URL is required")
+		os.Exit(1)
+	}
+
+	key := args[0]
+
+	// Get account info to get account ID
+	accountID, err := getAccountID()
+	if err != nil {
+		fmt.Printf("Error getting account ID: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create request
+	req, err := http.NewRequest(
+		http.MethodGet,
+		fmt.Sprintf("%s/api/v1/accounts/%s/secrets/%s", serverURL, accountID, key),
+		nil,
+	)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Add authentication
+	if token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	} else if username != "" && password != "" {
+		req.SetBasicAuth(username, password)
+	} else {
+		fmt.Println("Error: Authentication required")
+		os.Exit(1)
+	}
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	// Read response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Error: %s\n", body)
+		os.Exit(1)
+	}
+
+	// Parse and display response
+	var response map[string]interface{}
+	if err := json.Unmarshal(body, &response); err != nil {
+		fmt.Printf("Error parsing response: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("%s\n", response["value"])
+}
+
+// setSecret creates or updates a secret
+func setSecret(cmd *cobra.Command, args []string) {
+	if serverURL == "" {
+		fmt.Println("Error: Server URL is required")
+		os.Exit(1)
+	}
+
+	key := args[0]
+	value := args[1]
+
+	// Get account info to get account ID
+	accountID, err := getAccountID()
+	if err != nil {
+		fmt.Printf("Error getting account ID: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create request body
+	requestBody := map[string]string{
+		"value": value,
+	}
+	jsonBody, err := json.Marshal(requestBody)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create request
+	req, err := http.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("%s/api/v1/accounts/%s/secrets/%s", serverURL, accountID, key),
+		bytes.NewBuffer(jsonBody),
+	)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	// Add authentication
+	if token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	} else if username != "" && password != "" {
+		req.SetBasicAuth(username, password)
+	} else {
+		fmt.Println("Error: Authentication required")
+		os.Exit(1)
+	}
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	// Read response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Check response status
+	if resp.StatusCode != http.StatusCreated {
+		fmt.Printf("Error: %s\n", body)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Secret '%s' set successfully\n", key)
+}
+
+// deleteSecret removes a secret
+func deleteSecret(cmd *cobra.Command, args []string) {
+	if serverURL == "" {
+		fmt.Println("Error: Server URL is required")
+		os.Exit(1)
+	}
+
+	key := args[0]
+
+	// Confirm deletion
+	fmt.Printf("Are you sure you want to delete secret '%s'? (y/N): ", key)
+	var confirm string
+	fmt.Scanln(&confirm)
+	if strings.ToLower(confirm) != "y" {
+		fmt.Println("Deletion cancelled")
+		return
+	}
+
+	// Get account info to get account ID
+	accountID, err := getAccountID()
+	if err != nil {
+		fmt.Printf("Error getting account ID: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create request
+	req, err := http.NewRequest(
+		http.MethodDelete,
+		fmt.Sprintf("%s/api/v1/accounts/%s/secrets/%s", serverURL, accountID, key),
+		nil,
+	)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Add authentication
+	if token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	} else if username != "" && password != "" {
+		req.SetBasicAuth(username, password)
+	} else {
+		fmt.Println("Error: Authentication required")
+		os.Exit(1)
+	}
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusNoContent {
+		body, _ := io.ReadAll(resp.Body)
+		fmt.Printf("Error: %s\n", body)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Secret '%s' deleted successfully\n", key)
+}
+
+// getAccountID retrieves the current account ID from the server
+func getAccountID() (string, error) {
+	// Create request to get account info
+	req, err := http.NewRequest(
+		http.MethodGet,
+		fmt.Sprintf("%s/api/v1/accounts/me", serverURL),
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	// Add authentication
+	if token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	} else if username != "" && password != "" {
+		req.SetBasicAuth(username, password)
+	} else {
+		return "", fmt.Errorf("authentication required")
+	}
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to get account info: status %d", resp.StatusCode)
+	}
+
+	// Parse response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var account map[string]interface{}
+	if err := json.Unmarshal(body, &account); err != nil {
+		return "", err
+	}
+
+	accountID, ok := account["id"].(string)
+	if !ok {
+		return "", fmt.Errorf("invalid account response format")
+	}
+
+	return accountID, nil
 }

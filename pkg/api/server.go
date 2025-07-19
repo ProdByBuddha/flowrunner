@@ -22,15 +22,17 @@ type Server struct {
 	server         *http.Server
 	flowRegistry   registry.FlowRegistry
 	accountService auth.AccountService
+	secretVault    auth.ExtendedSecretVault
 }
 
 // NewServer creates a new API server
-func NewServer(cfg *config.Config, flowRegistry registry.FlowRegistry, accountService auth.AccountService) *Server {
+func NewServer(cfg *config.Config, flowRegistry registry.FlowRegistry, accountService auth.AccountService, secretVault auth.ExtendedSecretVault) *Server {
 	s := &Server{
 		config:         cfg,
 		router:         mux.NewRouter(),
 		flowRegistry:   flowRegistry,
 		accountService: accountService,
+		secretVault:    secretVault,
 	}
 
 	s.setupRoutes()
@@ -106,6 +108,43 @@ func (s *Server) setupRoutes() {
 	accountsMgmt := authenticated.PathPrefix("/accounts").Subrouter()
 	accountsMgmt.HandleFunc("/me", s.handleGetCurrentAccount).Methods(http.MethodGet, http.MethodOptions)
 	accountsMgmt.HandleFunc("/refresh-token", s.handleRefreshToken).Methods(http.MethodPost, http.MethodOptions)
+
+	// Secret management routes (authenticated)
+	secrets := authenticated.PathPrefix("/accounts/{accountId}/secrets").Subrouter()
+	secrets.HandleFunc("", s.handleListSecrets).Methods(http.MethodGet, http.MethodOptions)
+	secrets.HandleFunc("/keys", s.handleSecretKeys).Methods(http.MethodGet, http.MethodOptions)
+	secrets.HandleFunc("/{key}", s.handleCreateSecret).Methods(http.MethodPost, http.MethodOptions)
+	secrets.HandleFunc("/{key}", s.handleGetSecret).Methods(http.MethodGet, http.MethodOptions)
+	secrets.HandleFunc("/{key}", s.handleUpdateSecret).Methods(http.MethodPut, http.MethodOptions)
+	secrets.HandleFunc("/{key}", s.handleDeleteSecret).Methods(http.MethodDelete, http.MethodOptions)
+
+	// Structured secret management routes (authenticated)
+	structuredSecrets := authenticated.PathPrefix("/accounts/{accountId}/structured-secrets").Subrouter()
+	structuredSecrets.HandleFunc("", s.handleListStructuredSecrets).Methods(http.MethodGet, http.MethodOptions)
+	structuredSecrets.HandleFunc("/search", s.handleSearchStructuredSecrets).Methods(http.MethodPost, http.MethodOptions)
+	structuredSecrets.HandleFunc("/{key}", s.handleCreateStructuredSecret).Methods(http.MethodPost, http.MethodOptions)
+	structuredSecrets.HandleFunc("/{key}", s.handleGetStructuredSecret).Methods(http.MethodGet, http.MethodOptions)
+	structuredSecrets.HandleFunc("/{key}", s.handleUpdateStructuredSecret).Methods(http.MethodPut, http.MethodOptions)
+	structuredSecrets.HandleFunc("/{key}", s.handleDeleteStructuredSecret).Methods(http.MethodDelete, http.MethodOptions)
+	structuredSecrets.HandleFunc("/{key}/field/{field}", s.handleGetStructuredSecretField).Methods(http.MethodGet, http.MethodOptions)
+	structuredSecrets.HandleFunc("/{key}/metadata", s.handleUpdateStructuredSecretMetadata).Methods(http.MethodPatch, http.MethodOptions)
+
+	// Type-specific structured secret routes
+	oauthSecrets := authenticated.PathPrefix("/accounts/{accountId}/oauth-secrets").Subrouter()
+	oauthSecrets.HandleFunc("/{key}", s.handleCreateOAuthSecret).Methods(http.MethodPost, http.MethodOptions)
+	oauthSecrets.HandleFunc("/{key}", s.handleGetOAuthSecret).Methods(http.MethodGet, http.MethodOptions)
+
+	apiKeySecrets := authenticated.PathPrefix("/accounts/{accountId}/api-key-secrets").Subrouter()
+	apiKeySecrets.HandleFunc("/{key}", s.handleCreateAPIKeySecret).Methods(http.MethodPost, http.MethodOptions)
+	apiKeySecrets.HandleFunc("/{key}", s.handleGetAPIKeySecret).Methods(http.MethodGet, http.MethodOptions)
+
+	dbSecrets := authenticated.PathPrefix("/accounts/{accountId}/database-secrets").Subrouter()
+	dbSecrets.HandleFunc("/{key}", s.handleCreateDatabaseSecret).Methods(http.MethodPost, http.MethodOptions)
+	dbSecrets.HandleFunc("/{key}", s.handleGetDatabaseSecret).Methods(http.MethodGet, http.MethodOptions)
+
+	jwtSecrets := authenticated.PathPrefix("/accounts/{accountId}/jwt-secrets").Subrouter()
+	jwtSecrets.HandleFunc("/{key}", s.handleCreateJWTSecret).Methods(http.MethodPost, http.MethodOptions)
+	jwtSecrets.HandleFunc("/{key}", s.handleGetJWTSecret).Methods(http.MethodGet, http.MethodOptions)
 
 	// Debug middleware to log all requests
 	s.router.Use(func(next http.Handler) http.Handler {
