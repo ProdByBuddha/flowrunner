@@ -326,14 +326,25 @@ Test specific node types:
 go run cmd/test_nodes/main.go openai anthropic template structured email
 ```
 
+## Documentation
+
+- **[Internal Progress Documentation](INTERNAL_PROGRESS.md)** - Detailed implementation status and technical architecture
+- **[Contributors Guide](CONTRIBUTORS.md)** - How to contribute and contributor recognition
+- **[Implementation Tasks](/.kiro/specs/flowrunner-implementation/tasks.md)** - Detailed task breakdown and requirements
+
 ## License
 
-[MIT License](LICENSE)
+This project is licensed under the [MIT License](LICENSE).
 
 ## Contributing
 
+We welcome contributions! Please see our [Contributors Guide](CONTRIBUTORS.md) for detailed information on how to contribute.
+
+Quick start:
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+For more details, see [CONTRIBUTORS.md](CONTRIBUTORS.md).
