@@ -10,5 +10,7 @@ test_output.log
 /simple-server
 /test-server
 /test_jwt_auth
+/test_flow_management
+/test_flow_management_simple
 
 
