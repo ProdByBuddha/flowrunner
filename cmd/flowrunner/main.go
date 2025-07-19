@@ -17,6 +17,7 @@ import (
 
 	"github.com/tcmartin/flowrunner/pkg/api"
 	"github.com/tcmartin/flowrunner/pkg/config"
+	"github.com/tcmartin/flowrunner/pkg/loader"
 	"github.com/tcmartin/flowrunner/pkg/registry"
 	"github.com/tcmartin/flowrunner/pkg/services"
 	"github.com/tcmartin/flowrunner/pkg/storage"
@@ -239,17 +240,40 @@ func NewApp(cfg *config.Config) (*App, error) {
 	case "dynamodb":
 		log.Printf("Initializing DynamoDB storage provider with region: %s, endpoint: %s",
 			cfg.Storage.DynamoDB.Region, cfg.Storage.DynamoDB.Endpoint)
-		// Create a DynamoDB provider with the configuration
-		// For now, we'll use the memory provider as a fallback
-		storageProvider = storage.NewMemoryProvider()
-		log.Println("Note: Using in-memory storage as fallback (DynamoDB implementation pending)")
-	case "postgres":
+
+		// Create DynamoDB provider configuration
+		dynamoConfig := storage.DynamoDBProviderConfig{
+			Region:      cfg.Storage.DynamoDB.Region,
+			TablePrefix: cfg.Storage.DynamoDB.TablePrefix,
+			Endpoint:    cfg.Storage.DynamoDB.Endpoint,
+		}
+
+		// Create DynamoDB provider
+		storageProvider, err = storage.NewDynamoDBProvider(dynamoConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize DynamoDB storage provider: %w", err)
+		}
+		log.Println("DynamoDB storage provider initialized successfully")
+	case "postgres", "postgresql":
 		log.Printf("Initializing PostgreSQL storage provider with host: %s, port: %d, database: %s",
 			cfg.Storage.Postgres.Host, cfg.Storage.Postgres.Port, cfg.Storage.Postgres.Database)
-		// Create a PostgreSQL provider with the configuration
-		// For now, we'll use the memory provider as a fallback
-		storageProvider = storage.NewMemoryProvider()
-		log.Println("Note: Using in-memory storage as fallback (PostgreSQL implementation pending)")
+
+		// Create PostgreSQL provider configuration
+		postgresConfig := storage.PostgreSQLProviderConfig{
+			Host:     cfg.Storage.Postgres.Host,
+			Port:     cfg.Storage.Postgres.Port,
+			User:     cfg.Storage.Postgres.User,
+			Password: cfg.Storage.Postgres.Password,
+			Database: cfg.Storage.Postgres.Database,
+			SSLMode:  cfg.Storage.Postgres.SSLMode,
+		}
+
+		// Create PostgreSQL provider
+		storageProvider, err = storage.NewPostgreSQLProvider(postgresConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize PostgreSQL storage provider: %w", err)
+		}
+		log.Println("PostgreSQL storage provider initialized successfully")
 	default:
 		return nil, fmt.Errorf("unsupported storage type: %s", cfg.Storage.Type)
 	}
@@ -263,10 +287,13 @@ func NewApp(cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("failed to initialize storage: %w", err)
 	}
 
-	// We'll skip the YAML loader for now
+	// Create YAML loader
+	yamlLoader := loader.NewYAMLLoader()
 
 	// Create flow registry
-	flowRegistry := registry.NewFlowRegistry(storageProvider.GetFlowStore(), registry.FlowRegistryOptions{})
+	flowRegistry := registry.NewFlowRegistry(storageProvider.GetFlowStore(), registry.FlowRegistryOptions{
+		YAMLLoader: yamlLoader,
+	})
 
 	// Create account service with JWT support
 	accountService := services.NewAccountService(storageProvider.GetAccountStore())

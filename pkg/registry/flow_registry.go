@@ -3,6 +3,7 @@ package registry
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/tcmartin/flowrunner/pkg/loader"
@@ -45,8 +46,10 @@ func (r *FlowRegistryService) Create(accountID string, name string, yamlContent 
 		return "", fmt.Errorf("%w: %v", ErrInvalidYAML, err)
 	}
 
-	// Generate a unique ID for the flow
-	flowID := fmt.Sprintf("%s-%d", name, time.Now().UnixNano())
+	// Generate a unique ID for the flow (URL-safe)
+	safeName := strings.ReplaceAll(strings.ToLower(name), " ", "-")
+	safeName = strings.ReplaceAll(safeName, "_", "-")
+	flowID := fmt.Sprintf("%s-%d", safeName, time.Now().UnixNano())
 
 	// Create flow metadata and save it with the flow definition
 	// Note: The FlowStore implementation should handle storing the metadata
