@@ -47,9 +47,35 @@ Flowrunner is a lightweight, YAML-driven orchestration service built on top of F
 
 ### Configuration
 
-Create a `.env` file in the project root with the following variables:
+Create a `.env` file in the project root with the following variables (see `.env.example` for a complete template):
 
 ```
+# Server configuration
+FLOWRUNNER_SERVER_HOST=localhost
+FLOWRUNNER_SERVER_PORT=8080
+
+# Storage configuration
+# Options: memory, dynamodb, postgres
+FLOWRUNNER_STORAGE_TYPE=memory
+
+# DynamoDB configuration (used when FLOWRUNNER_STORAGE_TYPE=dynamodb)
+FLOWRUNNER_DYNAMODB_REGION=us-west-2
+FLOWRUNNER_DYNAMODB_ENDPOINT=http://localhost:8000
+FLOWRUNNER_DYNAMODB_TABLE_PREFIX=flowrunner_
+
+# PostgreSQL configuration (used when FLOWRUNNER_STORAGE_TYPE=postgres)
+FLOWRUNNER_POSTGRES_HOST=localhost
+FLOWRUNNER_POSTGRES_PORT=5432
+FLOWRUNNER_POSTGRES_DATABASE=flowrunner
+FLOWRUNNER_POSTGRES_USER=postgres
+FLOWRUNNER_POSTGRES_PASSWORD=postgres
+FLOWRUNNER_POSTGRES_SSL_MODE=disable
+
+# Auth configuration
+FLOWRUNNER_JWT_SECRET=your-jwt-secret-key
+FLOWRUNNER_TOKEN_EXPIRATION=24
+FLOWRUNNER_ENCRYPTION_KEY=your-encryption-key
+
 # LLM API Keys
 OPENAI_API_KEY=your_openai_api_key
 ANTHROPIC_API_KEY=your_anthropic_api_key
@@ -58,12 +84,9 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 GMAIL_USERNAME=your_gmail_username
 GMAIL_PASSWORD=your_app_password
 EMAIL_RECIPIENT=recipient_email
-
-# Storage Configuration
-STORAGE_TYPE=memory  # Options: memory, dynamodb, postgres
 ```
 
-For DynamoDB or PostgreSQL, additional configuration variables are required.
+You can also use a configuration file or command-line flags. Environment variables take precedence over configuration files.
 
 ## Usage
 

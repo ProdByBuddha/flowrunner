@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -83,27 +84,47 @@ func main() {
 
 // loadConfig loads the configuration from the specified path or creates a default one
 func loadConfig() (*config.Config, error) {
+	var cfg *config.Config
+
 	// If a config path is specified, load it
 	if *configPath != "" {
-		return config.LoadConfig(*configPath)
-	}
+		var err error
+		cfg, err = config.LoadConfig(*configPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load config from %s: %w", *configPath, err)
+		}
+	} else {
+		// Otherwise, look for a config file in standard locations
+		locations := []string{
+			"./config.json",
+			"./configs/config.json",
+			filepath.Join(os.Getenv("HOME"), ".flowrunner", "config.json"),
+			"/etc/flowrunner/config.json",
+		}
 
-	// Otherwise, look for a config file in standard locations
-	locations := []string{
-		"./config.json",
-		"./configs/config.json",
-		filepath.Join(os.Getenv("HOME"), ".flowrunner", "config.json"),
-		"/etc/flowrunner/config.json",
-	}
+		for _, path := range locations {
+			if loadedCfg, err := config.LoadConfig(path); err == nil {
+				cfg = loadedCfg
+				break
+			}
+		}
 
-	for _, path := range locations {
-		if cfg, err := config.LoadConfig(path); err == nil {
-			return cfg, nil
+		// If no config file is found, create a default one
+		if cfg == nil {
+			cfg = config.DefaultConfig()
+
+			// Save the default config to the user's home directory
+			defaultPath := filepath.Join(os.Getenv("HOME"), ".flowrunner", "config.json")
+			if err := config.SaveConfig(cfg, defaultPath); err != nil {
+				return nil, fmt.Errorf("failed to save default config: %w", err)
+			}
+
+			fmt.Printf("Created default configuration at %s\n", defaultPath)
 		}
 	}
 
-	// If no config file is found, create a default one
-	cfg := config.DefaultConfig()
+	// Override with environment variables if present
+	overrideConfigFromEnv(cfg)
 
 	// Generate random JWT secret and encryption key if not set
 	if cfg.Auth.JWTSecret == "" {
@@ -122,14 +143,71 @@ func loadConfig() (*config.Config, error) {
 		cfg.Auth.EncryptionKey = key
 	}
 
-	// Save the default config to the user's home directory
-	defaultPath := filepath.Join(os.Getenv("HOME"), ".flowrunner", "config.json")
-	if err := config.SaveConfig(cfg, defaultPath); err != nil {
-		return nil, fmt.Errorf("failed to save default config: %w", err)
+	return cfg, nil
+}
+
+// overrideConfigFromEnv overrides configuration values from environment variables
+func overrideConfigFromEnv(cfg *config.Config) {
+	// Server configuration
+	if host := os.Getenv("FLOWRUNNER_SERVER_HOST"); host != "" {
+		cfg.Server.Host = host
+	}
+	if port := os.Getenv("FLOWRUNNER_SERVER_PORT"); port != "" {
+		if p, err := strconv.Atoi(port); err == nil {
+			cfg.Server.Port = p
+		}
 	}
 
-	fmt.Printf("Created default configuration at %s\n", defaultPath)
-	return cfg, nil
+	// Storage configuration
+	if storageType := os.Getenv("FLOWRUNNER_STORAGE_TYPE"); storageType != "" {
+		cfg.Storage.Type = storageType
+	}
+
+	// DynamoDB configuration
+	if region := os.Getenv("FLOWRUNNER_DYNAMODB_REGION"); region != "" {
+		cfg.Storage.DynamoDB.Region = region
+	}
+	if endpoint := os.Getenv("FLOWRUNNER_DYNAMODB_ENDPOINT"); endpoint != "" {
+		cfg.Storage.DynamoDB.Endpoint = endpoint
+	}
+	if tablePrefix := os.Getenv("FLOWRUNNER_DYNAMODB_TABLE_PREFIX"); tablePrefix != "" {
+		cfg.Storage.DynamoDB.TablePrefix = tablePrefix
+	}
+
+	// PostgreSQL configuration
+	if host := os.Getenv("FLOWRUNNER_POSTGRES_HOST"); host != "" {
+		cfg.Storage.Postgres.Host = host
+	}
+	if port := os.Getenv("FLOWRUNNER_POSTGRES_PORT"); port != "" {
+		if p, err := strconv.Atoi(port); err == nil {
+			cfg.Storage.Postgres.Port = p
+		}
+	}
+	if database := os.Getenv("FLOWRUNNER_POSTGRES_DATABASE"); database != "" {
+		cfg.Storage.Postgres.Database = database
+	}
+	if user := os.Getenv("FLOWRUNNER_POSTGRES_USER"); user != "" {
+		cfg.Storage.Postgres.User = user
+	}
+	if password := os.Getenv("FLOWRUNNER_POSTGRES_PASSWORD"); password != "" {
+		cfg.Storage.Postgres.Password = password
+	}
+	if sslMode := os.Getenv("FLOWRUNNER_POSTGRES_SSL_MODE"); sslMode != "" {
+		cfg.Storage.Postgres.SSLMode = sslMode
+	}
+
+	// Auth configuration
+	if jwtSecret := os.Getenv("FLOWRUNNER_JWT_SECRET"); jwtSecret != "" {
+		cfg.Auth.JWTSecret = jwtSecret
+	}
+	if tokenExpiration := os.Getenv("FLOWRUNNER_TOKEN_EXPIRATION"); tokenExpiration != "" {
+		if exp, err := strconv.Atoi(tokenExpiration); err == nil {
+			cfg.Auth.TokenExpiration = exp
+		}
+	}
+	if encryptionKey := os.Getenv("FLOWRUNNER_ENCRYPTION_KEY"); encryptionKey != "" {
+		cfg.Auth.EncryptionKey = encryptionKey
+	}
 }
 
 // generateRandomKey generates a random key of the specified length
@@ -157,12 +235,21 @@ func NewApp(cfg *config.Config) (*App, error) {
 	switch cfg.Storage.Type {
 	case "memory":
 		storageProvider = storage.NewMemoryProvider()
+		log.Println("Using in-memory storage provider")
 	case "dynamodb":
-		// For now, we'll use the memory provider for DynamoDB
+		log.Printf("Initializing DynamoDB storage provider with region: %s, endpoint: %s",
+			cfg.Storage.DynamoDB.Region, cfg.Storage.DynamoDB.Endpoint)
+		// Create a DynamoDB provider with the configuration
+		// For now, we'll use the memory provider as a fallback
 		storageProvider = storage.NewMemoryProvider()
+		log.Println("Note: Using in-memory storage as fallback (DynamoDB implementation pending)")
 	case "postgres":
-		// For now, we'll use the memory provider for PostgreSQL
+		log.Printf("Initializing PostgreSQL storage provider with host: %s, port: %d, database: %s",
+			cfg.Storage.Postgres.Host, cfg.Storage.Postgres.Port, cfg.Storage.Postgres.Database)
+		// Create a PostgreSQL provider with the configuration
+		// For now, we'll use the memory provider as a fallback
 		storageProvider = storage.NewMemoryProvider()
+		log.Println("Note: Using in-memory storage as fallback (PostgreSQL implementation pending)")
 	default:
 		return nil, fmt.Errorf("unsupported storage type: %s", cfg.Storage.Type)
 	}
