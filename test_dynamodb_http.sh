@@ -42,19 +42,24 @@ echo "Server started successfully with PID $SERVER_PID"
 # Test the API
 echo "Testing API..."
 
-# Create an account
-echo "Creating account..."
+# Create an account with unique username
+USERNAME="dynamouser-$(date +%s)"
+echo "Creating account with username: $USERNAME"
 ACCOUNT_RESPONSE=$(curl -s -X POST http://localhost:8082/api/v1/accounts \
   -H "Content-Type: application/json" \
-  -d '{"username":"dynamouser","password":"dynamopassword"}')
+  -d "{\"username\":\"$USERNAME\",\"password\":\"dynamopassword\"}")
 
 echo "Account response: $ACCOUNT_RESPONSE"
+
+# Wait for DynamoDB eventual consistency
+echo "Waiting for DynamoDB eventual consistency..."
+sleep 3
 
 # Login to get JWT token
 echo "Logging in..."
 LOGIN_RESPONSE=$(curl -s -X POST http://localhost:8082/api/v1/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"dynamouser","password":"dynamopassword"}')
+  -d "{\"username\":\"$USERNAME\",\"password\":\"dynamopassword\"}")
 
 echo "Login response: $LOGIN_RESPONSE"
 

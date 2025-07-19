@@ -5,14 +5,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/tcmartin/flowrunner/pkg/auth"
+	"github.com/tcmartin/flowrunner/pkg/services"
 	"github.com/tcmartin/flowrunner/pkg/storage"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
-	// Test DynamoDB account store
+	// Test DynamoDB account operations
 	config := storage.DynamoDBProviderConfig{
 		Region:      "us-west-2",
 		TablePrefix: "flowrunner_test_",
@@ -32,42 +30,46 @@ func main() {
 
 	fmt.Println("DynamoDB provider initialized successfully!")
 
-	// Test account creation
-	accountStore := provider.GetAccountStore()
+	// Wait a bit for indexes to become active
+	fmt.Println("Waiting for indexes to become active...")
+	time.Sleep(5 * time.Second)
 
-	// Create a test account
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte("testpassword"), bcrypt.DefaultCost)
+	// Test account service
+	accountService := services.NewAccountService(provider.GetAccountStore())
+	accountService = accountService.WithJWTService("test-jwt-secret", 24)
+
+	// Create account
+	username := fmt.Sprintf("testuser-%d", time.Now().Unix())
+	password := "testpassword"
+
+	fmt.Printf("Creating account with username: %s\n", username)
+	accountID, err := accountService.CreateAccount(username, password)
 	if err != nil {
-		log.Fatalf("Failed to hash password: %v", err)
+		log.Fatalf("Failed to create account: %v", err)
 	}
 
-	accountID := uuid.New().String()
-	now := time.Now()
+	fmt.Printf("Account created with ID: %s\n", accountID)
 
-	account := auth.Account{
-		ID:           accountID,
-		Username:     "testuser",
-		PasswordHash: string(passwordHash),
-		APIToken:     "test-api-token-" + accountID,
-		CreatedAt:    now,
-		UpdatedAt:    now,
-	}
+	// Wait a bit for eventual consistency
+	time.Sleep(2 * time.Second)
 
-	fmt.Printf("Creating account with ID: %s\n", accountID)
-	fmt.Printf("Account data: %+v\n", account)
-
-	if err := accountStore.SaveAccount(account); err != nil {
-		log.Fatalf("Failed to save account: %v", err)
-	}
-
-	fmt.Println("Account saved successfully!")
-
-	// Try to retrieve the account
-	retrievedAccount, err := accountStore.GetAccount(accountID)
+	// Test authentication
+	fmt.Println("Testing authentication...")
+	authAccountID, err := accountService.Authenticate(username, password)
 	if err != nil {
-		log.Fatalf("Failed to retrieve account: %v", err)
+		log.Fatalf("Failed to authenticate: %v", err)
 	}
 
-	fmt.Printf("Retrieved account: %+v\n", retrievedAccount)
-	fmt.Println("Test completed successfully!")
+	fmt.Printf("Authentication successful! Account ID: %s\n", authAccountID)
+
+	// Test JWT generation
+	fmt.Println("Testing JWT generation...")
+	token, err := accountService.GenerateJWT(accountID)
+	if err != nil {
+		log.Fatalf("Failed to generate JWT: %v", err)
+	}
+
+	fmt.Printf("JWT generated: %s\n", token[:50]+"...")
+
+	fmt.Println("All tests passed successfully!")
 }

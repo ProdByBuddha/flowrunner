@@ -1417,20 +1417,28 @@ func (s *DynamoDBAccountStore) GetAccount(accountID string) (auth.Account, error
 		return auth.Account{}, ErrAccountNotFound
 	}
 
-	// Unmarshal account
+	// Unmarshal account with explicit field mapping
 	var item struct {
-		auth.Account
-		CreatedAtUnix int64 `json:"CreatedAt"`
-		UpdatedAtUnix int64 `json:"UpdatedAt"`
+		ID           string `json:"ID"`
+		Username     string `json:"Username"`
+		PasswordHash string `json:"PasswordHash"`
+		APIToken     string `json:"APIToken"`
+		CreatedAt    int64  `json:"CreatedAt"`
+		UpdatedAt    int64  `json:"UpdatedAt"`
 	}
 	if err := dynamodbattribute.UnmarshalMap(result.Item, &item); err != nil {
 		return auth.Account{}, fmt.Errorf("failed to unmarshal account: %w", err)
 	}
 
-	// Convert Unix timestamps back to time.Time
-	account := item.Account
-	account.CreatedAt = time.Unix(item.CreatedAtUnix, 0)
-	account.UpdatedAt = time.Unix(item.UpdatedAtUnix, 0)
+	// Convert to auth.Account with proper timestamp conversion
+	account := auth.Account{
+		ID:           item.ID,
+		Username:     item.Username,
+		PasswordHash: item.PasswordHash,
+		APIToken:     item.APIToken,
+		CreatedAt:    time.Unix(item.CreatedAt, 0),
+		UpdatedAt:    time.Unix(item.UpdatedAt, 0),
+	}
 
 	return account, nil
 }
@@ -1461,20 +1469,28 @@ func (s *DynamoDBAccountStore) GetAccountByUsername(username string) (auth.Accou
 		return auth.Account{}, ErrAccountNotFound
 	}
 
-	// Unmarshal account
+	// Unmarshal account with explicit field mapping
 	var item struct {
-		auth.Account
-		CreatedAtUnix int64 `json:"CreatedAt"`
-		UpdatedAtUnix int64 `json:"UpdatedAt"`
+		ID           string `json:"ID"`
+		Username     string `json:"Username"`
+		PasswordHash string `json:"PasswordHash"`
+		APIToken     string `json:"APIToken"`
+		CreatedAt    int64  `json:"CreatedAt"`
+		UpdatedAt    int64  `json:"UpdatedAt"`
 	}
 	if err := dynamodbattribute.UnmarshalMap(result.Items[0], &item); err != nil {
 		return auth.Account{}, fmt.Errorf("failed to unmarshal account: %w", err)
 	}
 
-	// Convert Unix timestamps back to time.Time
-	account := item.Account
-	account.CreatedAt = time.Unix(item.CreatedAtUnix, 0)
-	account.UpdatedAt = time.Unix(item.UpdatedAtUnix, 0)
+	// Convert to auth.Account with proper timestamp conversion
+	account := auth.Account{
+		ID:           item.ID,
+		Username:     item.Username,
+		PasswordHash: item.PasswordHash,
+		APIToken:     item.APIToken,
+		CreatedAt:    time.Unix(item.CreatedAt, 0),
+		UpdatedAt:    time.Unix(item.UpdatedAt, 0),
+	}
 
 	return account, nil
 }
@@ -1505,20 +1521,28 @@ func (s *DynamoDBAccountStore) GetAccountByToken(token string) (auth.Account, er
 		return auth.Account{}, ErrAccountNotFound
 	}
 
-	// Unmarshal account
+	// Unmarshal account with explicit field mapping
 	var item struct {
-		auth.Account
-		CreatedAtUnix int64 `json:"CreatedAt"`
-		UpdatedAtUnix int64 `json:"UpdatedAt"`
+		ID           string `json:"ID"`
+		Username     string `json:"Username"`
+		PasswordHash string `json:"PasswordHash"`
+		APIToken     string `json:"APIToken"`
+		CreatedAt    int64  `json:"CreatedAt"`
+		UpdatedAt    int64  `json:"UpdatedAt"`
 	}
 	if err := dynamodbattribute.UnmarshalMap(result.Items[0], &item); err != nil {
 		return auth.Account{}, fmt.Errorf("failed to unmarshal account: %w", err)
 	}
 
-	// Convert Unix timestamps back to time.Time
-	account := item.Account
-	account.CreatedAt = time.Unix(item.CreatedAtUnix, 0)
-	account.UpdatedAt = time.Unix(item.UpdatedAtUnix, 0)
+	// Convert to auth.Account with proper timestamp conversion
+	account := auth.Account{
+		ID:           item.ID,
+		Username:     item.Username,
+		PasswordHash: item.PasswordHash,
+		APIToken:     item.APIToken,
+		CreatedAt:    time.Unix(item.CreatedAt, 0),
+		UpdatedAt:    time.Unix(item.UpdatedAt, 0),
+	}
 
 	return account, nil
 }
@@ -1538,18 +1562,26 @@ func (s *DynamoDBAccountStore) ListAccounts() ([]auth.Account, error) {
 	accounts := make([]auth.Account, 0, len(result.Items))
 	for _, item := range result.Items {
 		var accItem struct {
-			auth.Account
-			CreatedAtUnix int64 `json:"CreatedAt"`
-			UpdatedAtUnix int64 `json:"UpdatedAt"`
+			ID           string `json:"ID"`
+			Username     string `json:"Username"`
+			PasswordHash string `json:"PasswordHash"`
+			APIToken     string `json:"APIToken"`
+			CreatedAt    int64  `json:"CreatedAt"`
+			UpdatedAt    int64  `json:"UpdatedAt"`
 		}
 		if err := dynamodbattribute.UnmarshalMap(item, &accItem); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal account: %w", err)
 		}
 
-		// Convert Unix timestamps back to time.Time
-		account := accItem.Account
-		account.CreatedAt = time.Unix(accItem.CreatedAtUnix, 0)
-		account.UpdatedAt = time.Unix(accItem.UpdatedAtUnix, 0)
+		// Convert to auth.Account with proper timestamp conversion
+		account := auth.Account{
+			ID:           accItem.ID,
+			Username:     accItem.Username,
+			PasswordHash: accItem.PasswordHash,
+			APIToken:     accItem.APIToken,
+			CreatedAt:    time.Unix(accItem.CreatedAt, 0),
+			UpdatedAt:    time.Unix(accItem.UpdatedAt, 0),
+		}
 
 		accounts = append(accounts, account)
 	}
