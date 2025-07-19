@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/tcmartin/flowrunner/pkg/auth"
 	"github.com/tcmartin/flowrunner/pkg/runtime"
@@ -18,7 +19,7 @@ import (
 
 // DynamoDBProvider implements the StorageProvider interface using DynamoDB
 type DynamoDBProvider struct {
-	client         *dynamodb.DynamoDB
+	client         dynamodbiface.DynamoDBAPI
 	flowStore      *DynamoDBFlowStore
 	secretStore    *DynamoDBSecretStore
 	executionStore *DynamoDBExecutionStore
@@ -80,6 +81,24 @@ func NewDynamoDBProvider(config DynamoDBProviderConfig) (*DynamoDBProvider, erro
 	return provider, nil
 }
 
+// NewDynamoDBProviderWithClient creates a new DynamoDB storage provider with a custom client
+// This is primarily used for testing with mock clients
+func NewDynamoDBProviderWithClient(client dynamodbiface.DynamoDBAPI, tablePrefix string) *DynamoDBProvider {
+	// Create provider
+	provider := &DynamoDBProvider{
+		client:      client,
+		tablePrefix: tablePrefix,
+	}
+
+	// Create stores
+	provider.flowStore = NewDynamoDBFlowStore(client, tablePrefix)
+	provider.secretStore = NewDynamoDBSecretStore(client, tablePrefix)
+	provider.executionStore = NewDynamoDBExecutionStore(client, tablePrefix)
+	provider.accountStore = NewDynamoDBAccountStore(client, tablePrefix)
+
+	return provider
+}
+
 // Initialize sets up the storage backend
 func (p *DynamoDBProvider) Initialize() error {
 	// Initialize all stores
@@ -130,13 +149,13 @@ func (p *DynamoDBProvider) GetAccountStore() AccountStore {
 
 // DynamoDBFlowStore implements the FlowStore interface using DynamoDB
 type DynamoDBFlowStore struct {
-	client      *dynamodb.DynamoDB
+	client      dynamodbiface.DynamoDBAPI
 	tablePrefix string
 	tableName   string
 }
 
 // NewDynamoDBFlowStore creates a new DynamoDB flow store
-func NewDynamoDBFlowStore(client *dynamodb.DynamoDB, tablePrefix string) *DynamoDBFlowStore {
+func NewDynamoDBFlowStore(client dynamodbiface.DynamoDBAPI, tablePrefix string) *DynamoDBFlowStore {
 	return &DynamoDBFlowStore{
 		client:      client,
 		tablePrefix: tablePrefix,
@@ -654,13 +673,13 @@ func (s *DynamoDBFlowStore) ListFlowsWithMetadata(accountID string) ([]FlowMetad
 
 // DynamoDBSecretStore implements the SecretStore interface using DynamoDB
 type DynamoDBSecretStore struct {
-	client      *dynamodb.DynamoDB
+	client      dynamodbiface.DynamoDBAPI
 	tablePrefix string
 	tableName   string
 }
 
 // NewDynamoDBSecretStore creates a new DynamoDB secret store
-func NewDynamoDBSecretStore(client *dynamodb.DynamoDB, tablePrefix string) *DynamoDBSecretStore {
+func NewDynamoDBSecretStore(client dynamodbiface.DynamoDBAPI, tablePrefix string) *DynamoDBSecretStore {
 	return &DynamoDBSecretStore{
 		client:      client,
 		tablePrefix: tablePrefix,
@@ -845,14 +864,14 @@ func (s *DynamoDBSecretStore) DeleteSecret(accountID, key string) error {
 
 // DynamoDBExecutionStore implements the ExecutionStore interface using DynamoDB
 type DynamoDBExecutionStore struct {
-	client        *dynamodb.DynamoDB
+	client        dynamodbiface.DynamoDBAPI
 	tablePrefix   string
 	execTableName string
 	logsTableName string
 }
 
 // NewDynamoDBExecutionStore creates a new DynamoDB execution store
-func NewDynamoDBExecutionStore(client *dynamodb.DynamoDB, tablePrefix string) *DynamoDBExecutionStore {
+func NewDynamoDBExecutionStore(client dynamodbiface.DynamoDBAPI, tablePrefix string) *DynamoDBExecutionStore {
 	return &DynamoDBExecutionStore{
 		client:        client,
 		tablePrefix:   tablePrefix,
@@ -1241,13 +1260,13 @@ func (s *DynamoDBExecutionStore) GetExecutionLogs(executionID string) ([]runtime
 
 // DynamoDBAccountStore implements the AccountStore interface using DynamoDB
 type DynamoDBAccountStore struct {
-	client      *dynamodb.DynamoDB
+	client      dynamodbiface.DynamoDBAPI
 	tablePrefix string
 	tableName   string
 }
 
 // NewDynamoDBAccountStore creates a new DynamoDB account store
-func NewDynamoDBAccountStore(client *dynamodb.DynamoDB, tablePrefix string) *DynamoDBAccountStore {
+func NewDynamoDBAccountStore(client dynamodbiface.DynamoDBAPI, tablePrefix string) *DynamoDBAccountStore {
 	return &DynamoDBAccountStore{
 		client:      client,
 		tablePrefix: tablePrefix,

@@ -1,12 +1,9 @@
 package storage
 
 import (
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
@@ -18,32 +15,15 @@ func init() {
 }
 
 // TestDynamoDBProvider tests the DynamoDB provider
-// Note: This test requires a local DynamoDB instance or valid AWS credentials
-// It will be skipped if the required environment variables are not set
 func TestDynamoDBProvider(t *testing.T) {
-	// Check if we have AWS credentials or a local endpoint
-	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
-	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
-	endpoint := os.Getenv("DYNAMODB_ENDPOINT")
-
-	if (accessKey == "" || secretKey == "") && endpoint == "" {
-		t.Skip("Skipping DynamoDB tests as neither AWS credentials nor local endpoint are set")
-	}
-
-	// Create provider config
-	config := DynamoDBProviderConfig{
-		Region:      "us-east-1",
-		AccessKey:   accessKey,
-		SecretKey:   secretKey,
-		TablePrefix: "test_",
-		Endpoint:    endpoint,
-	}
-
-	// Create provider
-	provider, err := NewDynamoDBProvider(config)
+	// Get test client (mock by default, real with -real-dynamodb flag)
+	client, err := GetTestDynamoDBClient()
 	if err != nil {
-		t.Fatalf("Failed to create DynamoDB provider: %v", err)
+		t.Fatalf("Failed to get test DynamoDB client: %v", err)
 	}
+
+	// Create provider using the client
+	provider := NewDynamoDBProviderWithClient(client, "test_")
 
 	// Initialize provider
 	err = provider.Initialize()
@@ -59,8 +39,19 @@ func TestDynamoDBProvider(t *testing.T) {
 	cleanupTables(t, provider)
 }
 
-// cleanupTables deletes the test tables
+// cleanupTables deletes the test tables (only for real DynamoDB)
 func cleanupTables(t *testing.T, provider *DynamoDBProvider) {
+	// Only cleanup if using real DynamoDB
+	if !*useRealDynamoDB {
+		return
+	}
+
+	// Cast to real DynamoDB client for cleanup
+	realClient, ok := provider.client.(*dynamodb.DynamoDB)
+	if !ok {
+		return // Not a real client, skip cleanup
+	}
+
 	tables := []string{
 		provider.flowStore.tableName,
 		provider.secretStore.tableName,
@@ -70,14 +61,14 @@ func cleanupTables(t *testing.T, provider *DynamoDBProvider) {
 	}
 
 	for _, table := range tables {
-		_, err := provider.client.DeleteTable(&dynamodb.DeleteTableInput{
+		_, err := realClient.DeleteTable(&dynamodb.DeleteTableInput{
 			TableName: aws.String(table),
 		})
 		if err != nil {
 			t.Logf("Failed to delete table %s: %v", table, err)
 		} else {
 			// Wait for table to be deleted
-			werr := provider.client.WaitUntilTableNotExists(&dynamodb.DescribeTableInput{
+			werr := realClient.WaitUntilTableNotExists(&dynamodb.DescribeTableInput{
 				TableName: aws.String(table),
 			})
 			if werr != nil {
@@ -89,42 +80,11 @@ func cleanupTables(t *testing.T, provider *DynamoDBProvider) {
 
 // TestDynamoDBFlowStore tests the DynamoDB flow store
 func TestDynamoDBFlowStore(t *testing.T) {
-	// Check if we have AWS credentials or a local endpoint
-	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
-	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
-	endpoint := os.Getenv("DYNAMODB_ENDPOINT")
-
-	if (accessKey == "" || secretKey == "") && endpoint == "" {
-		t.Skip("Skipping DynamoDB tests as neither AWS credentials nor local endpoint are set")
-	}
-
-	// Create AWS session
-	awsConfig := &aws.Config{
-		Region: aws.String("us-east-1"),
-	}
-
-	// Set credentials if provided
-	if accessKey != "" && secretKey != "" {
-		awsConfig.Credentials = credentials.NewStaticCredentials(
-			accessKey,
-			secretKey,
-			"",
-		)
-	}
-
-	// Set endpoint for local DynamoDB if provided
-	if endpoint != "" {
-		awsConfig.Endpoint = aws.String(endpoint)
-	}
-
-	// Create session
-	sess, err := session.NewSession(awsConfig)
+	// Get test client (mock by default, real with -real-dynamodb flag)
+	client, err := GetTestDynamoDBClient()
 	if err != nil {
-		t.Fatalf("Failed to create AWS session: %v", err)
+		t.Fatalf("Failed to get test DynamoDB client: %v", err)
 	}
-
-	// Create DynamoDB client
-	client := dynamodb.New(sess)
 
 	// Create flow store
 	store := NewDynamoDBFlowStore(client, "test_")
@@ -178,19 +138,23 @@ func TestDynamoDBFlowStore(t *testing.T) {
 	_, err = store.GetFlow(accountID, flowID)
 	assert.Error(t, err)
 
-	// Clean up
-	_, err = client.DeleteTable(&dynamodb.DeleteTableInput{
-		TableName: aws.String(store.tableName),
-	})
-	if err != nil {
-		t.Logf("Failed to delete table %s: %v", store.tableName, err)
-	} else {
-		// Wait for table to be deleted
-		werr := client.WaitUntilTableNotExists(&dynamodb.DescribeTableInput{
-			TableName: aws.String(store.tableName),
-		})
-		if werr != nil {
-			t.Logf("Failed to wait for table %s to be deleted: %v", store.tableName, werr)
+	// Clean up (only for real DynamoDB)
+	if *useRealDynamoDB {
+		if realClient, ok := client.(*dynamodb.DynamoDB); ok {
+			_, err = realClient.DeleteTable(&dynamodb.DeleteTableInput{
+				TableName: aws.String(store.tableName),
+			})
+			if err != nil {
+				t.Logf("Failed to delete table %s: %v", store.tableName, err)
+			} else {
+				// Wait for table to be deleted
+				werr := realClient.WaitUntilTableNotExists(&dynamodb.DescribeTableInput{
+					TableName: aws.String(store.tableName),
+				})
+				if werr != nil {
+					t.Logf("Failed to wait for table %s to be deleted: %v", store.tableName, werr)
+				}
+			}
 		}
 	}
 }

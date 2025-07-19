@@ -1,8 +1,9 @@
 package registry
 
 import (
-	"strings"
 	"testing"
+
+	"github.com/tcmartin/flowrunner/pkg/storage"
 )
 
 // We need to add these methods to the MockFlowStore
