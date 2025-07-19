@@ -260,7 +260,7 @@
 
 - [ ] 11. Create HTTP API endpoints
 
-  - [ ] 11.1 Implement flow management API
+  - [x] 11.1 Implement flow management API
 
     - Create CRUD endpoints for flows
     - Add validation and error handling

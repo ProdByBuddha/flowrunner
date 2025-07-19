@@ -12,6 +12,7 @@ test_output.log
 /test_jwt_auth
 /test_flow_management
 /test_flow_management_simple
+/test_dynamodb_simple
 .env.test
 test_results.txt
 
