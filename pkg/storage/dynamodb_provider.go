@@ -1361,15 +1361,21 @@ func (s *DynamoDBAccountStore) Initialize() error {
 
 // SaveAccount persists an account
 func (s *DynamoDBAccountStore) SaveAccount(account auth.Account) error {
-	// Convert time fields to Unix timestamps
+	// Create DynamoDB-specific item structure
 	item := struct {
-		auth.Account
-		CreatedAtUnix int64 `json:"CreatedAt"`
-		UpdatedAtUnix int64 `json:"UpdatedAt"`
+		ID           string `json:"ID"`
+		Username     string `json:"Username"`
+		PasswordHash string `json:"PasswordHash"`
+		APIToken     string `json:"APIToken"`
+		CreatedAt    int64  `json:"CreatedAt"`
+		UpdatedAt    int64  `json:"UpdatedAt"`
 	}{
-		Account:       account,
-		CreatedAtUnix: account.CreatedAt.Unix(),
-		UpdatedAtUnix: account.UpdatedAt.Unix(),
+		ID:           account.ID,
+		Username:     account.Username,
+		PasswordHash: account.PasswordHash,
+		APIToken:     account.APIToken,
+		CreatedAt:    account.CreatedAt.Unix(),
+		UpdatedAt:    account.UpdatedAt.Unix(),
 	}
 
 	// Marshal account
