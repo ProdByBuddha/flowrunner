@@ -92,7 +92,7 @@
     - Add rate limiting for authentication attempts
     - _Requirements: 3.1, 3.2, 3.5, 8.2_
 
-  - [x] 5.3 Implement secret vault with encryption
+  - [ ] 5.3 Implement secret vault with encryption
     - Create encrypted secret storage
     - Support per-account isolation of secrets
     - Add key rotation capabilities
