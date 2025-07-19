@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
@@ -38,6 +39,9 @@ func TestSecretVaultService_AllStorageBackends(t *testing.T) {
 
 		// Test encryption consistency
 		testEncryptionConsistency(t, vault, store)
+
+		// Test key rotation
+		testKeyRotation(t, vault)
 	})
 
 	// Test PostgreSQL backend
@@ -85,7 +89,7 @@ func TestSecretVaultService_AllStorageBackends(t *testing.T) {
 			t.Fatalf("Invalid port number: %s", portStr)
 		}
 
-		t.Logf("PostgreSQL test config: host=%s, port=%d, user=%s, database=%s, sslmode=%s", 
+		t.Logf("PostgreSQL test config: host=%s, port=%d, user=%s, database=%s, sslmode=%s",
 			host, port, user, database, sslMode)
 
 		provider, err := storage.NewPostgreSQLProvider(storage.PostgreSQLProviderConfig{
@@ -122,6 +126,9 @@ func TestSecretVaultService_AllStorageBackends(t *testing.T) {
 
 		// Test encryption consistency
 		testEncryptionConsistency(t, vault, store)
+
+		// Test key rotation
+		testKeyRotation(t, vault)
 	})
 
 	// Test DynamoDB backend
@@ -163,7 +170,7 @@ func TestSecretVaultService_AllStorageBackends(t *testing.T) {
 				tablePrefix = "secret_vault_test_"
 			}
 
-			t.Logf("DynamoDB test config: region=%s, endpoint=%s, tablePrefix=%s", 
+			t.Logf("DynamoDB test config: region=%s, endpoint=%s, tablePrefix=%s",
 				region, endpoint, tablePrefix)
 
 			// Use real DynamoDB for integration tests
@@ -199,11 +206,15 @@ func TestSecretVaultService_AllStorageBackends(t *testing.T) {
 
 		// Test encryption consistency
 		testEncryptionConsistency(t, vault, store)
+
+		// Test key rotation
+		testKeyRotation(t, vault)
 	})
 }
 
 func testBasicSecretOperations(t *testing.T, vault *SecretVaultService) {
-	accountID := "test-account-basic"
+	// Use unique account ID to avoid conflicts with persistent data
+	accountID := fmt.Sprintf("test-account-basic-%d", time.Now().UnixNano())
 
 	// Test Set and Get
 	err := vault.Set(accountID, "api_key", "secret-api-key-123")
@@ -240,8 +251,9 @@ func testBasicSecretOperations(t *testing.T, vault *SecretVaultService) {
 }
 
 func testAccountIsolation(t *testing.T, vault *SecretVaultService) {
-	account1 := "account-isolation-1"
-	account2 := "account-isolation-2"
+	// Use unique account IDs to avoid conflicts with persistent data
+	account1 := fmt.Sprintf("account-isolation-1-%d", time.Now().UnixNano())
+	account2 := fmt.Sprintf("account-isolation-2-%d", time.Now().UnixNano())
 
 	// Add secrets to both accounts
 	err := vault.Set(account1, "secret1", "value1")
@@ -270,7 +282,8 @@ func testAccountIsolation(t *testing.T, vault *SecretVaultService) {
 }
 
 func testEncryptionConsistency(t *testing.T, vault *SecretVaultService, store storage.SecretStore) {
-	accountID := "test-account-encryption"
+	// Use unique account ID to avoid conflicts with persistent data
+	accountID := fmt.Sprintf("test-account-encryption-%d", time.Now().UnixNano())
 	secretKey := "test-secret"
 	secretValue := "test-value"
 
@@ -314,6 +327,51 @@ func testEncryptionConsistency(t *testing.T, vault *SecretVaultService, store st
 	assert.Equal(t, secretValue, value1)
 }
 
+func testKeyRotation(t *testing.T, vault *SecretVaultService) {
+	// Use unique account ID to avoid conflicts with persistent data
+	accountID := fmt.Sprintf("test-account-rotation-%d", time.Now().UnixNano())
+
+	// Set up some secrets with the original key
+	err := vault.Set(accountID, "secret1", "value1")
+	assert.NoError(t, err)
+	err = vault.Set(accountID, "secret2", "value2")
+	assert.NoError(t, err)
+
+	// Verify we can read the secrets
+	value1, err := vault.Get(accountID, "secret1")
+	assert.NoError(t, err)
+	assert.Equal(t, "value1", value1)
+
+	// Generate new encryption key
+	oldKey := vault.encryptionKey
+	newKey, err := GenerateEncryptionKey()
+	require.NoError(t, err)
+
+	// Perform key rotation for this specific account
+	err = vault.RotateEncryptionKeyForAccounts(oldKey, newKey, []string{accountID})
+	assert.NoError(t, err)
+
+	// Verify secrets are still accessible after rotation
+	value1After, err := vault.Get(accountID, "secret1")
+	assert.NoError(t, err)
+	assert.Equal(t, "value1", value1After)
+
+	value2After, err := vault.Get(accountID, "secret2")
+	assert.NoError(t, err)
+	assert.Equal(t, "value2", value2After)
+
+	// Verify the vault is now using the new key
+	assert.Equal(t, newKey, vault.encryptionKey)
+
+	// Test that we can still set and get new secrets with the new key
+	err = vault.Set(accountID, "secret3", "value3")
+	assert.NoError(t, err)
+
+	value3, err := vault.Get(accountID, "secret3")
+	assert.NoError(t, err)
+	assert.Equal(t, "value3", value3)
+}
+
 func TestSecretVaultService_EdgeCases_AllBackends(t *testing.T) {
 	// Test Memory backend edge cases
 	t.Run("memory", func(t *testing.T) {
@@ -334,6 +392,62 @@ func TestSecretVaultService_EdgeCases_AllBackends(t *testing.T) {
 			"test_",
 		)
 		require.NoError(t, provider.Initialize())
+		store := provider.GetSecretStore()
+
+		encryptionKey, err := GenerateEncryptionKey()
+		require.NoError(t, err)
+
+		vault, err := NewSecretVaultService(store, encryptionKey)
+		require.NoError(t, err)
+
+		testSecretVaultEdgeCases(t, vault)
+	})
+
+	// Test DynamoDB real backend edge cases
+	t.Run("dynamodb", func(t *testing.T) {
+		if !*realDynamoDBSecrets {
+			t.Skip("Skipping real DynamoDB edge cases test: use -real-dynamodb-secrets flag to enable")
+		}
+
+		// Load environment variables
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			t.Logf("Warning: could not load .env file: %v", err)
+		}
+
+		// Get DynamoDB configuration from environment variables
+		region := os.Getenv("FLOWRUNNER_DYNAMODB_REGION")
+		endpoint := os.Getenv("FLOWRUNNER_DYNAMODB_ENDPOINT")
+		tablePrefix := os.Getenv("FLOWRUNNER_DYNAMODB_TABLE_PREFIX")
+
+		// Set defaults if not specified
+		if region == "" {
+			region = "us-west-2"
+		}
+		if endpoint == "" {
+			endpoint = "http://localhost:8000"
+		}
+		if tablePrefix == "" {
+			tablePrefix = "secret_vault_edge_test_"
+		}
+
+		t.Logf("DynamoDB edge cases test config: region=%s, endpoint=%s, tablePrefix=%s",
+			region, endpoint, tablePrefix)
+
+		// Use real DynamoDB for integration tests
+		provider, err := storage.NewDynamoDBProvider(storage.DynamoDBProviderConfig{
+			Region:      region,
+			Endpoint:    endpoint,
+			TablePrefix: tablePrefix,
+		})
+		if err != nil {
+			t.Skipf("Skipping real DynamoDB edge cases test: %v", err)
+		}
+
+		if err := provider.Initialize(); err != nil {
+			t.Skipf("Skipping real DynamoDB edge cases test: failed to initialize: %v", err)
+		}
+
 		store := provider.GetSecretStore()
 
 		encryptionKey, err := GenerateEncryptionKey()
@@ -419,7 +533,8 @@ func TestSecretVaultService_EdgeCases_AllBackends(t *testing.T) {
 }
 
 func testSecretVaultEdgeCases(t *testing.T, vault *SecretVaultService) {
-	accountID := "test-account-edge-cases"
+	// Use unique account ID to avoid conflicts with persistent data
+	accountID := fmt.Sprintf("test-account-edge-cases-%d", time.Now().UnixNano())
 
 	// Test empty values
 	err := vault.Set(accountID, "empty-secret", "")
