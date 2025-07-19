@@ -1,1 +1,0 @@
-I'd like you to finish/test the http request node (also make sure it works with custom headers for auth etc if that's not there) and make a wait node and a cron node. I'm not sure exactly how a cron node should work, but you should be able to schedule events and have them execute (provided flowrunner is on) at that time, using redis. I already have redis installed locally here. 

@@ -1,2 +1,36 @@
+# Environment variables
 .env
-.log
+*.env
+pkg/runtime/.env
+cmd/test_nodes/.env
+# Log files
+*.log
+test_output.log
+
+# Binary files
+/flowrunner
+/flowrunner-cli
+/simple-server
+/test-server
+/test_jwt_auth
+
+# Other binaries (any executable without extension)
+*
+!*.*
+!*/
+
+# Exceptions (directories and specific file types we want to keep)
+!*.go
+!*.sh
+!*.md
+!*.json
+!*.yaml
+!*.yml
+!*.txt
+!*.mod
+!*.sum
+!Makefile
+!Dockerfile
+!.gitignore
+!.gitattributes
+!LICENSE
