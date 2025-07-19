@@ -3,8 +3,11 @@ package services
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strconv"
 	"testing"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -12,99 +15,195 @@ import (
 )
 
 var realDynamoDBSecrets = flag.Bool("real-dynamodb-secrets", false, "Run secret vault tests against real DynamoDB (requires local DynamoDB)")
+var realPostgreSQLSecrets = flag.Bool("real-postgresql-secrets", false, "Run secret vault tests against real PostgreSQL (requires PostgreSQL server)")
 
 func TestSecretVaultService_AllStorageBackends(t *testing.T) {
-	// Test all storage backends
-	backends := map[string]func() storage.SecretStore{
-		"memory": func() storage.SecretStore {
-			return storage.NewMemorySecretStore()
-		},
-		"postgres": func() storage.SecretStore {
-			provider, err := storage.NewPostgreSQLProvider(storage.PostgreSQLProviderConfig{
-				Host:     "localhost",
-				Port:     5432,
-				Database: "flowrunner_test",
-				User:     "postgres",
-				Password: "postgres",
-				SSLMode:  "disable",
+	// Test Memory backend
+	t.Run("memory", func(t *testing.T) {
+		store := storage.NewMemorySecretStore()
+
+		// Generate encryption key
+		encryptionKey, err := GenerateEncryptionKey()
+		require.NoError(t, err)
+
+		// Create secret vault service
+		vault, err := NewSecretVaultService(store, encryptionKey)
+		require.NoError(t, err)
+
+		// Test basic operations
+		testBasicSecretOperations(t, vault)
+
+		// Test account isolation
+		testAccountIsolation(t, vault)
+
+		// Test encryption consistency
+		testEncryptionConsistency(t, vault, store)
+	})
+
+	// Test PostgreSQL backend
+	t.Run("postgres", func(t *testing.T) {
+		if !*realPostgreSQLSecrets {
+			t.Skip("Skipping PostgreSQL test: use -real-postgresql-secrets flag to enable")
+		}
+
+		// Load environment variables
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			t.Logf("Warning: could not load .env file: %v", err)
+		}
+
+		// Get PostgreSQL configuration from environment variables
+		host := os.Getenv("FLOWRUNNER_POSTGRES_HOST")
+		user := os.Getenv("FLOWRUNNER_POSTGRES_USER")
+		password := os.Getenv("FLOWRUNNER_POSTGRES_PASSWORD")
+		database := os.Getenv("FLOWRUNNER_POSTGRES_DATABASE")
+		portStr := os.Getenv("FLOWRUNNER_POSTGRES_PORT")
+		sslMode := os.Getenv("FLOWRUNNER_POSTGRES_SSL_MODE")
+
+		// Set defaults if not specified
+		if host == "" {
+			host = "localhost"
+		}
+		if user == "" {
+			user = "postgres"
+		}
+		if password == "" {
+			password = "postgres"
+		}
+		if database == "" {
+			database = "flowrunner_test"
+		}
+		if portStr == "" {
+			portStr = "5432"
+		}
+		if sslMode == "" {
+			sslMode = "disable"
+		}
+
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			t.Fatalf("Invalid port number: %s", portStr)
+		}
+
+		t.Logf("PostgreSQL test config: host=%s, port=%d, user=%s, database=%s, sslmode=%s", 
+			host, port, user, database, sslMode)
+
+		provider, err := storage.NewPostgreSQLProvider(storage.PostgreSQLProviderConfig{
+			Host:     host,
+			Port:     port,
+			Database: database,
+			User:     user,
+			Password: password,
+			SSLMode:  sslMode,
+		})
+		if err != nil {
+			t.Skipf("Skipping PostgreSQL test: %v", err)
+		}
+
+		if err := provider.Initialize(); err != nil {
+			t.Skipf("Skipping PostgreSQL test: failed to initialize: %v", err)
+		}
+
+		store := provider.GetSecretStore()
+
+		// Generate encryption key
+		encryptionKey, err := GenerateEncryptionKey()
+		require.NoError(t, err)
+
+		// Create secret vault service
+		vault, err := NewSecretVaultService(store, encryptionKey)
+		require.NoError(t, err)
+
+		// Test basic operations
+		testBasicSecretOperations(t, vault)
+
+		// Test account isolation
+		testAccountIsolation(t, vault)
+
+		// Test encryption consistency
+		testEncryptionConsistency(t, vault, store)
+	})
+
+	// Test DynamoDB backend
+	t.Run("dynamodb", func(t *testing.T) {
+		var store storage.SecretStore
+
+		if !*realDynamoDBSecrets {
+			// Use mock DynamoDB for fast tests
+			provider := storage.NewDynamoDBProviderWithClient(
+				storage.NewMockDynamoDBAPI(),
+				"test_",
+			)
+
+			if err := provider.Initialize(); err != nil {
+				t.Skipf("Skipping DynamoDB mock test: failed to initialize: %v", err)
+			}
+
+			store = provider.GetSecretStore()
+		} else {
+			// Load environment variables
+			err := godotenv.Load("../../.env")
+			if err != nil {
+				t.Logf("Warning: could not load .env file: %v", err)
+			}
+
+			// Get DynamoDB configuration from environment variables
+			region := os.Getenv("FLOWRUNNER_DYNAMODB_REGION")
+			endpoint := os.Getenv("FLOWRUNNER_DYNAMODB_ENDPOINT")
+			tablePrefix := os.Getenv("FLOWRUNNER_DYNAMODB_TABLE_PREFIX")
+
+			// Set defaults if not specified
+			if region == "" {
+				region = "us-west-2"
+			}
+			if endpoint == "" {
+				endpoint = "http://localhost:8000"
+			}
+			if tablePrefix == "" {
+				tablePrefix = "secret_vault_test_"
+			}
+
+			t.Logf("DynamoDB test config: region=%s, endpoint=%s, tablePrefix=%s", 
+				region, endpoint, tablePrefix)
+
+			// Use real DynamoDB for integration tests
+			provider, err := storage.NewDynamoDBProvider(storage.DynamoDBProviderConfig{
+				Region:      region,
+				Endpoint:    endpoint,
+				TablePrefix: tablePrefix,
 			})
 			if err != nil {
-				t.Skipf("Skipping PostgreSQL test: %v", err)
-				return nil
+				t.Skipf("Skipping real DynamoDB test: %v", err)
 			}
 
 			if err := provider.Initialize(); err != nil {
-				t.Skipf("Skipping PostgreSQL test: failed to initialize: %v", err)
-				return nil
+				t.Skipf("Skipping real DynamoDB test: failed to initialize: %v", err)
 			}
 
-			return provider.GetSecretStore()
-		},
-		"dynamodb": func() storage.SecretStore {
-			if !*realDynamoDBSecrets {
-				// Use mock DynamoDB for fast tests
-				provider := storage.NewDynamoDBProviderWithClient(
-					storage.NewMockDynamoDBAPI(),
-					"test_",
-				)
+			store = provider.GetSecretStore()
+		}
 
-				if err := provider.Initialize(); err != nil {
-					t.Skipf("Skipping DynamoDB mock test: failed to initialize: %v", err)
-					return nil
-				}
+		// Generate encryption key
+		encryptionKey, err := GenerateEncryptionKey()
+		require.NoError(t, err)
 
-				return provider.GetSecretStore()
-			} else {
-				// Use real DynamoDB for integration tests
-				provider, err := storage.NewDynamoDBProvider(storage.DynamoDBProviderConfig{
-					Region:      "us-west-2",
-					Endpoint:    "http://localhost:8000",
-					TablePrefix: "secret_vault_test_",
-				})
-				if err != nil {
-					t.Skipf("Skipping real DynamoDB test: %v", err)
-					return nil
-				}
+		// Create secret vault service
+		vault, err := NewSecretVaultService(store, encryptionKey)
+		require.NoError(t, err)
 
-				if err := provider.Initialize(); err != nil {
-					t.Skipf("Skipping real DynamoDB test: failed to initialize: %v", err)
-					return nil
-				}
+		// Test basic operations
+		testBasicSecretOperations(t, vault)
 
-				return provider.GetSecretStore()
-			}
-		},
-	}
+		// Test account isolation
+		testAccountIsolation(t, vault)
 
-	for backendName, createStore := range backends {
-		t.Run(backendName, func(t *testing.T) {
-			store := createStore()
-			if store == nil {
-				return // Skip test
-			}
-
-			// Generate encryption key
-			encryptionKey, err := GenerateEncryptionKey()
-			require.NoError(t, err)
-
-			// Create secret vault service
-			vault, err := NewSecretVaultService(store, encryptionKey)
-			require.NoError(t, err)
-
-			// Test basic operations
-			testBasicSecretOperations(t, vault)
-
-			// Test account isolation
-			testAccountIsolation(t, vault)
-
-			// Test encryption consistency
-			testEncryptionConsistency(t, vault, store)
-		})
-	}
+		// Test encryption consistency
+		testEncryptionConsistency(t, vault, store)
+	})
 }
 
 func testBasicSecretOperations(t *testing.T, vault *SecretVaultService) {
-	accountID := "test-account"
+	accountID := "test-account-basic"
 
 	// Test Set and Get
 	err := vault.Set(accountID, "api_key", "secret-api-key-123")
@@ -141,8 +240,8 @@ func testBasicSecretOperations(t *testing.T, vault *SecretVaultService) {
 }
 
 func testAccountIsolation(t *testing.T, vault *SecretVaultService) {
-	account1 := "account-1"
-	account2 := "account-2"
+	account1 := "account-isolation-1"
+	account2 := "account-isolation-2"
 
 	// Add secrets to both accounts
 	err := vault.Set(account1, "secret1", "value1")
@@ -171,7 +270,7 @@ func testAccountIsolation(t *testing.T, vault *SecretVaultService) {
 }
 
 func testEncryptionConsistency(t *testing.T, vault *SecretVaultService, store storage.SecretStore) {
-	accountID := "test-account"
+	accountID := "test-account-encryption"
 	secretKey := "test-secret"
 	secretValue := "test-value"
 
@@ -216,36 +315,111 @@ func testEncryptionConsistency(t *testing.T, vault *SecretVaultService, store st
 }
 
 func TestSecretVaultService_EdgeCases_AllBackends(t *testing.T) {
-	backends := map[string]func() storage.SecretStore{
-		"memory": func() storage.SecretStore {
-			return storage.NewMemorySecretStore()
-		},
-		"dynamodb_mock": func() storage.SecretStore {
-			provider := storage.NewDynamoDBProviderWithClient(
-				storage.NewMockDynamoDBAPI(),
-				"test_",
-			)
-			require.NoError(t, provider.Initialize())
-			return provider.GetSecretStore()
-		},
-	}
+	// Test Memory backend edge cases
+	t.Run("memory", func(t *testing.T) {
+		store := storage.NewMemorySecretStore()
+		encryptionKey, err := GenerateEncryptionKey()
+		require.NoError(t, err)
 
-	for backendName, createStore := range backends {
-		t.Run(backendName, func(t *testing.T) {
-			store := createStore()
-			encryptionKey, err := GenerateEncryptionKey()
-			require.NoError(t, err)
+		vault, err := NewSecretVaultService(store, encryptionKey)
+		require.NoError(t, err)
 
-			vault, err := NewSecretVaultService(store, encryptionKey)
-			require.NoError(t, err)
+		testSecretVaultEdgeCases(t, vault)
+	})
 
-			testSecretVaultEdgeCases(t, vault)
+	// Test DynamoDB mock backend edge cases
+	t.Run("dynamodb_mock", func(t *testing.T) {
+		provider := storage.NewDynamoDBProviderWithClient(
+			storage.NewMockDynamoDBAPI(),
+			"test_",
+		)
+		require.NoError(t, provider.Initialize())
+		store := provider.GetSecretStore()
+
+		encryptionKey, err := GenerateEncryptionKey()
+		require.NoError(t, err)
+
+		vault, err := NewSecretVaultService(store, encryptionKey)
+		require.NoError(t, err)
+
+		testSecretVaultEdgeCases(t, vault)
+	})
+
+	// Test PostgreSQL backend edge cases
+	t.Run("postgres", func(t *testing.T) {
+		if !*realPostgreSQLSecrets {
+			t.Skip("Skipping PostgreSQL edge cases test: use -real-postgresql-secrets flag to enable")
+		}
+
+		// Load environment variables
+		err := godotenv.Load("../../.env")
+		if err != nil {
+			t.Logf("Warning: could not load .env file: %v", err)
+		}
+
+		// Get PostgreSQL configuration from environment variables
+		host := os.Getenv("FLOWRUNNER_POSTGRES_HOST")
+		user := os.Getenv("FLOWRUNNER_POSTGRES_USER")
+		password := os.Getenv("FLOWRUNNER_POSTGRES_PASSWORD")
+		database := os.Getenv("FLOWRUNNER_POSTGRES_DATABASE")
+		portStr := os.Getenv("FLOWRUNNER_POSTGRES_PORT")
+		sslMode := os.Getenv("FLOWRUNNER_POSTGRES_SSL_MODE")
+
+		// Set defaults if not specified
+		if host == "" {
+			host = "localhost"
+		}
+		if user == "" {
+			user = "postgres"
+		}
+		if password == "" {
+			password = "postgres"
+		}
+		if database == "" {
+			database = "flowrunner_test"
+		}
+		if portStr == "" {
+			portStr = "5432"
+		}
+		if sslMode == "" {
+			sslMode = "disable"
+		}
+
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			t.Fatalf("Invalid port number: %s", portStr)
+		}
+
+		provider, err := storage.NewPostgreSQLProvider(storage.PostgreSQLProviderConfig{
+			Host:     host,
+			Port:     port,
+			Database: database,
+			User:     user,
+			Password: password,
+			SSLMode:  sslMode,
 		})
-	}
+		if err != nil {
+			t.Skipf("Skipping PostgreSQL edge cases test: %v", err)
+		}
+
+		if err := provider.Initialize(); err != nil {
+			t.Skipf("Skipping PostgreSQL edge cases test: failed to initialize: %v", err)
+		}
+
+		store := provider.GetSecretStore()
+
+		encryptionKey, err := GenerateEncryptionKey()
+		require.NoError(t, err)
+
+		vault, err := NewSecretVaultService(store, encryptionKey)
+		require.NoError(t, err)
+
+		testSecretVaultEdgeCases(t, vault)
+	})
 }
 
 func testSecretVaultEdgeCases(t *testing.T, vault *SecretVaultService) {
-	accountID := "test-account"
+	accountID := "test-account-edge-cases"
 
 	// Test empty values
 	err := vault.Set(accountID, "empty-secret", "")

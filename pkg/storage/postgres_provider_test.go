@@ -2,6 +2,7 @@ package storage
 
 import (
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -20,24 +21,65 @@ func init() {
 // Note: This test requires a PostgreSQL instance
 // It will be skipped if the required environment variables are not set
 func TestPostgreSQLProvider(t *testing.T) {
-	// Check if we have PostgreSQL credentials
-	host := os.Getenv("POSTGRES_HOST")
-	user := os.Getenv("POSTGRES_USER")
-	password := os.Getenv("POSTGRES_PASSWORD")
-	dbName := os.Getenv("POSTGRES_DB")
+	// Load environment variables
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		t.Logf("Warning: could not load .env file: %v", err)
+	}
 
-	if host == "" || user == "" || password == "" || dbName == "" {
+	// Check if we have PostgreSQL credentials from environment variables
+	host := os.Getenv("FLOWRUNNER_POSTGRES_HOST")
+	user := os.Getenv("FLOWRUNNER_POSTGRES_USER")
+	password := os.Getenv("FLOWRUNNER_POSTGRES_PASSWORD")
+	dbName := os.Getenv("FLOWRUNNER_POSTGRES_DATABASE")
+	portStr := os.Getenv("FLOWRUNNER_POSTGRES_PORT")
+	sslMode := os.Getenv("FLOWRUNNER_POSTGRES_SSL_MODE")
+
+	// Fall back to legacy environment variables if flowrunner ones are not set
+	if host == "" {
+		host = os.Getenv("POSTGRES_HOST")
+	}
+	if user == "" {
+		user = os.Getenv("POSTGRES_USER")
+	}
+	if password == "" {
+		password = os.Getenv("POSTGRES_PASSWORD")
+	}
+	if dbName == "" {
+		dbName = os.Getenv("POSTGRES_DB")
+	}
+
+	// Set defaults
+	if host == "" {
+		host = "localhost"
+	}
+	if portStr == "" {
+		portStr = "5432"
+	}
+	if sslMode == "" {
+		sslMode = "disable"
+	}
+
+	if user == "" || password == "" || dbName == "" {
 		t.Skip("Skipping PostgreSQL tests as credentials are not set")
 	}
+
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		t.Fatalf("Invalid port number: %s", portStr)
+	}
+
+	t.Logf("PostgreSQL test config: host=%s, port=%d, user=%s, database=%s, sslmode=%s", 
+		host, port, user, dbName, sslMode)
 
 	// Create provider config
 	config := PostgreSQLProviderConfig{
 		Host:     host,
-		Port:     5432,
+		Port:     port,
 		User:     user,
 		Password: password,
 		Database: dbName,
-		SSLMode:  "disable",
+		SSLMode:  sslMode,
 	}
 
 	// Create provider

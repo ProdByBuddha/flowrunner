@@ -211,11 +211,33 @@ func (m *MockDynamoDBAPI) Query(input *dynamodb.QueryInput) (*dynamodb.QueryOutp
 		items = table.Items
 	}
 
-	// Simple mock query logic - in a real implementation you'd parse the KeyConditionExpression
+	// Simple mock query logic with basic filtering
 	var resultItems []map[string]*dynamodb.AttributeValue
 
+	// If we have expression attribute values, try to extract the AccountID filter
+	var filterAccountID string
+	if input.ExpressionAttributeValues != nil {
+		if accountIDValue, exists := input.ExpressionAttributeValues[":0"]; exists && accountIDValue.S != nil {
+			filterAccountID = aws.StringValue(accountIDValue.S)
+		}
+		// Also check for other common placeholders
+		if filterAccountID == "" {
+			if accountIDValue, exists := input.ExpressionAttributeValues[":v0"]; exists && accountIDValue.S != nil {
+				filterAccountID = aws.StringValue(accountIDValue.S)
+			}
+		}
+	}
+
 	for _, item := range items {
-		// Basic filtering - this is simplified for testing
+		// If we have an AccountID filter, apply it
+		if filterAccountID != "" {
+			if accountIDAttr, exists := item["AccountID"]; exists && accountIDAttr.S != nil {
+				if aws.StringValue(accountIDAttr.S) != filterAccountID {
+					continue // Skip items that don't match the account ID
+				}
+			}
+		}
+		
 		resultItems = append(resultItems, item)
 	}
 
