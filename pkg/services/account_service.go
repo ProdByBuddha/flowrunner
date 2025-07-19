@@ -15,7 +15,8 @@ import (
 
 // AccountService implements the auth.AccountService interface
 type AccountService struct {
-	store storage.AccountStore
+	store      storage.AccountStore
+	jwtService *JWTService
 }
 
 // NewAccountService creates a new account service with the given storage backend
@@ -23,6 +24,26 @@ func NewAccountService(store storage.AccountStore) *AccountService {
 	return &AccountService{
 		store: store,
 	}
+}
+
+// WithJWTService adds JWT support to the account service
+func (s *AccountService) WithJWTService(jwtSecret string, tokenExpiration int) *AccountService {
+	s.jwtService = NewJWTService(jwtSecret, tokenExpiration)
+	return s
+}
+
+// GenerateJWT generates a JWT token for an account
+func (s *AccountService) GenerateJWT(accountID string) (string, error) {
+	if s.jwtService == nil {
+		return "", fmt.Errorf("JWT service not configured")
+	}
+
+	account, err := s.GetAccount(accountID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get account: %w", err)
+	}
+
+	return s.jwtService.GenerateToken(account)
 }
 
 // Authenticate verifies credentials and returns an account ID
@@ -52,7 +73,16 @@ func (s *AccountService) ValidateToken(token string) (string, error) {
 		return "", fmt.Errorf("token is required")
 	}
 
-	// Get account by token
+	// First try to validate as JWT
+	if s.jwtService != nil {
+		accountID, err := s.jwtService.ValidateToken(token)
+		if err == nil {
+			return accountID, nil
+		}
+		// If it's not a valid JWT, continue to try API token
+	}
+
+	// Try as API token
 	account, err := s.store.GetAccountByToken(token)
 	if err != nil {
 		return "", fmt.Errorf("invalid token")

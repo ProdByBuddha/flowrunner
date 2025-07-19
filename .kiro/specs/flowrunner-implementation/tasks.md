@@ -78,14 +78,14 @@
 
 - [ ] 5. Implement account management and authentication
 
-  - [ ] 5.1 Create account service
+  - [x] 5.1 Create account service
 
     - Implement account creation and management
     - Add password hashing and verification
     - Support account lookup and validation
     - _Requirements: 3.1, 3.3, 8.2_
 
-  - [ ] 5.2 Implement authentication middleware
+  - [x] 5.2 Implement authentication middleware
 
     - Support HTTP Basic authentication
     - Support Bearer Token authentication

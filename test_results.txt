@@ -1,4 +1,44 @@
-# github.com/tcmartin/flowrunner/pkg/storage
-pkg/storage/flow_metadata.go:31:31: undefined: time
-FAIL	github.com/tcmartin/flowrunner/pkg/registry [build failed]
-FAIL
+=== RUN   TestFlowVersioningAndMetadata
+    final_verification_test.go:32: Created flow with ID: test-flow-1752891098259117000
+    final_verification_test.go:47: Successfully updated metadata
+    final_verification_test.go:67: Successfully created version 1.1.0
+    final_verification_test.go:74: Found 2 versions
+    final_verification_test.go:76: Version 0: 1.1.0
+    final_verification_test.go:76: Version 1: 1.0.0
+    final_verification_test.go:84: Successfully retrieved version 1.0.0: 160 bytes
+    final_verification_test.go:90: Successfully retrieved version 1.1.0: 197 bytes
+    final_verification_test.go:100: Found 1 flows matching metadata criteria
+--- PASS: TestFlowVersioningAndMetadata (0.00s)
+=== RUN   TestFlowMetadataManagement
+--- PASS: TestFlowMetadataManagement (0.00s)
+=== RUN   TestFlowSearch
+--- PASS: TestFlowSearch (0.00s)
+=== RUN   TestFlowRegistryCreate
+--- PASS: TestFlowRegistryCreate (0.00s)
+=== RUN   TestFlowRegistryGet
+--- PASS: TestFlowRegistryGet (0.00s)
+=== RUN   TestFlowRegistryList
+--- PASS: TestFlowRegistryList (0.00s)
+=== RUN   TestFlowRegistryUpdate
+--- PASS: TestFlowRegistryUpdate (0.00s)
+=== RUN   TestFlowRegistryDelete
+--- PASS: TestFlowRegistryDelete (0.00s)
+=== RUN   TestFlowRegistryVersioning
+--- PASS: TestFlowRegistryVersioning (0.00s)
+=== RUN   TestFlowVersioningWithDebug
+    flow_versioning_debug_test.go:32: Created flow with ID: test-flow-1752891098261484000
+    flow_versioning_debug_test.go:39: Found 1 versions after creation
+    flow_versioning_debug_test.go:41: Version 0: 1.0.0
+    flow_versioning_debug_test.go:60: Updated flow with new version 1.1.0
+    flow_versioning_debug_test.go:67: Found 2 versions after update
+    flow_versioning_debug_test.go:69: Version 0: 1.0.0
+    flow_versioning_debug_test.go:69: Version 1: 1.1.0
+    flow_versioning_debug_test.go:77: Successfully retrieved version 1.0.0
+    flow_versioning_debug_test.go:83: Successfully retrieved version 1.1.0
+--- PASS: TestFlowVersioningWithDebug (0.00s)
+=== RUN   TestFlowVersioning
+--- PASS: TestFlowVersioning (0.00s)
+=== RUN   TestMissingMethodImplementations
+--- PASS: TestMissingMethodImplementations (0.00s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/registry	0.394s

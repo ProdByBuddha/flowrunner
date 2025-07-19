@@ -2,13 +2,23 @@
 package main
 
 import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
+	"time"
 
+	"github.com/tcmartin/flowrunner/pkg/api"
 	"github.com/tcmartin/flowrunner/pkg/config"
+	"github.com/tcmartin/flowrunner/pkg/registry"
+	"github.com/tcmartin/flowrunner/pkg/services"
+	"github.com/tcmartin/flowrunner/pkg/storage"
 )
 
 var (
@@ -45,9 +55,29 @@ func main() {
 		log.Fatalf("Failed to initialize application: %v", err)
 	}
 
-	// Start the application
-	if err := app.Start(); err != nil {
-		log.Fatalf("Application failed: %v", err)
+	// Handle graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	// Start the application in a goroutine
+	errCh := make(chan error)
+	go func() {
+		errCh <- app.Start()
+	}()
+
+	// Wait for interrupt signal or error
+	select {
+	case err := <-errCh:
+		if err != nil {
+			log.Fatalf("Application failed: %v", err)
+		}
+	case <-stop:
+		log.Println("Shutting down gracefully...")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := app.Stop(ctx); err != nil {
+			log.Fatalf("Error during shutdown: %v", err)
+		}
 	}
 }
 
@@ -75,6 +105,23 @@ func loadConfig() (*config.Config, error) {
 	// If no config file is found, create a default one
 	cfg := config.DefaultConfig()
 
+	// Generate random JWT secret and encryption key if not set
+	if cfg.Auth.JWTSecret == "" {
+		secret, err := generateRandomKey(32)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate JWT secret: %w", err)
+		}
+		cfg.Auth.JWTSecret = secret
+	}
+
+	if cfg.Auth.EncryptionKey == "" {
+		key, err := generateRandomKey(32)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate encryption key: %w", err)
+		}
+		cfg.Auth.EncryptionKey = key
+	}
+
 	// Save the default config to the user's home directory
 	defaultPath := filepath.Join(os.Getenv("HOME"), ".flowrunner", "config.json")
 	if err := config.SaveConfig(cfg, defaultPath); err != nil {
@@ -85,25 +132,90 @@ func loadConfig() (*config.Config, error) {
 	return cfg, nil
 }
 
+// generateRandomKey generates a random key of the specified length
+func generateRandomKey(length int) (string, error) {
+	bytes := make([]byte, length)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
 // App represents the flowrunner application
 type App struct {
-	config *config.Config
-	// Add other components here
+	config          *config.Config
+	server          *api.Server
+	storageProvider storage.StorageProvider
 }
 
 // NewApp creates a new application instance
 func NewApp(cfg *config.Config) (*App, error) {
+	// Initialize storage provider
+	var storageProvider storage.StorageProvider
+	var err error
+
+	switch cfg.Storage.Type {
+	case "memory":
+		storageProvider = storage.NewMemoryProvider()
+	case "dynamodb":
+		// For now, we'll use the memory provider for DynamoDB
+		storageProvider = storage.NewMemoryProvider()
+	case "postgres":
+		// For now, we'll use the memory provider for PostgreSQL
+		storageProvider = storage.NewMemoryProvider()
+	default:
+		return nil, fmt.Errorf("unsupported storage type: %s", cfg.Storage.Type)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize storage provider: %w", err)
+	}
+
+	// Initialize storage
+	if err := storageProvider.Initialize(); err != nil {
+		return nil, fmt.Errorf("failed to initialize storage: %w", err)
+	}
+
+	// We'll skip the YAML loader for now
+
+	// Create flow registry
+	flowRegistry := registry.NewFlowRegistry(storageProvider.GetFlowStore(), registry.FlowRegistryOptions{})
+
+	// Create account service with JWT support
+	accountService := services.NewAccountService(storageProvider.GetAccountStore())
+
+	// Add JWT support if configured
+	if cfg.Auth.JWTSecret != "" {
+		accountService = accountService.WithJWTService(cfg.Auth.JWTSecret, cfg.Auth.TokenExpiration)
+	}
+
+	// Create API server
+	server := api.NewServer(cfg, flowRegistry, accountService)
+
 	return &App{
-		config: cfg,
+		config:          cfg,
+		server:          server,
+		storageProvider: storageProvider,
 	}, nil
 }
 
 // Start starts the application
 func (a *App) Start() error {
 	fmt.Printf("Starting %s version %s\n", AppName, AppVersion)
-	fmt.Printf("Listening on %s:%d\n", a.config.Server.Host, a.config.Server.Port)
+	return a.server.Start()
+}
 
-	// TODO: Initialize components and start the server
+// Stop stops the application gracefully
+func (a *App) Stop(ctx context.Context) error {
+	// Stop the server
+	if err := a.server.Stop(ctx); err != nil {
+		return err
+	}
+
+	// Close storage
+	if err := a.storageProvider.Close(); err != nil {
+		return fmt.Errorf("failed to close storage: %w", err)
+	}
 
 	return nil
 }
