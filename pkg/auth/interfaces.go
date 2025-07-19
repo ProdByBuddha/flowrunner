@@ -68,17 +68,17 @@ type SecretVault interface {
 // Secret represents a stored credential
 type Secret struct {
 	// AccountID is the ID of the account that owns the secret
-	AccountID string `json:"-"`
+	AccountID string `json:"-" dynamodbav:"AccountID"`
 
 	// Key is the name of the secret
-	Key string `json:"key"`
+	Key string `json:"key" dynamodbav:"Key"`
 
 	// Value is the encrypted secret value (not exposed via API)
-	Value string `json:"-"`
+	Value string `json:"-" dynamodbav:"Value"`
 
 	// CreatedAt is when the secret was created
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"created_at" dynamodbav:"CreatedAt"`
 
 	// UpdatedAt is when the secret was last updated
-	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedAt time.Time `json:"updated_at" dynamodbav:"UpdatedAt"`
 }
