@@ -64,9 +64,8 @@ func (m *MockNode) Params() map[string]interface{} {
 	return args.Get(0).(map[string]interface{})
 }
 
-func (m *MockNode) Next(action string, n flowlib.Node) flowlib.Node {
-	args := m.Called(action, n)
-	return args.Get(0).(flowlib.Node)
+func (m *MockNode) Next(action string, n flowlib.Node) {
+	m.Called(action, n)
 }
 
 func (m *MockNode) Successors() map[string]flowlib.Node {
@@ -87,7 +86,7 @@ func TestYAMLLoaderValidate(t *testing.T) {
 			mockNode := new(MockNode)
 			mockNode.On("SetParams", mock.Anything).Return()
 			mockNode.On("Params").Return(map[string]interface{}{})
-			mockNode.On("Next", mock.Anything, mock.Anything).Return(mockNode)
+			mockNode.On("Next", mock.Anything, mock.Anything).Return()
 			mockNode.On("Successors").Return(map[string]flowlib.Node{})
 			mockNode.On("Run", mock.Anything).Return("default", nil)
 			mockFactory.On("CreateNode", mock.Anything).Return(mockNode, nil)
@@ -202,7 +201,7 @@ func TestYAMLLoaderParse(t *testing.T) {
 			mockNode := new(MockNode)
 			mockNode.On("SetParams", mock.Anything).Return()
 			mockNode.On("Params").Return(map[string]interface{}{})
-			mockNode.On("Next", mock.Anything, mock.Anything).Return(mockNode)
+			mockNode.On("Next", mock.Anything, mock.Anything).Return()
 			mockNode.On("Successors").Return(map[string]flowlib.Node{})
 			mockNode.On("Run", mock.Anything).Return("default", nil)
 			mockFactory.On("CreateNode", mock.Anything).Return(mockNode, nil)

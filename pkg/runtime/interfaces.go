@@ -23,6 +23,17 @@ type FlowRuntime interface {
 	Cancel(executionID string) error
 }
 
+// FlowRegistry is an interface for retrieving flow definitions
+type FlowRegistry interface {
+	GetFlow(accountID, flowID string) (*Flow, error)
+}
+
+// Flow represents a flow definition
+type Flow struct {
+	ID string
+	YAML string
+}
+
 // ExecutionStatus represents the current state of a flow execution
 type ExecutionStatus struct {
 	// ID of the execution

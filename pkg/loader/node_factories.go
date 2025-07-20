@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -52,6 +53,11 @@ func (f *BatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node, err
 	node := flowlib.NewBatchNode(maxRetries, wait)
 	node.SetParams(nodeDef.Params)
 
+	// Set a default execFn for BatchNode that returns an empty slice
+	// In a real scenario, this would likely come from nodeDef.Params or a shared context
+	node.SetExecFn(func(any) (any, error) { return []any{}, nil })
+	node.SetPrepFn(func(any) (any, error) { return []any{}, nil })
+
 	return node, nil
 }
 
@@ -76,6 +82,10 @@ func (f *AsyncBatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node
 	node := flowlib.NewAsyncBatchNode(maxRetries, wait)
 	node.SetParams(nodeDef.Params)
 
+	// Set a default execAsyncFn for AsyncBatchNode that returns an empty slice
+	node.SetExecAsyncFn(func(ctx context.Context, input any) (any, error) { return []any{}, nil })
+	node.SetPrepFn(func(any) (any, error) { return []any{}, nil })
+
 	return node, nil
 }
 
@@ -99,6 +109,10 @@ func (f *AsyncParallelBatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flow
 
 	node := flowlib.NewAsyncParallelBatchNode(maxRetries, wait)
 	node.SetParams(nodeDef.Params)
+
+	// Set a default execAsyncFn for AsyncParallelBatchNode that returns an empty slice
+	node.SetExecAsyncFn(func(ctx context.Context, input any) (any, error) { return []any{}, nil })
+	node.SetPrepFn(func(any) (any, error) { return []any{}, nil })
 
 	return node, nil
 }
@@ -128,6 +142,10 @@ func (f *WorkerPoolBatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib
 
 	node := flowlib.NewWorkerPoolBatchNode(maxRetries, wait, maxParallel)
 	node.SetParams(nodeDef.Params)
+
+	// Set a default execAsyncFn for WorkerPoolBatchNode that returns an empty slice
+	node.SetExecAsyncFn(func(ctx context.Context, input any) (any, error) { return []any{}, nil })
+	node.SetPrepFn(func(any) (any, error) { return []any{}, nil })
 
 	return node, nil
 }

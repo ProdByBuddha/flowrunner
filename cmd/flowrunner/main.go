@@ -290,7 +290,7 @@ func NewApp(cfg *config.Config) (*App, error) {
 
 	// Create YAML loader with empty dependencies (stub implementation)
 	nodeFactories := make(map[string]loader.NodeFactory)
-	yamlLoader := loader.NewYAMLLoader(nodeFactories, nil, nil)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories)
 
 	// Create flow registry
 	flowRegistry := registry.NewFlowRegistry(storageProvider.GetFlowStore(), registry.FlowRegistryOptions{

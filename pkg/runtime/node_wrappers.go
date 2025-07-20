@@ -26,8 +26,8 @@ func (w *NodeWrapper) Params() map[string]interface{} {
 }
 
 // Next sets the next node for the given action
-func (w *NodeWrapper) Next(action flowlib.Action, n flowlib.Node) flowlib.Node {
-	return w.node.Next(action, n)
+func (w *NodeWrapper) Next(action flowlib.Action, n flowlib.Node) {
+	w.node.Next(action, n)
 }
 
 // Successors returns the successors of the node
