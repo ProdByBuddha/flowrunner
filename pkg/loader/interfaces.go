@@ -5,6 +5,20 @@ import (
 	"github.com/tcmartin/flowlib"
 )
 
+// NodeFactory is a function type for creating nodes
+type NodeFactory func(params map[string]interface{}) (flowlib.Node, error)
+
+// ExpressionEvaluator evaluates expressions in context
+type ExpressionEvaluator interface {
+	Evaluate(expression string, context map[string]interface{}) (interface{}, error)
+	EvaluateInObject(obj map[string]interface{}, context map[string]interface{}) (map[string]interface{}, error)
+}
+
+// ScriptEngine executes scripts
+type ScriptEngine interface {
+	Execute(script string, context map[string]interface{}) (interface{}, error)
+}
+
 // YAMLLoader parses YAML flow definitions into Flowlib graph structures.
 type YAMLLoader interface {
 	// Parse converts a YAML string into a Flowlib graph

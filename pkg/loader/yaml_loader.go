@@ -8,17 +8,28 @@ import (
 )
 
 // DefaultYAMLLoader implements the YAMLLoader interface
-type DefaultYAMLLoader struct{}
+type DefaultYAMLLoader struct {
+	nodeFactories map[string]NodeFactory
+	evaluator     ExpressionEvaluator
+	scriptEngine  ScriptEngine
+}
 
 // NewYAMLLoader creates a new YAML loader
-func NewYAMLLoader() YAMLLoader {
-	return &DefaultYAMLLoader{}
+func NewYAMLLoader(nodeFactories map[string]NodeFactory, evaluator ExpressionEvaluator, scriptEngine ScriptEngine) YAMLLoader {
+	return &DefaultYAMLLoader{
+		nodeFactories: nodeFactories,
+		evaluator:     evaluator,
+		scriptEngine:  scriptEngine,
+	}
 }
 
 // Parse converts a YAML string into a Flowlib graph
 func (l *DefaultYAMLLoader) Parse(yamlContent string) (*flowlib.Flow, error) {
-	// For now, we'll just validate the YAML and return a stub flow
-	// This is a placeholder implementation
+	// First validate the YAML
+	if err := l.Validate(yamlContent); err != nil {
+		return nil, err
+	}
+
 	var flowDef FlowDefinition
 	if err := yaml.Unmarshal([]byte(yamlContent), &flowDef); err != nil {
 		return nil, fmt.Errorf("failed to parse YAML: %w", err)
@@ -49,6 +60,22 @@ func (l *DefaultYAMLLoader) Validate(yamlContent string) error {
 
 	if len(flowDef.Nodes) == 0 {
 		return fmt.Errorf("flow must have at least one node")
+	}
+
+	// Validate node types exist in factories
+	for nodeName, nodeDef := range flowDef.Nodes {
+		if _, exists := l.nodeFactories[nodeDef.Type]; !exists {
+			return fmt.Errorf("unknown node type '%s' in node '%s'", nodeDef.Type, nodeName)
+		}
+	}
+
+	// Validate node references
+	for nodeName, nodeDef := range flowDef.Nodes {
+		for action, nextNode := range nodeDef.Next {
+			if _, exists := flowDef.Nodes[nextNode]; !exists {
+				return fmt.Errorf("node '%s' references non-existent node '%s' for action '%s'", nodeName, nextNode, action)
+			}
+		}
 	}
 
 	return nil

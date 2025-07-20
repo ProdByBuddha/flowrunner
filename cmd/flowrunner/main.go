@@ -288,8 +288,9 @@ func NewApp(cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("failed to initialize storage: %w", err)
 	}
 
-	// Create YAML loader
-	yamlLoader := loader.NewYAMLLoader()
+	// Create YAML loader with empty dependencies (stub implementation)
+	nodeFactories := make(map[string]loader.NodeFactory)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, nil, nil)
 
 	// Create flow registry
 	flowRegistry := registry.NewFlowRegistry(storageProvider.GetFlowStore(), registry.FlowRegistryOptions{
