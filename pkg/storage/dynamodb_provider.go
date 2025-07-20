@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/tcmartin/flowrunner/pkg/auth"
+	"github.com/tcmartin/flowrunner/pkg/models"
 	"github.com/tcmartin/flowrunner/pkg/runtime"
 )
 
@@ -138,7 +139,7 @@ func (p *DynamoDBProvider) GetSecretStore() SecretStore {
 }
 
 // GetExecutionStore returns a store for execution data
-func (p *DynamoDBProvider) GetExecutionStore() ExecutionStore {
+func (p *DynamoDBProvider) GetExecutionStore() runtime.ExecutionStore {
 	return p.executionStore
 }
 
@@ -1032,10 +1033,10 @@ func (s *DynamoDBExecutionStore) initializeExecutionLogsTable() error {
 }
 
 // SaveExecution persists execution data
-func (s *DynamoDBExecutionStore) SaveExecution(execution runtime.ExecutionStatus) error {
+func (s *DynamoDBExecutionStore) SaveExecution(execution models.ExecutionStatus) error {
 	// Convert time fields to Unix timestamps
 	item := struct {
-		runtime.ExecutionStatus
+		models.ExecutionStatus
 		StartTimeUnix int64 `json:"StartTime"`
 		EndTimeUnix   int64 `json:"EndTime"`
 		// Note: We need AccountID for DynamoDB, but ExecutionStatus doesn't have it
@@ -1069,7 +1070,7 @@ func (s *DynamoDBExecutionStore) SaveExecution(execution runtime.ExecutionStatus
 }
 
 // GetExecution retrieves execution data
-func (s *DynamoDBExecutionStore) GetExecution(executionID string) (runtime.ExecutionStatus, error) {
+func (s *DynamoDBExecutionStore) GetExecution(executionID string) (models.ExecutionStatus, error) {
 	// Get execution
 	result, err := s.client.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(s.execTableName),
@@ -1081,21 +1082,21 @@ func (s *DynamoDBExecutionStore) GetExecution(executionID string) (runtime.Execu
 	})
 
 	if err != nil {
-		return runtime.ExecutionStatus{}, fmt.Errorf("failed to get execution: %w", err)
+		return models.ExecutionStatus{}, fmt.Errorf("failed to get execution: %w", err)
 	}
 
 	if result.Item == nil {
-		return runtime.ExecutionStatus{}, ErrExecutionNotFound
+		return models.ExecutionStatus{}, ErrExecutionNotFound
 	}
 
 	// Unmarshal execution
 	var item struct {
-		runtime.ExecutionStatus
+		models.ExecutionStatus
 		StartTimeUnix int64 `json:"StartTime"`
 		EndTimeUnix   int64 `json:"EndTime"`
 	}
 	if err := dynamodbattribute.UnmarshalMap(result.Item, &item); err != nil {
-		return runtime.ExecutionStatus{}, fmt.Errorf("failed to unmarshal execution: %w", err)
+		return models.ExecutionStatus{}, fmt.Errorf("failed to unmarshal execution: %w", err)
 	}
 
 	// Convert Unix timestamps back to time.Time
@@ -1107,7 +1108,7 @@ func (s *DynamoDBExecutionStore) GetExecution(executionID string) (runtime.Execu
 }
 
 // ListExecutions returns all executions for an account
-func (s *DynamoDBExecutionStore) ListExecutions(accountID string) ([]runtime.ExecutionStatus, error) {
+func (s *DynamoDBExecutionStore) ListExecutions(accountID string) ([]models.ExecutionStatus, error) {
 	// Create query expression
 	keyCond := expression.Key("AccountID").Equal(expression.Value(accountID))
 	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()

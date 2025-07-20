@@ -3,7 +3,7 @@ package storage
 
 import (
 	"github.com/tcmartin/flowrunner/pkg/auth"
-	"github.com/tcmartin/flowrunner/pkg/runtime"
+	"github.com/tcmartin/flowrunner/pkg/models"
 )
 
 // StorageProvider defines the interface for persistence backends
@@ -133,24 +133,6 @@ type SecretStore interface {
 
 	// DeleteSecret removes a secret
 	DeleteSecret(accountID, key string) error
-}
-
-// ExecutionStore manages execution data persistence
-type ExecutionStore interface {
-	// SaveExecution persists execution data
-	SaveExecution(execution runtime.ExecutionStatus) error
-
-	// GetExecution retrieves execution data
-	GetExecution(executionID string) (runtime.ExecutionStatus, error)
-
-	// ListExecutions returns all executions for an account
-	ListExecutions(accountID string) ([]runtime.ExecutionStatus, error)
-
-	// SaveExecutionLog persists an execution log entry
-	SaveExecutionLog(executionID string, log runtime.ExecutionLog) error
-
-	// GetExecutionLogs retrieves logs for an execution
-	GetExecutionLogs(executionID string) ([]runtime.ExecutionLog, error)
 }
 
 // AccountStore manages account persistence

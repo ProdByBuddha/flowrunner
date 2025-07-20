@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/tcmartin/flowrunner/pkg/auth"
+	"github.com/tcmartin/flowrunner/pkg/models"
 	"github.com/tcmartin/flowrunner/pkg/runtime"
 )
 
@@ -59,7 +60,7 @@ func (p *MemoryProvider) GetSecretStore() SecretStore {
 }
 
 // GetExecutionStore returns a store for execution data
-func (p *MemoryProvider) GetExecutionStore() ExecutionStore {
+func (p *MemoryProvider) GetExecutionStore() runtime.ExecutionStore {
 	return p.executionStore
 }
 
@@ -336,7 +337,7 @@ func (s *MemorySecretStore) DeleteSecret(accountID, key string) error {
 // MemoryExecutionStore implements the ExecutionStore interface using in-memory storage
 type MemoryExecutionStore struct {
 	executions map[string]ExecutionWrapper
-	logs       map[string][]runtime.ExecutionLog
+	logs       map[string][]models.ExecutionLog
 	mu         sync.RWMutex
 }
 
@@ -344,12 +345,12 @@ type MemoryExecutionStore struct {
 func NewMemoryExecutionStore() *MemoryExecutionStore {
 	return &MemoryExecutionStore{
 		executions: make(map[string]ExecutionWrapper),
-		logs:       make(map[string][]runtime.ExecutionLog),
+		logs:       make(map[string][]models.ExecutionLog),
 	}
 }
 
 // SaveExecution persists execution data
-func (s *MemoryExecutionStore) SaveExecution(execution runtime.ExecutionStatus) error {
+func (s *MemoryExecutionStore) SaveExecution(execution models.ExecutionStatus) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -369,26 +370,26 @@ func (s *MemoryExecutionStore) SaveExecution(execution runtime.ExecutionStatus) 
 }
 
 // GetExecution retrieves execution data
-func (s *MemoryExecutionStore) GetExecution(executionID string) (runtime.ExecutionStatus, error) {
+func (s *MemoryExecutionStore) GetExecution(executionID string) (models.ExecutionStatus, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	// Check if execution exists
 	wrapper, ok := s.executions[executionID]
 	if !ok {
-		return runtime.ExecutionStatus{}, ErrExecutionNotFound
+		return models.ExecutionStatus{}, ErrExecutionNotFound
 	}
 
 	return wrapper.ExecutionStatus, nil
 }
 
 // ListExecutions returns all executions for an account
-func (s *MemoryExecutionStore) ListExecutions(accountID string) ([]runtime.ExecutionStatus, error) {
+func (s *MemoryExecutionStore) ListExecutions(accountID string) ([]models.ExecutionStatus, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	// Get all executions for the account
-	executionList := make([]runtime.ExecutionStatus, 0)
+	executionList := make([]models.ExecutionStatus, 0)
 	for _, wrapper := range s.executions {
 		if wrapper.AccountID == accountID {
 			executionList = append(executionList, wrapper.ExecutionStatus)
@@ -399,13 +400,13 @@ func (s *MemoryExecutionStore) ListExecutions(accountID string) ([]runtime.Execu
 }
 
 // SaveExecutionLog persists an execution log entry
-func (s *MemoryExecutionStore) SaveExecutionLog(executionID string, log runtime.ExecutionLog) error {
+func (s *MemoryExecutionStore) SaveExecutionLog(executionID string, log models.ExecutionLog) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	// Create log array if it doesn't exist
 	if _, ok := s.logs[executionID]; !ok {
-		s.logs[executionID] = make([]runtime.ExecutionLog, 0)
+		s.logs[executionID] = make([]models.ExecutionLog, 0)
 	}
 
 	// Store the log
@@ -415,14 +416,14 @@ func (s *MemoryExecutionStore) SaveExecutionLog(executionID string, log runtime.
 }
 
 // GetExecutionLogs retrieves logs for an execution
-func (s *MemoryExecutionStore) GetExecutionLogs(executionID string) ([]runtime.ExecutionLog, error) {
+func (s *MemoryExecutionStore) GetExecutionLogs(executionID string) ([]models.ExecutionLog, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	// Check if logs exist
 	logs, ok := s.logs[executionID]
 	if !ok {
-		return []runtime.ExecutionLog{}, nil
+		return []models.ExecutionLog{}, nil
 	}
 
 	return logs, nil
