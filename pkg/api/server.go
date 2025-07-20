@@ -13,6 +13,7 @@ import (
 	"github.com/tcmartin/flowrunner/pkg/config"
 	"github.com/tcmartin/flowrunner/pkg/middleware"
 	"github.com/tcmartin/flowrunner/pkg/registry"
+	"github.com/tcmartin/flowrunner/pkg/runtime"
 )
 
 // Server represents the HTTP API server
@@ -23,6 +24,7 @@ type Server struct {
 	flowRegistry   registry.FlowRegistry
 	accountService auth.AccountService
 	secretVault    auth.ExtendedSecretVault
+	flowRuntime    runtime.FlowRuntime
 }
 
 // NewServer creates a new API server
@@ -33,6 +35,21 @@ func NewServer(cfg *config.Config, flowRegistry registry.FlowRegistry, accountSe
 		flowRegistry:   flowRegistry,
 		accountService: accountService,
 		secretVault:    secretVault,
+	}
+
+	s.setupRoutes()
+	return s
+}
+
+// NewServerWithRuntime creates a new API server with flow runtime
+func NewServerWithRuntime(cfg *config.Config, flowRegistry registry.FlowRegistry, accountService auth.AccountService, secretVault auth.ExtendedSecretVault, flowRuntime runtime.FlowRuntime) *Server {
+	s := &Server{
+		config:         cfg,
+		router:         mux.NewRouter(),
+		flowRegistry:   flowRegistry,
+		accountService: accountService,
+		secretVault:    secretVault,
+		flowRuntime:    flowRuntime,
 	}
 
 	s.setupRoutes()
@@ -103,6 +120,15 @@ func (s *Server) setupRoutes() {
 	flows.HandleFunc("/{id}", s.handleDeleteFlow).Methods(http.MethodDelete, http.MethodOptions)
 	flows.HandleFunc("/{id}/metadata", s.handleUpdateFlowMetadata).Methods(http.MethodPatch, http.MethodOptions)
 	flows.HandleFunc("/search", s.handleSearchFlows).Methods(http.MethodPost, http.MethodOptions)
+
+	// Flow execution routes
+	flows.HandleFunc("/{id}/run", s.handleRunFlow).Methods(http.MethodPost, http.MethodOptions)
+
+	// Execution routes
+	executions := authenticated.PathPrefix("/executions").Subrouter()
+	executions.HandleFunc("/{id}", s.handleGetExecution).Methods(http.MethodGet, http.MethodOptions)
+	executions.HandleFunc("/{id}/logs", s.handleGetExecutionLogs).Methods(http.MethodGet, http.MethodOptions)
+	executions.HandleFunc("/{id}", s.handleCancelExecution).Methods(http.MethodDelete, http.MethodOptions)
 
 	// Account management routes (authenticated)
 	accountsMgmt := authenticated.PathPrefix("/accounts").Subrouter()
@@ -381,4 +407,111 @@ func (s *Server) handleSearchFlows(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(flows)
+}
+
+// Flow execution handlers
+
+// handleRunFlow handles executing a flow
+func (s *Server) handleRunFlow(w http.ResponseWriter, r *http.Request) {
+	if s.flowRuntime == nil {
+		http.Error(w, "Flow runtime not available", http.StatusServiceUnavailable)
+		return
+	}
+
+	accountID, ok := middleware.GetAccountID(r)
+	if !ok {
+		http.Error(w, "Authentication required", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	flowID := vars["id"]
+
+	var req struct {
+		Input map[string]interface{} `json:"input,omitempty"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Initialize input if nil
+	if req.Input == nil {
+		req.Input = make(map[string]interface{})
+	}
+
+	executionID, err := s.flowRuntime.Execute(accountID, flowID, req.Input)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	response := map[string]interface{}{
+		"execution_id": executionID,
+		"status":      "running",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}
+
+// handleGetExecution handles getting execution status
+func (s *Server) handleGetExecution(w http.ResponseWriter, r *http.Request) {
+	if s.flowRuntime == nil {
+		http.Error(w, "Flow runtime not available", http.StatusServiceUnavailable)
+		return
+	}
+
+	vars := mux.Vars(r)
+	executionID := vars["id"]
+
+	status, err := s.flowRuntime.GetStatus(executionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(status)
+}
+
+// handleGetExecutionLogs handles getting execution logs
+func (s *Server) handleGetExecutionLogs(w http.ResponseWriter, r *http.Request) {
+	if s.flowRuntime == nil {
+		http.Error(w, "Flow runtime not available", http.StatusServiceUnavailable)
+		return
+	}
+
+	vars := mux.Vars(r)
+	executionID := vars["id"]
+
+	logs, err := s.flowRuntime.GetLogs(executionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(logs)
+}
+
+// handleCancelExecution handles canceling an execution
+func (s *Server) handleCancelExecution(w http.ResponseWriter, r *http.Request) {
+	if s.flowRuntime == nil {
+		http.Error(w, "Flow runtime not available", http.StatusServiceUnavailable)
+		return
+	}
+
+	vars := mux.Vars(r)
+	executionID := vars["id"]
+
+	err := s.flowRuntime.Cancel(executionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
