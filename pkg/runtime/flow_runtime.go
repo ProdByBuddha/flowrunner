@@ -140,6 +140,15 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 		Run(shared interface{}) (interface{}, error)
 	}); ok {
 		result, err = flowRunner.Run(input)
+	} else if flowlibFlow, ok := flow.(interface {
+		Run(shared any) (string, error)
+	}); ok {
+		// Handle flowlib.Flow which returns (Action, error)
+		var action string
+		action, err = flowlibFlow.Run(input)
+		if err == nil {
+			result = map[string]interface{}{"action": action}
+		}
 	} else {
 		err = fmt.Errorf("flow does not implement expected execution interface")
 	}
