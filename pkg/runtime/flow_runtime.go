@@ -24,7 +24,7 @@ type flowRuntime struct {
 	registry       FlowRegistry
 	yamlLoader     loader.YAMLLoader
 	executionStore ExecutionStore
-	
+
 	// In-memory tracking for active executions
 	activeExecutions map[string]*executionContext
 	mu               sync.RWMutex
@@ -72,7 +72,7 @@ func (r *flowRuntime) Execute(accountID string, flowID string, input map[string]
 	}
 
 	executionID := uuid.New().String()
-	
+
 	// Create execution context
 	ctx, cancel := context.WithCancel(context.Background())
 	execCtx := &executionContext{
@@ -82,12 +82,12 @@ func (r *flowRuntime) Execute(accountID string, flowID string, input map[string]
 		logChannel:  make(chan ExecutionLog, 100),
 		subscribers: make([]chan ExecutionLog, 0),
 		status: ExecutionStatus{
-			ID:          executionID,
-			FlowID:      flowID,
-			Status:      "running",
-			StartTime:   time.Now(),
-			Progress:    0.0,
-			Results:     make(map[string]interface{}),
+			ID:        executionID,
+			FlowID:    flowID,
+			Status:    "running",
+			StartTime: time.Now(),
+			Progress:  0.0,
+			Results:   make(map[string]interface{}),
 		},
 	}
 
@@ -115,10 +115,10 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 			r.logExecution(execCtx.status.ID, "error", "Flow execution panicked", map[string]interface{}{"panic": rec})
 			r.updateExecutionStatus(execCtx.status.ID, "failed", fmt.Sprintf("Flow execution panicked: %v", rec), nil)
 		}
-		
+
 		// Close log channel when execution is done
 		close(execCtx.logChannel)
-		
+
 		// Remove from active executions
 		r.mu.Lock()
 		delete(r.activeExecutions, execCtx.status.ID)
@@ -130,7 +130,7 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 	// Execute the flow
 	var result interface{}
 	var err error
-	
+
 	// Check if flow supports context-aware execution
 	if flowWithCtx, ok := flow.(interface {
 		RunWithContext(ctx context.Context, shared interface{}) (interface{}, error)
@@ -204,7 +204,7 @@ func (r *flowRuntime) SubscribeToLogs(executionID string) (<-chan ExecutionLog, 
 
 	// Create a subscriber channel
 	subscriber := make(chan ExecutionLog, 100)
-	
+
 	execCtx.mu.Lock()
 	execCtx.subscribers = append(execCtx.subscribers, subscriber)
 	execCtx.mu.Unlock()
@@ -235,10 +235,10 @@ func (r *flowRuntime) Cancel(executionID string) error {
 
 	// Cancel the execution context
 	execCtx.cancel()
-	
+
 	// Update status
 	r.updateExecutionStatus(executionID, "canceled", "Execution was canceled by user", nil)
-	
+
 	r.logExecution(executionID, "info", "Execution canceled by user", nil)
 
 	return nil

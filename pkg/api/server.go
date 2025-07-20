@@ -449,7 +449,7 @@ func (s *Server) handleRunFlow(w http.ResponseWriter, r *http.Request) {
 
 	response := map[string]interface{}{
 		"execution_id": executionID,
-		"status":      "running",
+		"status":       "running",
 	}
 
 	w.Header().Set("Content-Type", "application/json")
