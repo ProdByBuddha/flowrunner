@@ -21,6 +21,9 @@ type FlowRuntime interface {
 
 	// Cancel stops a running flow execution
 	Cancel(executionID string) error
+
+	// ListExecutions returns all executions for an account
+	ListExecutions(accountID string) ([]ExecutionStatus, error)
 }
 
 // FlowRegistry is an interface for retrieving flow definitions

@@ -267,7 +267,7 @@
     - Support pagination for listing
     - _Requirements: 1.3, 1.4, 1.5, 1.6, 8.1, 8.3, 8.4_
 
-  - [ ] 11.2 Create flow execution API
+  - [x] 11.2 Create flow execution API
 
     - Implement execution trigger endpoint
     - Add status checking endpoint

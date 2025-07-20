@@ -319,3 +319,41 @@ func (r *flowRuntime) updateExecutionStatus(executionID, status, errorMsg string
 		}
 	}
 }
+
+func (r *flowRuntime) ListExecutions(accountID string) ([]ExecutionStatus, error) {
+	var executions []ExecutionStatus
+
+	// Get active executions
+	r.mu.RLock()
+	for _, execCtx := range r.activeExecutions {
+		if execCtx.accountID == accountID {
+			execCtx.mu.RLock()
+			executions = append(executions, execCtx.status)
+			execCtx.mu.RUnlock()
+		}
+	}
+	r.mu.RUnlock()
+
+	// If execution store is available, get completed executions
+	if r.executionStore != nil {
+		storedExecutions, err := r.executionStore.ListExecutions(accountID)
+		if err != nil {
+			return executions, err // Return active executions even if store fails
+		}
+
+		// Create a map of active execution IDs to avoid duplicates
+		activeIDs := make(map[string]bool)
+		for _, exec := range executions {
+			activeIDs[exec.ID] = true
+		}
+
+		// Add stored executions that are not active
+		for _, storedExec := range storedExecutions {
+			if !activeIDs[storedExec.ID] {
+				executions = append(executions, storedExec)
+			}
+		}
+	}
+
+	return executions, nil
+}

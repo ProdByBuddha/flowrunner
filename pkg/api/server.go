@@ -25,6 +25,7 @@ type Server struct {
 	accountService auth.AccountService
 	secretVault    auth.ExtendedSecretVault
 	flowRuntime    runtime.FlowRuntime
+	wsManager      *WebSocketManager
 }
 
 // NewServer creates a new API server
@@ -35,6 +36,7 @@ func NewServer(cfg *config.Config, flowRegistry registry.FlowRegistry, accountSe
 		flowRegistry:   flowRegistry,
 		accountService: accountService,
 		secretVault:    secretVault,
+		wsManager:      NewWebSocketManager(nil), // No flow runtime in basic constructor
 	}
 
 	s.setupRoutes()
@@ -50,6 +52,7 @@ func NewServerWithRuntime(cfg *config.Config, flowRegistry registry.FlowRegistry
 		accountService: accountService,
 		secretVault:    secretVault,
 		flowRuntime:    flowRuntime,
+		wsManager:      NewWebSocketManager(flowRuntime),
 	}
 
 	s.setupRoutes()
@@ -129,6 +132,9 @@ func (s *Server) setupRoutes() {
 	executions.HandleFunc("/{id}", s.handleGetExecution).Methods(http.MethodGet, http.MethodOptions)
 	executions.HandleFunc("/{id}/logs", s.handleGetExecutionLogs).Methods(http.MethodGet, http.MethodOptions)
 	executions.HandleFunc("/{id}", s.handleCancelExecution).Methods(http.MethodDelete, http.MethodOptions)
+
+	// WebSocket route for real-time execution updates (authenticated)
+	authenticated.HandleFunc("/ws", s.handleWebSocket).Methods(http.MethodGet)
 
 	// Account management routes (authenticated)
 	accountsMgmt := authenticated.PathPrefix("/accounts").Subrouter()
@@ -514,4 +520,22 @@ func (s *Server) handleCancelExecution(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// handleWebSocket handles WebSocket connections for real-time execution updates
+func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	// Extract account ID from request context (set by auth middleware)
+	accountID, ok := r.Context().Value(middleware.AccountIDKey).(string)
+	if !ok {
+		http.Error(w, "Authentication required", http.StatusUnauthorized)
+		return
+	}
+
+	if s.wsManager == nil {
+		http.Error(w, "WebSocket service not available", http.StatusServiceUnavailable)
+		return
+	}
+
+	// Handle the WebSocket connection
+	s.wsManager.HandleWebSocket(w, r, accountID)
 }
