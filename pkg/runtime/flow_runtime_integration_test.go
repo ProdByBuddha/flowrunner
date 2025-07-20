@@ -178,3 +178,87 @@ nodes:
 	assert.NotEmpty(t, executionID)
 	mockRegistry.AssertExpectations(t)
 }
+
+func TestFlowRuntime_Integration_FlowWithAsyncBatch(t *testing.T) {
+	// Setup
+	mockRegistry := new(IntegrationMockFlowRegistry)
+	nodeFactories := map[string]loader.NodeFactory{
+		"base":       &loader.BaseNodeFactory{},
+		"async_batch": &loader.AsyncBatchNodeFactory{},
+	}
+	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	flowRuntime := runtime.NewFlowRuntime(mockRegistry, yamlLoader)
+
+	// Define a flow with async batch logic
+	yamlContent := `
+metadata:
+  name: async-batch-flow
+nodes:
+  start:
+    type: base
+    next:
+      default: process_items
+  process_items:
+    type: async_batch
+    next:
+      default: end
+  end:
+    type: base
+`
+	flowDef := &runtime.Flow{
+		ID:   "async-batch-flow",
+		YAML: yamlContent,
+	}
+	mockRegistry.On("GetFlow", "test-account", "async-batch-flow").Return(flowDef, nil)
+
+	// Execute the flow
+	executionID, err := flowRuntime.Execute("test-account", "async-batch-flow", nil)
+
+	// Assertions
+	assert.NoError(t, err)
+	assert.NotEmpty(t, executionID)
+	mockRegistry.AssertExpectations(t)
+}
+
+func TestFlowRuntime_Integration_FlowWithParallelBatch(t *testing.T) {
+	// Setup
+	mockRegistry := new(IntegrationMockFlowRegistry)
+	nodeFactories := map[string]loader.NodeFactory{
+		"base":          &loader.BaseNodeFactory{},
+		"parallel_batch": &loader.AsyncParallelBatchNodeFactory{},
+	}
+	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	flowRuntime := runtime.NewFlowRuntime(mockRegistry, yamlLoader)
+
+	// Define a flow with parallel batch logic
+	yamlContent := `
+metadata:
+  name: parallel-batch-flow
+nodes:
+  start:
+    type: base
+    next:
+      default: process_items
+  process_items:
+    type: parallel_batch
+    batch:
+      max_parallel: 3
+    next:
+      default: end
+  end:
+    type: base
+`
+	flowDef := &runtime.Flow{
+		ID:   "parallel-batch-flow",
+		YAML: yamlContent,
+	}
+	mockRegistry.On("GetFlow", "test-account", "parallel-batch-flow").Return(flowDef, nil)
+
+	// Execute the flow
+	executionID, err := flowRuntime.Execute("test-account", "parallel-batch-flow", nil)
+
+	// Assertions
+	assert.NoError(t, err)
+	assert.NotEmpty(t, executionID)
+	mockRegistry.AssertExpectations(t)
+}
