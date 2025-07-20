@@ -426,6 +426,8 @@ func TestEnhancedFlowRuntime_ErrorHandling(t *testing.T) {
 	})
 
 	t.Run("non-existent execution status", func(t *testing.T) {
+		mockExecutionStore.On("GetExecution", "non-existent").Return(ExecutionStatus{}, assert.AnError)
+		
 		flowRuntime := NewFlowRuntimeWithStore(mockRegistry, mockYAMLLoader, mockExecutionStore)
 
 		status, err := flowRuntime.GetStatus("non-existent")
