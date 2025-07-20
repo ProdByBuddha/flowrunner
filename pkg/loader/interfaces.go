@@ -5,8 +5,7 @@ import (
 	"github.com/tcmartin/flowlib"
 )
 
-// NodeFactory is a function type for creating nodes
-type NodeFactory func(params map[string]interface{}) (flowlib.Node, error)
+
 
 // ExpressionEvaluator evaluates expressions in context
 type ExpressionEvaluator interface {
@@ -60,8 +59,26 @@ type NodeDefinition struct {
 	// Next nodes to execute based on action
 	Next map[string]string `yaml:"next" json:"next"`
 
+	// Batch processing configuration
+	Batch BatchDefinition `yaml:"batch" json:"batch,omitempty"`
+
+	// Retry configuration
+	Retry RetryDefinition `yaml:"retry" json:"retry,omitempty"`
+
 	// JavaScript hooks for the node
 	Hooks NodeHooks `yaml:"hooks" json:"hooks,omitempty"`
+}
+
+// BatchDefinition defines the batch processing strategy for a node.
+type BatchDefinition struct {
+	Strategy    string `yaml:"strategy" json:"strategy,omitempty"`
+	MaxParallel int    `yaml:"max_parallel" json:"max_parallel,omitempty"`
+}
+
+// RetryDefinition defines the retry strategy for a node.
+type RetryDefinition struct {
+	MaxRetries int    `yaml:"max_retries" json:"max_retries,omitempty"`
+	Wait       string `yaml:"wait" json:"wait,omitempty"`
 }
 
 // NodeHooks contains JavaScript code to execute at different stages

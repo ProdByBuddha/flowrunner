@@ -11,7 +11,14 @@ import (
 )
 
 // MockNodeFactory is a mock implementation of NodeFactory
-type MockNodeFactory func(params map[string]interface{}) (flowlib.Node, error)
+type MockNodeFactory struct {
+	mock.Mock
+}
+
+func (m *MockNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node, error) {
+	args := m.Called(nodeDef)
+	return args.Get(0).(flowlib.Node), args.Error(1)
+}
 
 // MockExpressionEvaluator is a mock implementation of ExpressionEvaluator
 type MockExpressionEvaluator struct {
@@ -75,21 +82,21 @@ func (m *MockNode) Run(shared interface{}) (string, error) {
 func TestYAMLLoaderValidate(t *testing.T) {
 	// Create mock dependencies
 	nodeFactories := map[string]NodeFactory{
-		"test": func(params map[string]interface{}) (flowlib.Node, error) {
+		"test": func() *MockNodeFactory {
+			mockFactory := new(MockNodeFactory)
 			mockNode := new(MockNode)
 			mockNode.On("SetParams", mock.Anything).Return()
 			mockNode.On("Params").Return(map[string]interface{}{})
 			mockNode.On("Next", mock.Anything, mock.Anything).Return(mockNode)
 			mockNode.On("Successors").Return(map[string]flowlib.Node{})
 			mockNode.On("Run", mock.Anything).Return("default", nil)
-			return mockNode, nil
-		},
+			mockFactory.On("CreateNode", mock.Anything).Return(mockNode, nil)
+			return mockFactory
+		}(),
 	}
-	evaluator := new(MockExpressionEvaluator)
-	engine := new(MockScriptEngine)
 
 	// Create YAML loader
-	loader := NewYAMLLoader(nodeFactories, evaluator, engine)
+	loader := NewYAMLLoader(nodeFactories)
 
 	// Test cases
 	tests := []struct {
@@ -190,15 +197,21 @@ func TestYAMLLoaderParse(t *testing.T) {
 	mockNode.On("Run", mock.Anything).Return("default", nil)
 
 	nodeFactories := map[string]NodeFactory{
-		"test": func(params map[string]interface{}) (flowlib.Node, error) {
-			return mockNode, nil
-		},
+		"test": func() *MockNodeFactory {
+			mockFactory := new(MockNodeFactory)
+			mockNode := new(MockNode)
+			mockNode.On("SetParams", mock.Anything).Return()
+			mockNode.On("Params").Return(map[string]interface{}{})
+			mockNode.On("Next", mock.Anything, mock.Anything).Return(mockNode)
+			mockNode.On("Successors").Return(map[string]flowlib.Node{})
+			mockNode.On("Run", mock.Anything).Return("default", nil)
+			mockFactory.On("CreateNode", mock.Anything).Return(mockNode, nil)
+			return mockFactory
+		}(),
 	}
-	evaluator := new(MockExpressionEvaluator)
-	engine := new(MockScriptEngine)
 
 	// Create YAML loader
-	loader := NewYAMLLoader(nodeFactories, evaluator, engine)
+	loader := NewYAMLLoader(nodeFactories)
 
 	// Test valid YAML
 	yaml := `

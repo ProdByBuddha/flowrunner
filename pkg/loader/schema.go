@@ -43,6 +43,32 @@ const FlowSchema = `
               "type": "string"
             }
           },
+          "batch": {
+            "type": "object",
+            "properties": {
+              "strategy": {
+                "type": "string",
+                "enum": ["serial", "async", "parallel", "worker_pool"]
+              },
+              "max_parallel": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "retry": {
+            "type": "object",
+            "properties": {
+              "max_retries": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "wait": {
+                "type": "string",
+                "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
+              }
+            }
+          },
           "hooks": {
             "type": "object",
             "properties": {
