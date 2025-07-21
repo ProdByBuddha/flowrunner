@@ -103,6 +103,10 @@ func (s *Server) setupRoutes() {
 	// Create authentication middleware
 	authMiddleware := middleware.NewAuthMiddleware(s.accountService)
 
+	// Public routes (no authentication required)
+	s.router.HandleFunc("/health", s.handleHealth).Methods(http.MethodGet, http.MethodOptions)
+	s.router.HandleFunc("/", s.handleHealth).Methods(http.MethodGet, http.MethodOptions)
+
 	// API router with version prefix
 	api := s.router.PathPrefix("/api/v1").Subrouter()
 
