@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/tcmartin/flowrunner/pkg/api"
 	"github.com/tcmartin/flowrunner/pkg/auth"
 	"github.com/tcmartin/flowrunner/pkg/config"
@@ -38,6 +39,9 @@ const (
 )
 
 func main() {
+	// Load environment variables from .env file
+	_ = godotenv.Load()
+
 	// Parse command-line flags
 	flag.Parse()
 

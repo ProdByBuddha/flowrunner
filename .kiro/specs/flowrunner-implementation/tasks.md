@@ -149,23 +149,23 @@
     - Implement error handling for script failures
     - _Requirements: 5.3, 5.4, 5.5_
 
-- [ ] 8. Implement plugin system for custom nodes
+- [x] 8. Implement plugin system for custom nodes
 
-  - [ ] 8.1 Create plugin registry
+  - [x] 8.1 Create plugin registry
 
     - Implement plugin discovery and loading
     - Add plugin validation and registration
     - Support dynamic loading without restart
     - _Requirements: 4.1, 4.2, 4.4, 4.5_
 
-  - [ ] 8.2 Implement plugin interface
+  - [x] 8.2 Implement plugin interface
 
     - Define interface for custom node plugins
     - Create adapter for Flowlib integration
     - Support parameter passing to plugins
     - _Requirements: 4.2, 4.3_
 
-  - [ ] 8.3 Add plugin management API
+  - [x] 8.3 Add plugin management API
     - Create endpoints for plugin listing
     - Add plugin information retrieval
     - Support plugin enabling/disabling

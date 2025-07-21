@@ -14,6 +14,7 @@ test_output.log
 /test_flow_management_simple
 /test_dynamodb_simple
 /test_dynamodb_account
+main
 .env.test
 test_results.txt
 
