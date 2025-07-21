@@ -102,9 +102,9 @@ func (r *flowRuntime) Execute(accountID string, flowID string, input map[string]
 			r.logExecution(executionID, "error", "Failed to save execution status", map[string]interface{}{"error": err.Error()})
 		}
 
-		// If this is a PostgreSQL execution store, set the account ID
-		if pgStore, ok := r.executionStore.(interface{ SetExecutionAccountID(string, string) error }); ok {
-			if err := pgStore.SetExecutionAccountID(executionID, accountID); err != nil {
+		// If the execution store supports setting account ID (PostgreSQL, DynamoDB, etc.), set it
+		if store, ok := r.executionStore.(interface{ SetExecutionAccountID(string, string) error }); ok {
+			if err := store.SetExecutionAccountID(executionID, accountID); err != nil {
 				r.logExecution(executionID, "error", "Failed to set execution account ID", map[string]interface{}{"error": err.Error()})
 			}
 		}

@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -870,6 +871,31 @@ type DynamoDBExecutionStore struct {
 	logsTableName string
 }
 
+// SetExecutionAccountID sets the account ID for an execution in its metadata
+func (s *DynamoDBExecutionStore) SetExecutionAccountID(executionID, accountID string) error {
+	// Create the item directly with the account ID attribute
+	_, err := s.client.UpdateItem(&dynamodb.UpdateItemInput{
+		TableName: aws.String(s.execTableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"ID": {
+				S: aws.String(executionID),
+			},
+		},
+		UpdateExpression: aws.String("SET AccountID = :accountID"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":accountID": {
+				S: aws.String(accountID),
+			},
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to update execution with account ID: %w", err)
+	}
+
+	return nil
+}
+
 // NewDynamoDBExecutionStore creates a new DynamoDB execution store
 func NewDynamoDBExecutionStore(client dynamodbiface.DynamoDBAPI, tablePrefix string) *DynamoDBExecutionStore {
 	return &DynamoDBExecutionStore{
@@ -1033,30 +1059,63 @@ func (s *DynamoDBExecutionStore) initializeExecutionLogsTable() error {
 
 // SaveExecution persists execution data
 func (s *DynamoDBExecutionStore) SaveExecution(execution runtime.ExecutionStatus) error {
-	// Convert time fields to Unix timestamps
-	item := struct {
-		runtime.ExecutionStatus
-		StartTimeUnix int64 `json:"StartTime"`
-		EndTimeUnix   int64 `json:"EndTime"`
-		// Note: We need AccountID for DynamoDB, but ExecutionStatus doesn't have it
-		// In a real application, we would get this from context or a parameter
-		AccountID string `json:"AccountID"`
-	}{
-		ExecutionStatus: execution,
-		StartTimeUnix:   execution.StartTime.Unix(),
-		EndTimeUnix:     execution.EndTime.Unix(),
-		// For testing purposes, we'll use a default account ID
-		AccountID: "default-account",
+	// Get account ID from metadata if available
+	accountID := "default-account"
+	if execution.Metadata != nil {
+		if id, ok := execution.Metadata["account_id"]; ok && id != "" {
+			accountID = id
+		}
 	}
 
-	// Marshal execution
-	av, err := dynamodbattribute.MarshalMap(item)
-	if err != nil {
-		return fmt.Errorf("failed to marshal execution: %w", err)
+	// Convert time fields to Unix timestamps for DynamoDB
+	startTimeUnix := int64(0)
+	if !execution.StartTime.IsZero() {
+		startTimeUnix = execution.StartTime.Unix()
 	}
+
+	endTimeUnix := int64(0)
+	if !execution.EndTime.IsZero() {
+		endTimeUnix = execution.EndTime.Unix()
+	}
+
+	// Create item directly with AttributeValue map to ensure all required fields are set
+	av := map[string]*dynamodb.AttributeValue{
+		"ID": {
+			S: aws.String(execution.ID),
+		},
+		"AccountID": {
+			S: aws.String(accountID),
+		},
+		"StartTime": {
+			N: aws.String(strconv.FormatInt(startTimeUnix, 10)),
+		},
+	}
+
+	// Add optional fields
+	if execution.FlowID != "" {
+		av["FlowID"] = &dynamodb.AttributeValue{S: aws.String(execution.FlowID)}
+	}
+
+	if execution.Status != "" {
+		av["Status"] = &dynamodb.AttributeValue{S: aws.String(execution.Status)}
+	}
+
+	if endTimeUnix > 0 {
+		av["EndTime"] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(endTimeUnix, 10))}
+	}
+
+	if execution.Error != "" {
+		av["Error"] = &dynamodb.AttributeValue{S: aws.String(execution.Error)}
+	}
+
+	if execution.CurrentNode != "" {
+		av["CurrentNode"] = &dynamodb.AttributeValue{S: aws.String(execution.CurrentNode)}
+	}
+
+	av["Progress"] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatFloat(execution.Progress, 'f', -1, 64))}
 
 	// Save execution
-	_, err = s.client.PutItem(&dynamodb.PutItemInput{
+	_, err := s.client.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String(s.execTableName),
 		Item:      av,
 	})
@@ -1088,20 +1147,62 @@ func (s *DynamoDBExecutionStore) GetExecution(executionID string) (runtime.Execu
 		return runtime.ExecutionStatus{}, ErrExecutionNotFound
 	}
 
-	// Unmarshal execution
-	var item struct {
-		runtime.ExecutionStatus
-		StartTimeUnix int64 `json:"StartTime"`
-		EndTimeUnix   int64 `json:"EndTime"`
+	// Create execution status manually from the DynamoDB item
+	execution := runtime.ExecutionStatus{
+		ID: executionID,
 	}
-	if err := dynamodbattribute.UnmarshalMap(result.Item, &item); err != nil {
-		return runtime.ExecutionStatus{}, fmt.Errorf("failed to unmarshal execution: %w", err)
+
+	// Extract fields from the DynamoDB item
+	if v, ok := result.Item["FlowID"]; ok && v.S != nil {
+		execution.FlowID = *v.S
+	}
+
+	if v, ok := result.Item["Status"]; ok && v.S != nil {
+		execution.Status = *v.S
+	}
+
+	if v, ok := result.Item["Error"]; ok && v.S != nil {
+		execution.Error = *v.S
+	}
+
+	if v, ok := result.Item["CurrentNode"]; ok && v.S != nil {
+		execution.CurrentNode = *v.S
+	}
+
+	if v, ok := result.Item["Progress"]; ok && v.N != nil {
+		if progress, err := strconv.ParseFloat(*v.N, 64); err == nil {
+			execution.Progress = progress
+		}
 	}
 
 	// Convert Unix timestamps back to time.Time
-	execution := item.ExecutionStatus
-	execution.StartTime = time.Unix(item.StartTimeUnix, 0)
-	execution.EndTime = time.Unix(item.EndTimeUnix, 0)
+	if v, ok := result.Item["StartTime"]; ok && v.N != nil {
+		if startTime, err := strconv.ParseInt(*v.N, 10, 64); err == nil {
+			execution.StartTime = time.Unix(startTime, 0)
+		}
+	}
+
+	if v, ok := result.Item["EndTime"]; ok && v.N != nil {
+		if endTime, err := strconv.ParseInt(*v.N, 10, 64); err == nil {
+			execution.EndTime = time.Unix(endTime, 0)
+		}
+	}
+
+	// Extract results if available
+	if v, ok := result.Item["Results"]; ok && v.M != nil {
+		results := make(map[string]interface{})
+		if err := dynamodbattribute.UnmarshalMap(v.M, &results); err == nil {
+			execution.Results = results
+		}
+	}
+
+	// Extract metadata if available
+	if v, ok := result.Item["Metadata"]; ok && v.M != nil {
+		metadata := make(map[string]string)
+		if err := dynamodbattribute.UnmarshalMap(v.M, &metadata); err == nil {
+			execution.Metadata = metadata
+		}
+	}
 
 	return execution, nil
 }

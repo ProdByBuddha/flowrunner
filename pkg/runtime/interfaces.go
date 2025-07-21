@@ -33,7 +33,7 @@ type FlowRegistry interface {
 
 // Flow represents a flow definition
 type Flow struct {
-	ID string
+	ID   string
 	YAML string
 }
 
@@ -65,6 +65,9 @@ type ExecutionStatus struct {
 
 	// CurrentNode is the ID of the currently executing node
 	CurrentNode string `json:"current_node,omitempty"`
+
+	// Metadata is a map of additional metadata for the execution
+	Metadata map[string]string `json:"metadata,omitempty"`
 }
 
 // ExecutionLog represents a log entry for an execution
