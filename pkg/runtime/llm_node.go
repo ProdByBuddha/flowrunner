@@ -3,11 +3,20 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/tcmartin/flowlib"
 	"github.com/tcmartin/flowrunner/pkg/utils"
 )
+
+// Helper function to truncate strings for logging
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
+}
 
 // LLMNodeWrapper is a wrapper for LLM nodes
 type LLMNodeWrapper struct {
@@ -39,6 +48,52 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			// Get flow input (shared context)
 			flowInput, _ := combinedInput["input"].(map[string]interface{})
 
+			// Extract execution context for structured logging
+			var executionID, flowID, nodeID string
+			if flowInput != nil {
+				if execCtx, ok := flowInput["_execution"].(map[string]interface{}); ok {
+					if id, ok := execCtx["execution_id"].(string); ok {
+						executionID = id
+					}
+					if fid, ok := execCtx["flow_id"].(string); ok {
+						flowID = fid
+					}
+				}
+			}
+
+			// Helper function for structured logging
+			logToExecution := func(level, message string, data map[string]interface{}) {
+				if executionID != "" {
+					// Add standard fields
+					if data == nil {
+						data = make(map[string]interface{})
+					}
+					data["node_type"] = "llm"
+					if flowID != "" {
+						data["flow_id"] = flowID
+					}
+					if nodeID != "" {
+						data["node_id"] = nodeID
+					}
+					
+					// Standard Go log for immediate visibility
+					log.Printf("[LLM Node][%s] %s", level, message)
+					
+					// Check if we have a flow runtime logger in the execution context
+					if flowInput != nil {
+						if execCtx, ok := flowInput["_execution"].(map[string]interface{}); ok {
+							if logger, ok := execCtx["logger"].(func(string, string, string, map[string]interface{})); ok {
+								// Call the flow runtime's logging function
+								logger(executionID, level, message, data)
+							}
+						}
+					}
+				} else {
+					// Fallback to standard logging
+					log.Printf("[LLM Node][%s] %s", level, message)
+				}
+			}
+
 			// Convert params to map[string]any for compatibility
 			paramsAny := make(map[string]any)
 			for k, v := range params {
@@ -50,6 +105,11 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			if !ok {
 				providerStr = "openai" // Default to OpenAI
 			}
+
+			// Log the start of LLM execution
+			logToExecution("info", "Starting LLM execution", map[string]interface{}{
+				"provider": providerStr,
+			})
 
 			var provider utils.LLMProvider
 			switch providerStr {
@@ -64,14 +124,21 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			// Extract API key
 			apiKey, ok := paramsAny["api_key"].(string)
 			if !ok {
+				logToExecution("error", "api_key parameter is required", nil)
 				return nil, fmt.Errorf("api_key parameter is required")
 			}
 
 			// Extract model
 			model, ok := paramsAny["model"].(string)
 			if !ok {
+				logToExecution("error", "model parameter is required", nil)
 				return nil, fmt.Errorf("model parameter is required")
 			}
+
+			logToExecution("info", "LLM configuration set", map[string]interface{}{
+				"provider": providerStr,
+				"model":    model,
+			})
 
 			// Extract messages - check if we should use dynamic input
 			var messages []utils.Message
@@ -83,6 +150,10 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			if flowInput != nil {
 				if question, ok := flowInput["question"].(string); ok && question != "" {
 					// Use dynamic question from flow input
+					logToExecution("info", "Using dynamic input from flow", map[string]interface{}{
+						"question_length": len(question),
+						"question_preview": truncateString(question, 100),
+					})
 					messages = []utils.Message{
 						{
 							Role:    "system",
@@ -93,7 +164,11 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 							Content: question,
 						},
 					}
+				} else {
+					logToExecution("info", "Flow input present but no 'question' field found, using static parameters", nil)
 				}
+			} else {
+				logToExecution("info", "No flow input available, using static parameters", nil)
 			}
 
 			// If no dynamic content was used, fall back to static parameters
@@ -300,22 +375,57 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 				Options:     options,
 			}
 
+			log.Printf("[LLM Node] Making LLM request - Model: %s, Messages: %d, Temperature: %.2f, MaxTokens: %d", 
+				model, len(messages), temperature, maxTokens)
+
+			logToExecution("info", "Making LLM API request", map[string]interface{}{
+				"model":        model,
+				"messages":     len(messages),
+				"temperature":  temperature,
+				"max_tokens":   maxTokens,
+				"provider":     providerStr,
+			})
+
 			// Execute request
 			ctx := context.Background()
 			resp, err := client.Complete(ctx, request)
 			if err != nil {
+				logToExecution("error", "LLM request failed", map[string]interface{}{
+					"error": err.Error(),
+					"model": model,
+				})
 				return nil, fmt.Errorf("LLM request failed: %w", err)
 			}
 
+			logToExecution("info", "LLM request completed successfully", map[string]interface{}{
+				"model": model,
+			})
+
 			// Check for errors
 			if resp.Error != nil {
+				logToExecution("error", "LLM API error", map[string]interface{}{
+					"error": resp.Error.Message,
+					"model": model,
+				})
 				return nil, fmt.Errorf("LLM API error: %s", resp.Error.Message)
 			}
 
 			// Extract response
 			if len(resp.Choices) == 0 {
+				logToExecution("error", "No choices returned from LLM", map[string]interface{}{
+					"model": model,
+				})
 				return nil, fmt.Errorf("no choices returned from LLM")
 			}
+
+			content := resp.Choices[0].Message.Content
+			logToExecution("info", "LLM response received", map[string]interface{}{
+				"content_length":  len(content),
+				"finish_reason":   resp.Choices[0].FinishReason,
+				"response_id":     resp.ID,
+				"model":          resp.Model,
+				"content_preview": truncateString(content, 200),
+			})
 
 			// Process structured output if requested
 			var structuredOutput any
@@ -341,8 +451,10 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			// Add structured output if available
 			if structuredOutput != nil {
 				result["structured_output"] = structuredOutput
+				log.Printf("[LLM Node] Structured output parsed successfully")
 			}
 
+			log.Printf("[LLM Node] Execution completed successfully - Response ID: %s", resp.ID)
 			return result, nil
 		},
 	}

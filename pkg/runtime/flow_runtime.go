@@ -134,6 +134,21 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 
 	r.logExecution(execCtx.status.ID, "info", "Starting flow execution", map[string]interface{}{"flowID": execCtx.flowID, "accountID": execCtx.accountID})
 
+	// Inject execution context into the input for nodes to use
+	enhancedInput := make(map[string]interface{})
+	if input != nil {
+		for k, v := range input {
+			enhancedInput[k] = v
+		}
+	}
+	// Add execution context for logging and debugging
+	enhancedInput["_execution"] = map[string]interface{}{
+		"execution_id": execCtx.status.ID,
+		"flow_id":      execCtx.flowID,
+		"account_id":   execCtx.accountID,
+		"logger":       r.logExecution,
+	}
+
 	// Execute the flow
 	var result interface{}
 	var err error
@@ -142,17 +157,17 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 	if flowWithCtx, ok := flow.(interface {
 		RunWithContext(ctx context.Context, shared interface{}) (interface{}, error)
 	}); ok {
-		result, err = flowWithCtx.RunWithContext(ctx, input)
+		result, err = flowWithCtx.RunWithContext(ctx, enhancedInput)
 	} else if flowRunner, ok := flow.(interface {
 		Run(shared interface{}) (interface{}, error)
 	}); ok {
-		result, err = flowRunner.Run(input)
+		result, err = flowRunner.Run(enhancedInput)
 	} else if flowlibFlow, ok := flow.(interface {
 		Run(shared any) (string, error)
 	}); ok {
 		// Handle flowlib.Flow which returns (Action, error)
 		var action string
-		action, err = flowlibFlow.Run(input)
+		action, err = flowlibFlow.Run(enhancedInput)
 		if err == nil {
 			result = map[string]interface{}{"action": action}
 		}
