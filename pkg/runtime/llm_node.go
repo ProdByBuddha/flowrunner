@@ -24,14 +24,29 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 	wrapper := &NodeWrapper{
 		node: baseNode,
 		exec: func(input any) (any, error) {
-			// Get parameters from input
-			params, ok := input.(map[string]any)
+			// Extract parameters and flow input from combined context
+			combinedInput, ok := input.(map[string]interface{})
 			if !ok {
-				return nil, fmt.Errorf("expected map[string]any, got %T", input)
+				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
+			}
+
+			// Get static node parameters
+			params, ok := combinedInput["params"].(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("expected params to be map[string]interface{}")
+			}
+
+			// Get flow input (shared context)
+			flowInput, _ := combinedInput["input"].(map[string]interface{})
+
+			// Convert params to map[string]any for compatibility
+			paramsAny := make(map[string]any)
+			for k, v := range params {
+				paramsAny[k] = v
 			}
 
 			// Extract provider
-			providerStr, ok := params["provider"].(string)
+			providerStr, ok := paramsAny["provider"].(string)
 			if !ok {
 				providerStr = "openai" // Default to OpenAI
 			}
@@ -47,27 +62,50 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			}
 
 			// Extract API key
-			apiKey, ok := params["api_key"].(string)
+			apiKey, ok := paramsAny["api_key"].(string)
 			if !ok {
 				return nil, fmt.Errorf("api_key parameter is required")
 			}
 
 			// Extract model
-			model, ok := params["model"].(string)
+			model, ok := paramsAny["model"].(string)
 			if !ok {
 				return nil, fmt.Errorf("model parameter is required")
 			}
 
-			// Extract messages
+			// Extract messages - check if we should use dynamic input
 			var messages []utils.Message
 
+			// Priority order:
+			// 1. If flow input contains "question", use it to override the prompt
+			// 2. Otherwise use static parameters (templates, messages, prompt)
+			
+			if flowInput != nil {
+				if question, ok := flowInput["question"].(string); ok && question != "" {
+					// Use dynamic question from flow input
+					messages = []utils.Message{
+						{
+							Role:    "system",
+							Content: "You are a helpful assistant. Keep your answers brief.",
+						},
+						{
+							Role:    "user",
+							Content: question,
+						},
+					}
+				}
+			}
+
+			// If no dynamic content was used, fall back to static parameters
+			if len(messages) == 0 {
+
 			// Check if we're using templates
-			if templatesParam, ok := params["templates"].([]any); ok {
+			if templatesParam, ok := paramsAny["templates"].([]any); ok {
 				// Extract template variables
 				variables := make(map[string]any)
 
 				// Add context variables if provided
-				if contextParam, ok := params["context"].(map[string]any); ok {
+				if contextParam, ok := paramsAny["context"].(map[string]any); ok {
 					for k, v := range contextParam {
 						variables[k] = v
 					}
@@ -101,7 +139,7 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 				}
 
 				messages = renderedMessages
-			} else if messagesParam, ok := params["messages"]; ok {
+			} else if messagesParam, ok := paramsAny["messages"]; ok {
 				if messagesArray, ok := messagesParam.([]any); ok {
 					for _, msgInterface := range messagesArray {
 						if msgMap, ok := msgInterface.(map[string]any); ok {
@@ -125,7 +163,7 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 						})
 					}
 				}
-			} else if promptParam, ok := params["prompt"].(string); ok {
+			} else if promptParam, ok := paramsAny["prompt"].(string); ok {
 				// Support simple prompt parameter as user message
 				messages = []utils.Message{
 					{
@@ -133,9 +171,9 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 						Content: promptParam,
 					},
 				}
-			} else if templateParam, ok := params["template"].(string); ok && params["variables"] != nil {
+			} else if templateParam, ok := paramsAny["template"].(string); ok && paramsAny["variables"] != nil {
 				// Support single template with variables
-				variables, ok := params["variables"].(map[string]any)
+				variables, ok := paramsAny["variables"].(map[string]any)
 				if !ok {
 					return nil, fmt.Errorf("variables must be a map[string]any")
 				}
@@ -154,7 +192,7 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 
 				// Default to user role if not specified
 				role := "user"
-				if roleParam, ok := params["role"].(string); ok {
+				if roleParam, ok := paramsAny["role"].(string); ok {
 					role = roleParam
 				}
 
@@ -167,22 +205,23 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			} else {
 				return nil, fmt.Errorf("either messages, prompt, template, or templates parameter is required")
 			}
+			} // Close the "if len(messages) == 0" block
 
 			// Extract temperature
 			temperature := 0.7 // Default temperature
-			if tempParam, ok := params["temperature"].(float64); ok {
+			if tempParam, ok := paramsAny["temperature"].(float64); ok {
 				temperature = tempParam
 			}
 
 			// Extract max tokens
 			maxTokens := 0 // Default (no limit)
-			if tokensParam, ok := params["max_tokens"].(int); ok {
+			if tokensParam, ok := paramsAny["max_tokens"].(int); ok {
 				maxTokens = tokensParam
 			}
 
 			// Extract stop sequences
 			var stop []string
-			if stopParam, ok := params["stop"].([]any); ok {
+			if stopParam, ok := paramsAny["stop"].([]any); ok {
 				for _, s := range stopParam {
 					if stopStr, ok := s.(string); ok {
 						stop = append(stop, stopStr)
@@ -192,7 +231,7 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 
 			// Extract functions
 			var functions []utils.FunctionDefinition
-			if funcsParam, ok := params["functions"].([]any); ok {
+			if funcsParam, ok := paramsAny["functions"].([]any); ok {
 				for _, funcInterface := range funcsParam {
 					if funcMap, ok := funcInterface.(map[string]any); ok {
 						name, _ := funcMap["name"].(string)
@@ -210,7 +249,7 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 
 			// Extract tools
 			var tools []utils.ToolDefinition
-			if toolsParam, ok := params["tools"].([]any); ok {
+			if toolsParam, ok := paramsAny["tools"].([]any); ok {
 				for _, toolInterface := range toolsParam {
 					if toolMap, ok := toolInterface.(map[string]any); ok {
 						toolType, _ := toolMap["type"].(string)

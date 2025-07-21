@@ -41,6 +41,8 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 	wrapper := &NodeWrapper{
 		node: baseNode,
 		exec: func(input interface{}) (interface{}, error) {
+			// Handle both old format (direct params) and new format (combined input)
+			// For transform node, we just pass through the input in this placeholder implementation
 			// This is a placeholder - in a real implementation, this would use the
 			// JavaScript engine to transform the input data
 			return input, nil

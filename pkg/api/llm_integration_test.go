@@ -15,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tcmartin/flowlib"
 	"github.com/tcmartin/flowrunner/pkg/config"
 	"github.com/tcmartin/flowrunner/pkg/loader"
 	"github.com/tcmartin/flowrunner/pkg/plugins"
@@ -61,7 +62,7 @@ func TestLLMFlowIntegration(t *testing.T) {
 	// Create YAML loader with core node types
 	nodeFactories := make(map[string]plugins.NodeFactory)
 	for nodeType, factory := range runtime.CoreNodeTypes() {
-		nodeFactories[nodeType] = &RuntimeNodeFactoryAdapter{factory: factory}
+		nodeFactories[nodeType] = &LLMTestRuntimeNodeFactoryAdapter{factory: factory}
 	}
 	yamlLoader := loader.NewYAMLLoader(nodeFactories, pluginRegistry)
 
@@ -71,7 +72,7 @@ func TestLLMFlowIntegration(t *testing.T) {
 	})
 
 	// Create flow runtime adapter
-	registryAdapter := &FlowRegistryAdapter{registry: flowRegistry}
+	registryAdapter := &LLMTestFlowRegistryAdapter{registry: flowRegistry}
 	executionStore := storageProvider.GetExecutionStore()
 	flowRuntime := runtime.NewFlowRuntimeWithStore(registryAdapter, yamlLoader, executionStore)
 
@@ -150,32 +151,28 @@ func TestLLMFlowIntegration(t *testing.T) {
 
 	// Step 3: Create a flow with an LLM node via HTTP API
 	t.Log("Step 3: Creating flow with LLM node...")
-	
-	// Define a simple flow with an LLM node that asks about the capital of France
+
+	// Define a flow with an LLM node that accepts dynamic input
+	// System prompt can be predefined, but user question comes from flow execution input
 	flowYAML := `metadata:
   name: "Simple LLM Test Flow"
-  description: "A test flow that uses an LLM node to answer a simple question"
+  description: "A test flow that uses an LLM node with dynamic input"
   version: "1.0.0"
 
 nodes:
   start:
     type: "llm"
     params:
-      provider: "openai"
-      api_key: "` + apiKey + `"
-      model: "gpt-3.5-turbo"
-      messages:
-        - role: "system"
-          content: "You are a helpful assistant. Keep your answers brief and accurate."
-        - role: "user"
-          content: "What is the capital of France? Answer in one word."
-      temperature: 0.3
-      max_tokens: 10
+      provider: openai
+      api_key: ` + apiKey + `
+      model: gpt-3.5-turbo
+      temperature: 0.7
+      max_tokens: 100
     next:
-      default: "end"
+      default: end
   
   end:
-    type: "transform"
+    type: transform
     params:
       script: "return input;"
 `
@@ -217,12 +214,13 @@ nodes:
 	require.True(t, ok, "Flow ID should be returned")
 	t.Logf("Created flow: %s", flowID)
 
-	// Step 4: Execute the flow via HTTP API
+	// Step 4: Execute the flow via HTTP API with dynamic input
 	t.Log("Step 4: Executing flow...")
-	
+
 	execReq := map[string]interface{}{
 		"input": map[string]interface{}{
-			"test_execution": true,
+			"question": "What is the capital of France?",
+			"context":  "The user wants to know about geography.",
 		},
 	}
 
@@ -255,7 +253,7 @@ nodes:
 
 	// Step 5: Poll for execution completion
 	t.Log("Step 5: Polling for execution completion...")
-	
+
 	maxWait := 30 * time.Second
 	pollInterval := 1 * time.Second
 	startTime := time.Now()
@@ -277,7 +275,7 @@ nodes:
 		require.NoError(t, err)
 
 		finalStatusCode = resp.StatusCode
-		
+
 		if resp.StatusCode == http.StatusOK {
 			body, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
@@ -302,25 +300,53 @@ nodes:
 
 	// Step 6: Verify execution completed successfully
 	t.Log("Step 6: Verifying execution results...")
-	
+
 	assert.Equal(t, http.StatusOK, finalStatusCode, "Should be able to get execution status")
 	require.NotNil(t, finalStatus, "Should have final status")
 
 	status, ok := finalStatus["status"].(string)
 	require.True(t, ok, "Status should be a string")
-	
+
 	if status == "completed" {
 		t.Log("✅ LLM execution completed successfully!")
 		assert.Equal(t, "completed", status, "Execution should complete successfully")
 	} else if status == "failed" {
-		t.Log("⚠️  LLM execution failed - this may be due to API key issues or LLM node configuration")
+		t.Log("⚠️  LLM execution failed - checking logs for details...")
+		
+		// Get execution logs immediately to understand the failure
+		req, err = http.NewRequest(
+			"GET",
+			testServer.URL+"/api/v1/executions/"+executionID+"/logs",
+			nil,
+		)
+		require.NoError(t, err)
+
+		req.SetBasicAuth(username, password)
+
+		resp, err := client.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusOK {
+			var logs []map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&logs)
+			require.NoError(t, err)
+
+			t.Logf("Found %d log entries:", len(logs))
+			for i, log := range logs {
+				if message, ok := log["message"].(string); ok {
+					t.Logf("Log %d: %s", i+1, message)
+				}
+			}
+		}
+		
 		t.Log("However, the HTTP API integration is working correctly:")
 		t.Log("  • User creation: ✅")
-		t.Log("  • Secret storage: ✅") 
+		t.Log("  • Secret storage: ✅")
 		t.Log("  • Flow creation: ✅")
 		t.Log("  • Flow execution: ✅")
 		t.Log("  • Status polling: ✅")
-		
+
 		// Don't fail the test - the integration framework is working
 		t.Skip("Skipping LLM-specific assertions due to execution failure")
 	}
@@ -354,7 +380,7 @@ nodes:
 
 	// Optional: Get execution logs to verify LLM node ran
 	t.Log("Step 7: Checking execution logs...")
-	
+
 	req, err = http.NewRequest(
 		"GET",
 		testServer.URL+"/api/v1/executions/"+executionID+"/logs",
@@ -374,21 +400,21 @@ nodes:
 		require.NoError(t, err)
 
 		t.Logf("Found %d log entries", len(logs))
-		
+
 		// Print all log entries to understand the failure
 		for i, log := range logs {
 			if message, ok := log["message"].(string); ok {
 				t.Logf("Log %d: %s", i+1, message)
 			}
 		}
-		
+
 		// Look for LLM-related log entries
 		foundLLMExecution := false
 		for _, log := range logs {
 			message, ok := log["message"].(string)
-			if ok && (strings.Contains(strings.ToLower(message), "llm") || 
-					 strings.Contains(strings.ToLower(message), "openai") ||
-					 strings.Contains(strings.ToLower(message), "ask_llm")) {
+			if ok && (strings.Contains(strings.ToLower(message), "llm") ||
+				strings.Contains(strings.ToLower(message), "openai") ||
+				strings.Contains(strings.ToLower(message), "ask_llm")) {
 				foundLLMExecution = true
 				t.Logf("LLM execution log: %s", message)
 				break
@@ -401,4 +427,30 @@ nodes:
 	} else {
 		t.Logf("Could not retrieve logs (status: %d), but execution completed successfully", resp.StatusCode)
 	}
+}
+
+// LLMTestRuntimeNodeFactoryAdapter adapts runtime.NodeFactory to plugins.NodeFactory
+type LLMTestRuntimeNodeFactoryAdapter struct {
+	factory runtime.NodeFactory
+}
+
+func (a *LLMTestRuntimeNodeFactoryAdapter) CreateNode(nodeDef plugins.NodeDefinition) (flowlib.Node, error) {
+	return a.factory(nodeDef.Params)
+}
+
+// LLMTestFlowRegistryAdapter adapts registry.FlowRegistry to runtime.FlowRegistry
+type LLMTestFlowRegistryAdapter struct {
+	registry registry.FlowRegistry
+}
+
+func (a *LLMTestFlowRegistryAdapter) GetFlow(accountID, flowID string) (*runtime.Flow, error) {
+	content, err := a.registry.Get(accountID, flowID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &runtime.Flow{
+		ID:   flowID,
+		YAML: content,
+	}, nil
 }

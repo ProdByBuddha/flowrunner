@@ -140,12 +140,6 @@ func (c *LLMClient) Complete(ctx context.Context, request LLMRequest) (*LLMRespo
 
 // completeOpenAI sends a completion request to OpenAI
 func (c *LLMClient) completeOpenAI(ctx context.Context, request LLMRequest) (*LLMResponse, error) {
-	fmt.Println("Debug - params:", c.options)
-	fmt.Println("Debug - messagesParam type:", fmt.Sprintf("%T", request.Messages), ", value:", request.Messages)
-	for _, msg := range request.Messages {
-		fmt.Println("Debug - role:", msg.Role, ", content:", msg.Content)
-	}
-
 	// Create request body
 	requestBody := map[string]interface{}{
 		"model":       request.Model,

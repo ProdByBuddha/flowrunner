@@ -42,8 +42,54 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 		// Get the parameters
 		params := w.Params()
 
+		// Determine if this is a flow execution or direct node call
+		// Flow execution: shared contains flow input data (may have "question", "input", etc.)
+		// Direct node call: shared is empty or only contains result storage
+		var combinedInput map[string]interface{}
+		
+		if sharedMap, ok := shared.(map[string]interface{}); ok {
+			// Check if this looks like flow input (has question, input data, etc.)
+			hasFlowInput := false
+			for key := range sharedMap {
+				// These are typical flow input keys
+				if key == "question" || key == "input" || key == "context" || key == "data" {
+					hasFlowInput = true
+					break
+				}
+				// If it only has result keys, it's probably direct node usage
+				if key == "result" || key == "llm_result" || key == "http_result" {
+					continue
+				}
+				// If it has other non-result keys, assume it's flow input
+				if !strings.HasSuffix(key, "_result") {
+					hasFlowInput = true
+					break
+				}
+			}
+			
+			if hasFlowInput {
+				// Flow execution: create combined input format
+				combinedInput = map[string]interface{}{
+					"params": params,
+					"input":  shared,
+				}
+			} else {
+				// Direct node usage: use stored parameters only
+				combinedInput = map[string]interface{}{
+					"params": params,
+					"input":  map[string]interface{}{}, // empty flow input
+				}
+			}
+		} else {
+			// Non-map shared context: assume direct node usage
+			combinedInput = map[string]interface{}{
+				"params": params,
+				"input":  map[string]interface{}{},
+			}
+		}
+
 		// Execute the function
-		result, err := w.exec(params)
+		result, err := w.exec(combinedInput)
 		if err != nil {
 			return "", err
 		}
@@ -99,9 +145,22 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 	wrapper := &NodeWrapper{
 		node: baseNode,
 		exec: func(input interface{}) (interface{}, error) {
-			// Get parameters from input
-			params, ok := input.(map[string]interface{})
-			if !ok {
+			// Handle both old format (direct params) and new format (combined input)
+			var params map[string]interface{}
+			
+			if combinedInput, ok := input.(map[string]interface{}); ok {
+				if nodeParams, hasParams := combinedInput["params"]; hasParams {
+					// New format: combined input with params and input
+					if paramsMap, ok := nodeParams.(map[string]interface{}); ok {
+						params = paramsMap
+					} else {
+						return nil, fmt.Errorf("expected params to be map[string]interface{}")
+					}
+				} else {
+					// Old format: direct params (backwards compatibility)
+					params = combinedInput
+				}
+			} else {
 				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
 			}
 
@@ -323,9 +382,22 @@ func NewStoreNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 	wrapper := &NodeWrapper{
 		node: baseNode,
 		exec: func(input interface{}) (interface{}, error) {
-			// Get parameters from input
-			params, ok := input.(map[string]interface{})
-			if !ok {
+			// Handle both old format (direct params) and new format (combined input)
+			var params map[string]interface{}
+			
+			if combinedInput, ok := input.(map[string]interface{}); ok {
+				if nodeParams, hasParams := combinedInput["params"]; hasParams {
+					// New format: combined input with params and input
+					if paramsMap, ok := nodeParams.(map[string]interface{}); ok {
+						params = paramsMap
+					} else {
+						return nil, fmt.Errorf("expected params to be map[string]interface{}")
+					}
+				} else {
+					// Old format: direct params (backwards compatibility)
+					params = combinedInput
+				}
+			} else {
 				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
 			}
 
@@ -394,9 +466,22 @@ func NewDelayNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 	wrapper := &NodeWrapper{
 		node: baseNode,
 		exec: func(input interface{}) (interface{}, error) {
-			// Get parameters from input
-			params, ok := input.(map[string]interface{})
-			if !ok {
+			// Handle both old format (direct params) and new format (combined input)
+			var params map[string]interface{}
+			
+			if combinedInput, ok := input.(map[string]interface{}); ok {
+				if nodeParams, hasParams := combinedInput["params"]; hasParams {
+					// New format: combined input with params and input
+					if paramsMap, ok := nodeParams.(map[string]interface{}); ok {
+						params = paramsMap
+					} else {
+						return nil, fmt.Errorf("expected params to be map[string]interface{}")
+					}
+				} else {
+					// Old format: direct params (backwards compatibility)
+					params = combinedInput
+				}
+			} else {
 				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
 			}
 
@@ -433,6 +518,8 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 	wrapper := &NodeWrapper{
 		node: baseNode,
 		exec: func(input interface{}) (interface{}, error) {
+			// Handle both old format (direct params) and new format (combined input)
+			// For condition node, we don't actually use the params in this placeholder implementation
 			// This is a placeholder - in a real implementation, this would evaluate
 			// the condition using the JavaScript engine
 			return true, nil
