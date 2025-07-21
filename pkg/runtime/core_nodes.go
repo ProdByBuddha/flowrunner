@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/robertkrimen/otto"
 	"github.com/tcmartin/flowlib"
 	"github.com/tcmartin/flowrunner/pkg/utils"
 )
@@ -42,10 +43,72 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 		node: baseNode,
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
-			// For transform node, we just pass through the input in this placeholder implementation
-			// This is a placeholder - in a real implementation, this would use the
-			// JavaScript engine to transform the input data
-			return input, nil
+			var nodeParams map[string]interface{}
+			var flowInput map[string]interface{}
+			
+			if combinedInput, ok := input.(map[string]interface{}); ok {
+				if paramsField, hasParams := combinedInput["params"]; hasParams {
+					// New format: combined input with params and input
+					if paramsMap, ok := paramsField.(map[string]interface{}); ok {
+						nodeParams = paramsMap
+					} else {
+						return nil, fmt.Errorf("expected params to be map[string]interface{}")
+					}
+					
+					// Extract flow input
+					if inputField, hasInput := combinedInput["input"]; hasInput {
+						if inputMap, ok := inputField.(map[string]interface{}); ok {
+							flowInput = inputMap
+						}
+					}
+				} else {
+					// Old format: direct params (backwards compatibility)
+					nodeParams = combinedInput
+				}
+			} else {
+				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
+			}
+
+			// Extract the JavaScript script
+			script, ok := nodeParams["script"].(string)
+			if !ok {
+				return nil, fmt.Errorf("script parameter is required and must be a string")
+			}
+
+			// Create JavaScript engine using Otto
+			vm := otto.New()
+
+			// Set up console.log for debugging
+			vm.Set("console", map[string]interface{}{
+				"log": func(args ...interface{}) {
+					fmt.Printf("[Transform Script] %v\n", args...)
+				},
+			})
+
+			// Set up the context
+			// If we have flow input, add it as 'input' context
+			if flowInput != nil {
+				vm.Set("input", flowInput)
+			} else {
+				// For backwards compatibility, if no flow input, use the node params as input
+				vm.Set("input", nodeParams)
+			}
+
+			// Execute the transform script
+			// Wrap the script in a function to allow return statements
+			wrappedScript := "(function() {\n" + script + "\n})()"
+			result, err := vm.Run(wrappedScript)
+			if err != nil {
+				return nil, fmt.Errorf("failed to execute transform script: %w", err)
+			}
+
+			// Convert result to Go value
+			goValue, err := result.Export()
+			if err != nil {
+				return nil, fmt.Errorf("failed to export JavaScript result: %w", err)
+			}
+
+			return goValue, nil
 		},
 	}
 
