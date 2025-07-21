@@ -76,7 +76,7 @@
     - Support searching and filtering flows
     - _Requirements: 1.3, 1.4, 8.4_
 
-- [ ] 5. Implement account management and authentication
+- [x] 5. Implement account management and authentication
 
   - [x] 5.1 Create account service
 
@@ -98,7 +98,7 @@
     - Add key rotation capabilities
     - _Requirements: 3.2, 3.4_
 
-- [ ] 6. Implement flow runtime and execution engine
+- [x] 6. Implement flow runtime and execution engine
 
   - [x] 6.1 Create flow runtime service
 
@@ -107,21 +107,21 @@
     - Support input parameter handling
     - _Requirements: 2.1, 2.2, 2.3_
 
-  - [ ] 6.2 Implement execution status tracking
+  - [x] 6.2 Implement execution status tracking
 
     - Add status updates during execution
     - Track execution progress and timing
     - Store execution results
     - _Requirements: 2.2, 2.4, 2.5_
 
-  - [ ] 6.3 Add execution logging and monitoring
+  - [x] 6.3 Add execution logging and monitoring
 
     - Implement structured logging for executions
     - Add detailed node execution logging
     - Support log retrieval and filtering
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [ ] 6.4 Implement WebSocket support for real-time monitoring
+  - [x] 6.4 Implement WebSocket support for real-time monitoring
     - Create WebSocket handler for execution updates
     - Add subscription mechanism for executions
     - Implement real-time log streaming
@@ -281,7 +281,7 @@
     - Implement proper authorization checks
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 11.4 Add WebSocket endpoint for real-time updates
+  - [x] 11.4 Add WebSocket endpoint for real-time updates
     - Create WebSocket handler
     - Implement authentication for WebSocket connections
     - Add subscription mechanism
