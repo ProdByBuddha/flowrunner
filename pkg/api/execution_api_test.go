@@ -14,6 +14,7 @@ import (
 	"github.com/tcmartin/flowlib"
 	"github.com/tcmartin/flowrunner/pkg/config"
 	"github.com/tcmartin/flowrunner/pkg/loader"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 	"github.com/tcmartin/flowrunner/pkg/registry"
 	"github.com/tcmartin/flowrunner/pkg/runtime"
 	"github.com/tcmartin/flowrunner/pkg/services"
@@ -199,10 +200,10 @@ func setupTestServer() (*Server, *MockFlowRegistry, *storage.MemoryProvider, str
 	}
 
 	// Create YAML loader with node factories
-	nodeFactories := map[string]loader.NodeFactory{
+		nodeFactories := map[string]plugins.NodeFactory{
 		"base": &loader.BaseNodeFactory{},
 	}
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 
 	// Create flow runtime with storage
 	mockExecutionStore := NewMockExecutionStore()

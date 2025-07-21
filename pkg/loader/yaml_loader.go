@@ -4,18 +4,21 @@ import (
 	"fmt"
 
 	"github.com/tcmartin/flowlib"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 	"gopkg.in/yaml.v2"
 )
 
 // DefaultYAMLLoader implements the YAMLLoader interface
 type DefaultYAMLLoader struct {
-	nodeFactories map[string]NodeFactory
+	nodeFactories    map[string]plugins.NodeFactory
+	pluginRegistry plugins.PluginRegistry
 }
 
 // NewYAMLLoader creates a new YAML loader
-func NewYAMLLoader(nodeFactories map[string]NodeFactory) YAMLLoader {
+func NewYAMLLoader(nodeFactories map[string]plugins.NodeFactory, pluginRegistry plugins.PluginRegistry) YAMLLoader {
 	return &DefaultYAMLLoader{
-		nodeFactories: nodeFactories,
+		nodeFactories:    nodeFactories,
+		pluginRegistry: pluginRegistry,
 	}
 }
 
@@ -36,13 +39,27 @@ func (l *DefaultYAMLLoader) Parse(yamlContent string) (*flowlib.Flow, error) {
 	for nodeName, nodeDef := range flowDef.Nodes {
 		factory, exists := l.nodeFactories[nodeDef.Type]
 		if !exists {
-			return nil, fmt.Errorf("unknown node type '%s' in node '%s'", nodeDef.Type, nodeName)
+			// If the node type is not in the built-in factories, try the plugin registry
+			plugin, err := l.pluginRegistry.Get(nodeDef.Type)
+			if err != nil {
+				return nil, fmt.Errorf("unknown node type '%s' in node '%s'", nodeDef.Type, nodeName)
+			}
+			nodePlugin, ok := plugin.(plugins.NodePlugin)
+			if !ok {
+				return nil, fmt.Errorf("plugin '%s' is not a valid NodePlugin", nodeDef.Type)
+			}
+			node, err := nodePlugin.CreateNode(nodeDef.Params)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create node '%s' from plugin: %w", nodeName, err)
+			}
+			nodes[nodeName] = node
+		} else {
+			node, err := factory.CreateNode(nodeDef)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create node '%s': %w", nodeName, err)
+			}
+			nodes[nodeName] = node
 		}
-		node, err := factory.CreateNode(nodeDef)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create node '%s': %w", nodeName, err)
-		}
-		nodes[nodeName] = node
 	}
 
 	// Connect the nodes
@@ -83,10 +100,12 @@ func (l *DefaultYAMLLoader) Validate(yamlContent string) error {
 		return fmt.Errorf("flow must have at least one node")
 	}
 
-	// Validate node types exist in factories
+	// Validate node types exist in factories or plugin registry
 	for nodeName, nodeDef := range flowDef.Nodes {
 		if _, exists := l.nodeFactories[nodeDef.Type]; !exists {
-			return fmt.Errorf("unknown node type '%s' in node '%s'", nodeDef.Type, nodeName)
+			if _, err := l.pluginRegistry.Get(nodeDef.Type); err != nil {
+				return fmt.Errorf("unknown node type '%s' in node '%s'", nodeDef.Type, nodeName)
+			}
 		}
 	}
 

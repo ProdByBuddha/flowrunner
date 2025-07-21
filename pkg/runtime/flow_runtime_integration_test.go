@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/tcmartin/flowrunner/pkg/loader"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 	"github.com/tcmartin/flowrunner/pkg/runtime"
 )
 
@@ -23,10 +24,10 @@ func (m *IntegrationMockFlowRegistry) GetFlow(accountID, flowID string) (*runtim
 func TestFlowRuntime_Integration_SimpleFlow(t *testing.T) {
 	// Setup
 	mockRegistry := new(IntegrationMockFlowRegistry)
-	nodeFactories := map[string]loader.NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"base": &loader.BaseNodeFactory{},
 	}
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 	flowRuntime := runtime.NewFlowRuntime(mockRegistry, yamlLoader)
 
 	// Define a simple flow in YAML
@@ -59,10 +60,10 @@ nodes:
 func TestFlowRuntime_Integration_FlowWithRetry(t *testing.T) {
 	// Setup
 	mockRegistry := new(IntegrationMockFlowRegistry)
-	nodeFactories := map[string]loader.NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"base": &loader.BaseNodeFactory{},
 	}
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 	flowRuntime := runtime.NewFlowRuntime(mockRegistry, yamlLoader)
 
 	// Define a flow with retry logic
@@ -98,11 +99,11 @@ nodes:
 func TestFlowRuntime_Integration_FlowWithBatch(t *testing.T) {
 	// Setup
 	mockRegistry := new(IntegrationMockFlowRegistry)
-	nodeFactories := map[string]loader.NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"base":  &loader.BaseNodeFactory{},
 		"batch": &loader.BatchNodeFactory{},
 	}
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 	flowRuntime := runtime.NewFlowRuntime(mockRegistry, yamlLoader)
 
 	// Define a flow with batch logic
@@ -139,11 +140,11 @@ nodes:
 func TestFlowRuntime_Integration_FlowWithWorkerPool(t *testing.T) {
 	// Setup
 	mockRegistry := new(IntegrationMockFlowRegistry)
-	nodeFactories := map[string]loader.NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"base":        &loader.BaseNodeFactory{},
 		"worker_pool": &loader.WorkerPoolBatchNodeFactory{},
 	}
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 	flowRuntime := runtime.NewFlowRuntime(mockRegistry, yamlLoader)
 
 	// Define a flow with worker pool logic
@@ -182,11 +183,11 @@ nodes:
 func TestFlowRuntime_Integration_FlowWithAsyncBatch(t *testing.T) {
 	// Setup
 	mockRegistry := new(IntegrationMockFlowRegistry)
-	nodeFactories := map[string]loader.NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"base":       &loader.BaseNodeFactory{},
 		"async_batch": &loader.AsyncBatchNodeFactory{},
 	}
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 	flowRuntime := runtime.NewFlowRuntime(mockRegistry, yamlLoader)
 
 	// Define a flow with async batch logic
@@ -223,11 +224,11 @@ nodes:
 func TestFlowRuntime_Integration_FlowWithParallelBatch(t *testing.T) {
 	// Setup
 	mockRegistry := new(IntegrationMockFlowRegistry)
-	nodeFactories := map[string]loader.NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"base":          &loader.BaseNodeFactory{},
 		"parallel_batch": &loader.AsyncParallelBatchNodeFactory{},
 	}
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 	flowRuntime := runtime.NewFlowRuntime(mockRegistry, yamlLoader)
 
 	// Define a flow with parallel batch logic

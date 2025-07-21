@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tcmartin/flowlib"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 )
 
 // MockNodeFactory is a mock implementation of NodeFactory
@@ -15,7 +16,7 @@ type MockNodeFactory struct {
 	mock.Mock
 }
 
-func (m *MockNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node, error) {
+func (m *MockNodeFactory) CreateNode(nodeDef plugins.NodeDefinition) (flowlib.Node, error) {
 	args := m.Called(nodeDef)
 	return args.Get(0).(flowlib.Node), args.Error(1)
 }
@@ -80,7 +81,7 @@ func (m *MockNode) Run(shared interface{}) (string, error) {
 
 func TestYAMLLoaderValidate(t *testing.T) {
 	// Create mock dependencies
-	nodeFactories := map[string]NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"test": func() *MockNodeFactory {
 			mockFactory := new(MockNodeFactory)
 			mockNode := new(MockNode)
@@ -94,8 +95,10 @@ func TestYAMLLoaderValidate(t *testing.T) {
 		}(),
 	}
 
+	pluginRegistry := plugins.NewPluginRegistry()
+
 	// Create YAML loader
-	loader := NewYAMLLoader(nodeFactories)
+	loader := NewYAMLLoader(nodeFactories, pluginRegistry)
 
 	// Test cases
 	tests := []struct {
@@ -195,7 +198,7 @@ func TestYAMLLoaderParse(t *testing.T) {
 	mockNode.On("Successors").Return(map[string]flowlib.Node{})
 	mockNode.On("Run", mock.Anything).Return("default", nil)
 
-	nodeFactories := map[string]NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"test": func() *MockNodeFactory {
 			mockFactory := new(MockNodeFactory)
 			mockNode := new(MockNode)
@@ -209,8 +212,10 @@ func TestYAMLLoaderParse(t *testing.T) {
 		}(),
 	}
 
+	pluginRegistry := plugins.NewPluginRegistry()
+
 	// Create YAML loader
-	loader := NewYAMLLoader(nodeFactories)
+	loader := NewYAMLLoader(nodeFactories, pluginRegistry)
 
 	// Test valid YAML
 	yaml := `

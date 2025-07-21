@@ -19,6 +19,7 @@ import (
 	"github.com/tcmartin/flowrunner/pkg/auth"
 	"github.com/tcmartin/flowrunner/pkg/config"
 	"github.com/tcmartin/flowrunner/pkg/loader"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 	"github.com/tcmartin/flowrunner/pkg/registry"
 	"github.com/tcmartin/flowrunner/pkg/services"
 	"github.com/tcmartin/flowrunner/pkg/storage"
@@ -289,8 +290,9 @@ func NewApp(cfg *config.Config) (*App, error) {
 	}
 
 	// Create YAML loader with empty dependencies (stub implementation)
-	nodeFactories := make(map[string]loader.NodeFactory)
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	pluginRegistry := plugins.NewPluginRegistry()
+	nodeFactories := make(map[string]plugins.NodeFactory)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, pluginRegistry)
 
 	// Create flow registry
 	flowRegistry := registry.NewFlowRegistry(storageProvider.GetFlowStore(), registry.FlowRegistryOptions{

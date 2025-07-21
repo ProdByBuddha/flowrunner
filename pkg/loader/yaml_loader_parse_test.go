@@ -8,16 +8,17 @@ import (
 	"github.com/tcmartin/flowlib"
 
 	"github.com/tcmartin/flowrunner/pkg/loader"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 )
 
 func TestYAMLLoader_Parse_SimpleFlow(t *testing.T) {
 	// Create a map of node factories
-	nodeFactories := map[string]loader.NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"base": &loader.BaseNodeFactory{},
 	}
 
 	// Create a new YAML loader
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 
 	// Define a simple flow in YAML
 	yamlContent := `
@@ -51,7 +52,7 @@ nodes:
 
 func TestYAMLLoader_Parse_FlowWithRetryAndBatch(t *testing.T) {
 	// Create a map of node factories including all new types
-	nodeFactories := map[string]loader.NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"base":           &loader.BaseNodeFactory{},
 		"batch":          &loader.BatchNodeFactory{},
 		"async_batch":    &loader.AsyncBatchNodeFactory{},
@@ -60,7 +61,7 @@ func TestYAMLLoader_Parse_FlowWithRetryAndBatch(t *testing.T) {
 	}
 
 	// Create a new YAML loader
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 
 	// Define a complex flow in YAML
 	yamlContent := `
@@ -119,12 +120,12 @@ nodes:
 
 func TestYAMLLoader_Parse_NoStartNode(t *testing.T) {
 	// Create a map of node factories
-	nodeFactories := map[string]loader.NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"base": &loader.BaseNodeFactory{},
 	}
 
 	// Create a new YAML loader
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 
 	// Define a flow with no clear start node (circular reference)
 	yamlContent := `
@@ -152,12 +153,12 @@ nodes:
 
 func TestYAMLLoader_Parse_MultipleStartNodes(t *testing.T) {
 	// Create a map of node factories
-	nodeFactories := map[string]loader.NodeFactory{
+	nodeFactories := map[string]plugins.NodeFactory{
 		"base": &loader.BaseNodeFactory{},
 	}
 
 	// Create a new YAML loader
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 
 	// Define a flow with multiple potential start nodes
 	yamlContent := `

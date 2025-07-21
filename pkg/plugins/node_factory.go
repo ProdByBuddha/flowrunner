@@ -1,6 +1,8 @@
-package loader
+package plugins
 
-import "github.com/tcmartin/flowlib"
+import (
+	"github.com/tcmartin/flowlib"
+)
 
 // NodeFactory creates a flowlib.Node
 type NodeFactory interface {

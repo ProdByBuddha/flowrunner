@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tcmartin/flowrunner/pkg/config"
 	"github.com/tcmartin/flowrunner/pkg/loader"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 	"github.com/tcmartin/flowrunner/pkg/registry"
 	"github.com/tcmartin/flowrunner/pkg/runtime"
 	"github.com/tcmartin/flowrunner/pkg/services"
@@ -99,7 +100,7 @@ func TestWebSocketPostgreSQLIntegration_ComplexFlow(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create YAML loader with all core node types
-	nodeFactories := make(map[string]loader.NodeFactory)
+	nodeFactories := make(map[string]plugins.NodeFactory)
 	for nodeType, factory := range runtime.CoreNodeTypes() {
 		nodeFactories[nodeType] = &RuntimeNodeFactoryAdapter{factory: factory}
 	}
@@ -109,7 +110,7 @@ func TestWebSocketPostgreSQLIntegration_ComplexFlow(t *testing.T) {
 	nodeFactories["parallel_batch"] = &loader.AsyncParallelBatchNodeFactory{}
 	nodeFactories["worker_pool"] = &loader.WorkerPoolBatchNodeFactory{}
 
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 
 	// Create flow registry with PostgreSQL backend
 	flowRegistry := registry.NewFlowRegistry(postgresProvider.GetFlowStore(), registry.FlowRegistryOptions{
@@ -693,11 +694,11 @@ func TestWebSocketPostgreSQLIntegration_SimpleBranching(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create YAML loader with core node types
-	nodeFactories := make(map[string]loader.NodeFactory)
+	nodeFactories := make(map[string]plugins.NodeFactory)
 	for nodeType, factory := range runtime.CoreNodeTypes() {
 		nodeFactories[nodeType] = &RuntimeNodeFactoryAdapter{factory: factory}
 	}
-	yamlLoader := loader.NewYAMLLoader(nodeFactories)
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 
 	// Create flow registry
 	flowRegistry := registry.NewFlowRegistry(postgresProvider.GetFlowStore(), registry.FlowRegistryOptions{

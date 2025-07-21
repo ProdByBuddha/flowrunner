@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/tcmartin/flowlib"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 )
 
 // BaseNodeFactory creates a basic flowlib.NodeWithRetry
 type BaseNodeFactory struct{}
 
-func (f *BaseNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node, error) {
+func (f *BaseNodeFactory) CreateNode(nodeDef plugins.NodeDefinition) (flowlib.Node, error) {
 	maxRetries := 0
 	if nodeDef.Retry.MaxRetries > 0 {
 		maxRetries = nodeDef.Retry.MaxRetries
@@ -35,7 +36,7 @@ func (f *BaseNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node, erro
 // BatchNodeFactory creates a flowlib.BatchNode
 type BatchNodeFactory struct{}
 
-func (f *BatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node, error) {
+func (f *BatchNodeFactory) CreateNode(nodeDef plugins.NodeDefinition) (flowlib.Node, error) {
 	maxRetries := 0
 	if nodeDef.Retry.MaxRetries > 0 {
 		maxRetries = nodeDef.Retry.MaxRetries
@@ -64,7 +65,7 @@ func (f *BatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node, err
 // AsyncBatchNodeFactory creates a flowlib.AsyncBatchNode
 type AsyncBatchNodeFactory struct{}
 
-func (f *AsyncBatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node, error) {
+func (f *AsyncBatchNodeFactory) CreateNode(nodeDef plugins.NodeDefinition) (flowlib.Node, error) {
 	maxRetries := 0
 	if nodeDef.Retry.MaxRetries > 0 {
 		maxRetries = nodeDef.Retry.MaxRetries
@@ -92,7 +93,7 @@ func (f *AsyncBatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node
 // AsyncParallelBatchNodeFactory creates a flowlib.AsyncParallelBatchNode
 type AsyncParallelBatchNodeFactory struct{}
 
-func (f *AsyncParallelBatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node, error) {
+func (f *AsyncParallelBatchNodeFactory) CreateNode(nodeDef plugins.NodeDefinition) (flowlib.Node, error) {
 	maxRetries := 0
 	if nodeDef.Retry.MaxRetries > 0 {
 		maxRetries = nodeDef.Retry.MaxRetries
@@ -120,7 +121,7 @@ func (f *AsyncParallelBatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flow
 // WorkerPoolBatchNodeFactory creates a flowlib.WorkerPoolBatchNode
 type WorkerPoolBatchNodeFactory struct{}
 
-func (f *WorkerPoolBatchNodeFactory) CreateNode(nodeDef NodeDefinition) (flowlib.Node, error) {
+func (f *WorkerPoolBatchNodeFactory) CreateNode(nodeDef plugins.NodeDefinition) (flowlib.Node, error) {
 	maxRetries := 0
 	if nodeDef.Retry.MaxRetries > 0 {
 		maxRetries = nodeDef.Retry.MaxRetries
