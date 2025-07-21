@@ -142,13 +142,16 @@ func TestDelayNode(t *testing.T) {
 }
 
 func TestConditionNode(t *testing.T) {
-	// Create the node
-	node, err := NewConditionNodeWrapper(map[string]interface{}{})
+	// Create the node with a simple JavaScript condition script
+	config := map[string]interface{}{
+		"condition_script": "return true;",
+	}
+	node, err := NewConditionNodeWrapper(config)
 	if err != nil {
 		t.Fatalf("Failed to create condition node: %v", err)
 	}
 
-	// Execute the node (should return true in our placeholder implementation)
+	// Execute the node
 	result, err := node.Run(nil)
 	if err != nil {
 		t.Fatalf("Failed to execute condition node: %v", err)
