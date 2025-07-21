@@ -101,6 +101,13 @@ func (r *flowRuntime) Execute(accountID string, flowID string, input map[string]
 		if err := r.executionStore.SaveExecution(execCtx.status); err != nil {
 			r.logExecution(executionID, "error", "Failed to save execution status", map[string]interface{}{"error": err.Error()})
 		}
+
+		// If this is a PostgreSQL execution store, set the account ID
+		if pgStore, ok := r.executionStore.(interface{ SetExecutionAccountID(string, string) error }); ok {
+			if err := pgStore.SetExecutionAccountID(executionID, accountID); err != nil {
+				r.logExecution(executionID, "error", "Failed to set execution account ID", map[string]interface{}{"error": err.Error()})
+			}
+		}
 	}
 
 	// Start execution in goroutine

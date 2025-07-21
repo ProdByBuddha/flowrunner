@@ -636,16 +636,16 @@ func (s *PostgreSQLExecutionStore) SaveExecution(execution runtime.ExecutionStat
 			return fmt.Errorf("failed to update execution: %w", err)
 		}
 	} else {
-		// For new executions, we need the account ID from somewhere else
-		// In a real application, this would come from the context or a parameter
-		// For now, we'll just use a placeholder and expect it to be set elsewhere
+		// For new executions, we need to extract the account ID from the execution ID
+		// This is a temporary workaround - in production, you'd want to pass account ID explicitly
+		// For now, we'll set a placeholder account ID that can be updated later
+		placeholderAccountID := "unknown"
 
-		// Note: This is a workaround for the test. In a real application,
-		// you would pass the account ID as a parameter to this method.
 		_, err = s.db.Exec(
 			`INSERT INTO executions (
 				id, 
 				flow_id, 
+				account_id,
 				status, 
 				start_time, 
 				end_time, 
@@ -653,9 +653,10 @@ func (s *PostgreSQLExecutionStore) SaveExecution(execution runtime.ExecutionStat
 				results, 
 				progress, 
 				current_node
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 			execution.ID,
 			execution.FlowID,
+			placeholderAccountID,
 			execution.Status,
 			execution.StartTime,
 			execution.EndTime,
@@ -669,6 +670,20 @@ func (s *PostgreSQLExecutionStore) SaveExecution(execution runtime.ExecutionStat
 		}
 	}
 
+	return nil
+}
+
+// SetExecutionAccountID updates the account ID for an execution
+// This is a workaround for the fact that ExecutionStatus doesn't include AccountID
+func (s *PostgreSQLExecutionStore) SetExecutionAccountID(executionID, accountID string) error {
+	_, err := s.db.Exec(
+		"UPDATE executions SET account_id = $1 WHERE id = $2",
+		accountID,
+		executionID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to set execution account ID: %w", err)
+	}
 	return nil
 }
 
