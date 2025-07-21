@@ -295,6 +295,12 @@ func NewApp(cfg *config.Config) (*App, error) {
 
 	// Create YAML loader with empty dependencies (stub implementation)
 	pluginRegistry := plugins.NewPluginRegistry()
+
+	// Register the mcp plugin
+	if err := pluginRegistry.Register("mcp", &plugins.MCPPlugin{}); err != nil {
+		log.Fatalf("Failed to register mcp plugin: %v", err)
+	}
+
 	nodeFactories := make(map[string]plugins.NodeFactory)
 	yamlLoader := loader.NewYAMLLoader(nodeFactories, pluginRegistry)
 

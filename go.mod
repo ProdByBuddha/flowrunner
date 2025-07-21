@@ -11,8 +11,10 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
+	github.com/r3labs/sse/v2 v2.10.0
 	github.com/robertkrimen/otto v0.5.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v1.9.1
@@ -28,14 +30,15 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
+	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
+	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 )
 
