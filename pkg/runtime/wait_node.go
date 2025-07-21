@@ -17,9 +17,22 @@ func NewWaitNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 	wrapper := &NodeWrapper{
 		node: baseNode,
 		exec: func(input interface{}) (interface{}, error) {
-			// Get parameters from input
-			params, ok := input.(map[string]interface{})
-			if !ok {
+			// Handle both old format (direct params) and new format (combined input)
+			var params map[string]interface{}
+			
+			if combinedInput, ok := input.(map[string]interface{}); ok {
+				if nodeParams, hasParams := combinedInput["params"]; hasParams {
+					// New format: combined input with params and input
+					if paramsMap, ok := nodeParams.(map[string]interface{}); ok {
+						params = paramsMap
+					} else {
+						return nil, fmt.Errorf("expected params to be map[string]interface{}")
+					}
+				} else {
+					// Old format: direct params (backwards compatibility)
+					params = combinedInput
+				}
+			} else {
 				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
 			}
 
