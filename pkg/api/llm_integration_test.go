@@ -35,7 +35,7 @@ import (
 // for all operations, with no mocking involved.
 func TestLLMFlowIntegration(t *testing.T) {
 	// Load environment variables
-	_ = godotenv.Load("../../../.env")
+	_ = godotenv.Load("../../.env")
 
 	// Skip test if OpenAI API key is not available
 	apiKey := os.Getenv("OPENAI_API_KEY")
