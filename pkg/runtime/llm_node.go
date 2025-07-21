@@ -18,6 +18,26 @@ func truncateString(s string, maxLen int) string {
 	return s[:maxLen] + "..."
 }
 
+// Helper function to recursively convert map[interface{}]interface{} to map[string]any
+func convertInterfaceMapToStringMap(input map[interface{}]interface{}) map[string]any {
+	result := make(map[string]any)
+	for k, v := range input {
+		keyStr, ok := k.(string)
+		if !ok {
+			continue
+		}
+		
+		// Recursively convert nested maps
+		switch val := v.(type) {
+		case map[interface{}]interface{}:
+			result[keyStr] = convertInterfaceMapToStringMap(val)
+		default:
+			result[keyStr] = v
+		}
+	}
+	return result
+}
+
 // LLMNodeWrapper is a wrapper for LLM nodes
 type LLMNodeWrapper struct {
 	*NodeWrapper
@@ -326,23 +346,46 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			var tools []utils.ToolDefinition
 			if toolsParam, ok := paramsAny["tools"].([]any); ok {
 				for _, toolInterface := range toolsParam {
-					if toolMap, ok := toolInterface.(map[string]any); ok {
-						toolType, _ := toolMap["type"].(string)
+					// Handle both map[string]any and map[interface{}]interface{} types from YAML
+					var toolMap map[string]any
+					if tm, ok := toolInterface.(map[string]any); ok {
+						toolMap = tm
+					} else if tmInterface, ok := toolInterface.(map[interface{}]interface{}); ok {
+						toolMap = convertInterfaceMapToStringMap(tmInterface)
+					} else {
+						continue // Skip if neither type
+					}
+					
+					toolType, _ := toolMap["type"].(string)
 
-						if funcMap, ok := toolMap["function"].(map[string]any); ok {
-							name, _ := funcMap["name"].(string)
-							desc, _ := funcMap["description"].(string)
-							params, _ := funcMap["parameters"].(map[string]any)
-
-							tools = append(tools, utils.ToolDefinition{
-								Type: toolType,
-								Function: utils.FunctionDefinition{
-									Name:        name,
-									Description: desc,
-									Parameters:  params,
-								},
-							})
+					// Handle function map conversion
+					var funcMap map[string]any
+					if fm, ok := toolMap["function"].(map[string]any); ok {
+						funcMap = fm
+					} else if fmInterface, ok := toolMap["function"].(map[interface{}]interface{}); ok {
+						funcMap = convertInterfaceMapToStringMap(fmInterface)
+					}
+					
+					if funcMap != nil {
+						name, _ := funcMap["name"].(string)
+						desc, _ := funcMap["description"].(string)
+						
+						// Handle parameters map conversion
+						var params map[string]any
+						if p, ok := funcMap["parameters"].(map[string]any); ok {
+							params = p
+						} else if pInterface, ok := funcMap["parameters"].(map[interface{}]interface{}); ok {
+							params = convertInterfaceMapToStringMap(pInterface)
 						}
+
+						tools = append(tools, utils.ToolDefinition{
+							Type: toolType,
+							Function: utils.FunctionDefinition{
+								Name:        name,
+								Description: desc,
+								Parameters:  params,
+							},
+						})
 					}
 				}
 			}
@@ -377,6 +420,12 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 
 			log.Printf("[LLM Node] Making LLM request - Model: %s, Messages: %d, Temperature: %.2f, MaxTokens: %d", 
 				model, len(messages), temperature, maxTokens)
+			log.Printf("[LLM Node] TOOLS COUNT: %d", len(tools))
+			if len(tools) > 0 {
+				for i, tool := range tools {
+					log.Printf("[LLM Node] Tool %d: %s (%s)", i, tool.Function.Name, tool.Function.Description)
+				}
+			}
 
 			logToExecution("info", "Making LLM API request", map[string]interface{}{
 				"model":        model,

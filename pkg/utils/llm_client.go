@@ -29,10 +29,29 @@ type LLMClient struct {
 	options    map[string]interface{}
 }
 
+// ToolCall represents a tool call from the LLM
+type ToolCall struct {
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Function struct {
+		Name      string `json:"name"`
+		Arguments string `json:"arguments"`
+	} `json:"function"`
+}
+
+// ToolCallResult represents the result of a tool call
+type ToolCallResult struct {
+	ToolCallID string `json:"tool_call_id"`
+	Content    string `json:"content"`
+}
+
 // Message represents a chat message
 type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role         string           `json:"role"`
+	Content      string           `json:"content,omitempty"`
+	ToolCalls    []ToolCall       `json:"tool_calls,omitempty"`
+	ToolCallID   string           `json:"tool_call_id,omitempty"`
+	Name         string           `json:"name,omitempty"`
 }
 
 // LLMRequest represents a request to an LLM
@@ -45,6 +64,7 @@ type LLMRequest struct {
 	Stream      bool                   `json:"stream,omitempty"`
 	Functions   []FunctionDefinition   `json:"functions,omitempty"`
 	Tools       []ToolDefinition       `json:"tools,omitempty"`
+	ToolChoice  interface{}            `json:"tool_choice,omitempty"`
 	Options     map[string]interface{} `json:"options,omitempty"`
 }
 
@@ -165,6 +185,10 @@ func (c *LLMClient) completeOpenAI(ctx context.Context, request LLMRequest) (*LL
 
 	if len(request.Tools) > 0 {
 		requestBody["tools"] = request.Tools
+	}
+
+	if request.ToolChoice != nil {
+		requestBody["tool_choice"] = request.ToolChoice
 	}
 
 	// Add any additional options
