@@ -114,6 +114,13 @@ func (s *Server) setupRoutes() {
 	authenticated := api.PathPrefix("").Subrouter()
 	authenticated.Use(authMiddleware.Authenticate)
 
+	// Account management routes (authenticated)
+	accountsMgmt := authenticated.PathPrefix("/accounts").Subrouter()
+	accountsMgmt.HandleFunc("", s.handleListAccounts).Methods(http.MethodGet, http.MethodOptions)
+	accountsMgmt.HandleFunc("/{id}", s.handleGetAccount).Methods(http.MethodGet, http.MethodOptions)
+	accountsMgmt.HandleFunc("/{id}", s.handleDeleteAccount).Methods(http.MethodDelete, http.MethodOptions)
+	accountsMgmt.HandleFunc("/{id}", s.handleUpdateAccount).Methods(http.MethodPut, http.MethodOptions)
+
 	// Flow routes
 	flows := authenticated.PathPrefix("/flows").Subrouter()
 	flows.HandleFunc("", s.handleListFlows).Methods(http.MethodGet, http.MethodOptions)
@@ -137,7 +144,6 @@ func (s *Server) setupRoutes() {
 	authenticated.HandleFunc("/ws", s.handleWebSocket).Methods(http.MethodGet)
 
 	// Account management routes (authenticated)
-	accountsMgmt := authenticated.PathPrefix("/accounts").Subrouter()
 	accountsMgmt.HandleFunc("/me", s.handleGetCurrentAccount).Methods(http.MethodGet, http.MethodOptions)
 	accountsMgmt.HandleFunc("/refresh-token", s.handleRefreshToken).Methods(http.MethodPost, http.MethodOptions)
 

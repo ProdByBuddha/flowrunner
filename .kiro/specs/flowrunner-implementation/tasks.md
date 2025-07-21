@@ -274,7 +274,7 @@
     - Create log retrieval endpoint
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
 
-  - [ ] 11.3 Implement account and secret API
+  - [x] 11.3 Implement account and secret API
 
     - Create account management endpoints
     - Add secret CRUD endpoints
