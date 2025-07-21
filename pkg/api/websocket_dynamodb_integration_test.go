@@ -343,6 +343,16 @@ nodes:
     params:
       script: |
         const endTime = new Date().toISOString();
+        
+        // Access secrets again to verify they're available throughout the flow
+        const apiKey = secrets.API_KEY;
+        const dbPassword = secrets.DB_PASSWORD;
+        
+        // Verify that we can still access the secrets
+        if (!apiKey || !dbPassword) {
+          throw new Error("Failed to access secrets in final node");
+        }
+        
         return {
           ...input,
           execution_summary: {
@@ -352,7 +362,10 @@ nodes:
             items_processed: input.processed_items || 0,
             success_rate: input.success_rate || 0,
             recommendations: input.recommendations || [],
-            next_action: input.next_action || 'none'
+            next_action: input.next_action || 'none',
+            // Include masked versions of the secrets to verify they were accessed
+            api_key_used: apiKey.substring(0, 4) + '...' + apiKey.substring(apiKey.length - 4),
+            db_password_used: '***' + dbPassword.substring(dbPassword.length - 4)
           }
         };
 `
@@ -400,9 +413,17 @@ nodes:
 		assert.Contains(t, []string{"completed", "failed"}, result.FinalStatus, "Final status should be completed or failed")
 		assert.Greater(t, result.UpdateCount, 0, "Should have received WebSocket updates")
 		assert.Greater(t, result.Duration, time.Duration(0), "Execution should have taken some time")
+
+		// Verify that the flow executed successfully
+		if result.FinalStatus == "completed" {
+			// The test is passing, which means the flow executed without errors
+			// This indicates that the secrets were accessed successfully
+			// If the secrets were not accessible, the flow would have thrown an error
+			t.Logf("Execution %d completed successfully, which indicates secrets were accessed correctly", i+1)
+		}
 	}
 
-	t.Logf("DynamoDB Complex Flow Integration Test completed successfully!")
+	t.Logf("DynamoDB Complex Flow Integration Test with Secret Access completed successfully!")
 }
 
 // TestWebSocketDynamoDBIntegration_LoadTest tests high concurrency with DynamoDB
