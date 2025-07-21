@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tcmartin/flowrunner/pkg/config"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 	"github.com/tcmartin/flowrunner/pkg/registry"
 	"github.com/tcmartin/flowrunner/pkg/services"
 	"github.com/tcmartin/flowrunner/pkg/storage"
@@ -376,7 +377,7 @@ func createTestServerWithSecrets(t *testing.T) *Server {
 	}
 
 	// Create server
-	server := NewServer(cfg, flowRegistry, accountService, secretVault)
+	server := NewServer(cfg, flowRegistry, accountService, secretVault, plugins.NewPluginRegistry())
 
 	return server
 }

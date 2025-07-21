@@ -326,7 +326,7 @@ func NewApp(cfg *config.Config) (*App, error) {
 	}
 
 	// Create API server
-	server := api.NewServer(cfg, flowRegistry, accountService, secretVault)
+	server := api.NewServer(cfg, flowRegistry, accountService, secretVault, pluginRegistry)
 
 	return &App{
 		config:          cfg,

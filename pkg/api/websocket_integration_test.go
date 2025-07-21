@@ -124,7 +124,7 @@ nodes:
 		},
 	}
 
-	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime)
+	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, plugins.NewPluginRegistry())
 
 	// Create test server
 	testServer := httptest.NewServer(server.router)
@@ -263,7 +263,7 @@ func TestWebSocketAuthentication(t *testing.T) {
 		},
 	}
 
-	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, nil)
+	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, nil, plugins.NewPluginRegistry())
 	testServer := httptest.NewServer(server.router)
 	defer testServer.Close()
 
@@ -341,7 +341,7 @@ func TestWebSocketConcurrentConnections(t *testing.T) {
 		},
 	}
 
-	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime)
+	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, plugins.NewPluginRegistry())
 	testServer := httptest.NewServer(server.router)
 	defer testServer.Close()
 

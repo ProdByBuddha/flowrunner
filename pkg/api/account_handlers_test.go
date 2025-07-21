@@ -15,6 +15,7 @@ import (
 	"github.com/tcmartin/flowrunner/pkg/auth"
 	"github.com/tcmartin/flowrunner/pkg/config"
 	"github.com/tcmartin/flowrunner/pkg/middleware"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 )
 
 // MockAccountService is a mock implementation of auth.AccountService
@@ -182,7 +183,7 @@ func TestHandleListAccounts(t *testing.T) {
 	mockAccountService.On("ListAccounts").Return(accounts, nil)
 
 	// Create server with mocks
-	server := NewServer(&config.Config{}, nil, mockAccountService, mockSecretVault)
+	server := NewServer(&config.Config{}, nil, mockAccountService, mockSecretVault, plugins.NewPluginRegistry())
 
 	// Create request
 	req, err := http.NewRequest("GET", "/api/v1/accounts", nil)
@@ -234,7 +235,7 @@ func TestHandleGetAccount(t *testing.T) {
 	mockAccountService.On("GetAccount", "acc1").Return(account, nil)
 
 	// Create server with mocks
-	server := NewServer(&config.Config{}, nil, mockAccountService, mockSecretVault)
+	server := NewServer(&config.Config{}, nil, mockAccountService, mockSecretVault, plugins.NewPluginRegistry())
 
 	// Create request
 	req, err := http.NewRequest("GET", "/api/v1/accounts/acc1", nil)
@@ -280,7 +281,7 @@ func TestHandleDeleteAccount(t *testing.T) {
 	mockAccountService.On("DeleteAccount", "acc1").Return(nil)
 
 	// Create server with mocks
-	server := NewServer(&config.Config{}, nil, mockAccountService, mockSecretVault)
+	server := NewServer(&config.Config{}, nil, mockAccountService, mockSecretVault, plugins.NewPluginRegistry())
 
 	// Create request
 	req, err := http.NewRequest("DELETE", "/api/v1/accounts/acc1", nil)
@@ -319,7 +320,7 @@ func TestHandleUpdateAccount(t *testing.T) {
 	mockSecretVault := new(MockSecretVault)
 
 	// Create server with mocks
-	server := NewServer(&config.Config{}, nil, mockAccountService, mockSecretVault)
+	server := NewServer(&config.Config{}, nil, mockAccountService, mockSecretVault, plugins.NewPluginRegistry())
 
 	// Create request body
 	reqBody := AccountRequest{

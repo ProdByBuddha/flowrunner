@@ -389,7 +389,7 @@ nodes:
 		},
 	}
 
-	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime)
+	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, plugins.NewPluginRegistry())
 	testServer := httptest.NewServer(server.router)
 	defer testServer.Close()
 
@@ -670,7 +670,7 @@ nodes:
 		},
 	}
 
-	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime)
+	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, plugins.NewPluginRegistry())
 	testServer := httptest.NewServer(server.router)
 	defer testServer.Close()
 

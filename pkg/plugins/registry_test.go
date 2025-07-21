@@ -44,6 +44,23 @@ func TestPluginRegistry(t *testing.T) {
 		assert.Equal(t, plugin, retrieved)
 	})
 
+	t.Run("Register ExampleNodePlugin", func(t *testing.T) {
+		examplePlugin := &ExampleNodePlugin{}
+		err := registry.Register(examplePlugin.Name(), examplePlugin)
+		assert.NoError(t, err)
+
+		retrieved, err := registry.Get(examplePlugin.Name())
+		assert.NoError(t, err)
+		assert.IsType(t, &ExampleNodePlugin{}, retrieved)
+
+		nodePlugin, ok := retrieved.(NodePlugin)
+		assert.True(t, ok)
+
+		node, err := nodePlugin.CreateNode(map[string]interface{}{"message": "Hello from test!"})
+		assert.NoError(t, err)
+		assert.NotNil(t, node)
+	})
+
 	t.Run("Register duplicate", func(t *testing.T) {
 		plugin := &MockNodePlugin{name: "test_plugin_2"}
 		err := registry.Register("test_plugin_2", plugin)

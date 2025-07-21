@@ -12,6 +12,7 @@ import (
 	"github.com/tcmartin/flowrunner/pkg/auth"
 	"github.com/tcmartin/flowrunner/pkg/config"
 	"github.com/tcmartin/flowrunner/pkg/middleware"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
 	"github.com/tcmartin/flowrunner/pkg/registry"
 	"github.com/tcmartin/flowrunner/pkg/runtime"
 )
@@ -25,17 +26,19 @@ type Server struct {
 	accountService auth.AccountService
 	secretVault    auth.ExtendedSecretVault
 	flowRuntime    runtime.FlowRuntime
+	pluginRegistry plugins.PluginRegistry
 	wsManager      *WebSocketManager
 }
 
 // NewServer creates a new API server
-func NewServer(cfg *config.Config, flowRegistry registry.FlowRegistry, accountService auth.AccountService, secretVault auth.ExtendedSecretVault) *Server {
+func NewServer(cfg *config.Config, flowRegistry registry.FlowRegistry, accountService auth.AccountService, secretVault auth.ExtendedSecretVault, pluginRegistry plugins.PluginRegistry) *Server {
 	s := &Server{
 		config:         cfg,
 		router:         mux.NewRouter(),
 		flowRegistry:   flowRegistry,
 		accountService: accountService,
 		secretVault:    secretVault,
+		pluginRegistry: pluginRegistry,
 		wsManager:      NewWebSocketManager(nil), // No flow runtime in basic constructor
 	}
 
@@ -44,7 +47,7 @@ func NewServer(cfg *config.Config, flowRegistry registry.FlowRegistry, accountSe
 }
 
 // NewServerWithRuntime creates a new API server with flow runtime
-func NewServerWithRuntime(cfg *config.Config, flowRegistry registry.FlowRegistry, accountService auth.AccountService, secretVault auth.ExtendedSecretVault, flowRuntime runtime.FlowRuntime) *Server {
+func NewServerWithRuntime(cfg *config.Config, flowRegistry registry.FlowRegistry, accountService auth.AccountService, secretVault auth.ExtendedSecretVault, flowRuntime runtime.FlowRuntime, pluginRegistry plugins.PluginRegistry) *Server {
 	s := &Server{
 		config:         cfg,
 		router:         mux.NewRouter(),
@@ -52,6 +55,7 @@ func NewServerWithRuntime(cfg *config.Config, flowRegistry registry.FlowRegistry
 		accountService: accountService,
 		secretVault:    secretVault,
 		flowRuntime:    flowRuntime,
+		pluginRegistry: pluginRegistry,
 		wsManager:      NewWebSocketManager(flowRuntime),
 	}
 
@@ -183,6 +187,11 @@ func (s *Server) setupRoutes() {
 	jwtSecrets := authenticated.PathPrefix("/accounts/{accountId}/jwt-secrets").Subrouter()
 	jwtSecrets.HandleFunc("/{key}", s.handleCreateJWTSecret).Methods(http.MethodPost, http.MethodOptions)
 	jwtSecrets.HandleFunc("/{key}", s.handleGetJWTSecret).Methods(http.MethodGet, http.MethodOptions)
+
+	// Plugin management routes (authenticated)
+	plugins := authenticated.PathPrefix("/plugins").Subrouter()
+	plugins.HandleFunc("", s.handleListPlugins).Methods(http.MethodGet, http.MethodOptions)
+	plugins.HandleFunc("/{name}", s.handleGetPlugin).Methods(http.MethodGet, http.MethodOptions)
 
 	// Debug middleware to log all requests
 	s.router.Use(func(next http.Handler) http.Handler {

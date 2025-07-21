@@ -210,7 +210,7 @@ func setupTestServer() (*Server, *MockFlowRegistry, *storage.MemoryProvider, str
 	flowRuntime := runtime.NewFlowRuntimeWithStore(mockFlowRegistry, yamlLoader, mockExecutionStore)
 
 	// Create server with runtime
-	server := NewServerWithRuntime(cfg, mockFlowRegistry, accountService, extendedSecretVault, flowRuntime)
+	server := NewServerWithRuntime(cfg, mockFlowRegistry, accountService, extendedSecretVault, flowRuntime, plugins.NewPluginRegistry())
 
 	return server, mockFlowRegistry, storageProvider, accountID
 }
@@ -460,7 +460,7 @@ func TestFlowRuntimeWithoutExecution(t *testing.T) {
 	extendedSecretVault, _ := services.NewExtendedSecretVaultService(storageProvider.GetSecretStore(), []byte("test-encryption-key-32-bytes-123"))
 
 	// Create server WITHOUT runtime
-	server := NewServer(cfg, mockFlowRegistry, accountService, extendedSecretVault)
+	server := NewServer(cfg, mockFlowRegistry, accountService, extendedSecretVault, plugins.NewPluginRegistry())
 
 	t.Run("execution endpoints unavailable without runtime", func(t *testing.T) {
 		rr := makeAuthenticatedRequest(server, "test-account", "POST", "/api/v1/flows/test-flow/run", map[string]interface{}{})
