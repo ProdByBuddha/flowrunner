@@ -35,7 +35,7 @@ import (
 // for all operations, with no mocking involved.
 func TestLLMFlowIntegration(t *testing.T) {
 	// Load environment variables
-	_ = godotenv.Load("../../.env")
+	_ = godotenv.Load("../../../.env")
 
 	// Skip test if OpenAI API key is not available
 	apiKey := os.Getenv("OPENAI_API_KEY")
@@ -165,7 +165,7 @@ nodes:
     params:
       provider: openai
       api_key: ` + apiKey + `
-      model: gpt-3.5-turbo
+      model: gpt-4.1-mini
       temperature: 0.7
       max_tokens: 100
     next:
@@ -312,7 +312,7 @@ nodes:
 		assert.Equal(t, "completed", status, "Execution should complete successfully")
 	} else if status == "failed" {
 		t.Log("⚠️  LLM execution failed - checking logs for details...")
-		
+
 		// Get execution logs immediately to understand the failure
 		req, err = http.NewRequest(
 			"GET",
@@ -339,7 +339,7 @@ nodes:
 				}
 			}
 		}
-		
+
 		t.Log("However, the HTTP API integration is working correctly:")
 		t.Log("  • User creation: ✅")
 		t.Log("  • Secret storage: ✅")
@@ -552,7 +552,7 @@ func TestParallelLLMFlowIntegration(t *testing.T) {
 
 	// Step 3: Create parallel flow YAML - sequential execution with different perspectives
 	t.Log("Step 3: Creating sequential multi-LLM flow...")
-	
+
 	// Create flow that demonstrates sequential execution through multiple LLM nodes
 	// Each node processes a different aspect, simulating parallel analysis results
 	flowYAML := `metadata:
@@ -567,7 +567,7 @@ nodes:
     params:
       provider: openai
       api_key: ` + apiKey + `
-      model: gpt-3.5-turbo
+      model: gpt-4.1-mini
       temperature: 0.3
       max_tokens: 150
     next:
@@ -579,7 +579,7 @@ nodes:
     params:
       provider: openai
       api_key: ` + apiKey + `
-      model: gpt-3.5-turbo
+      model: gpt-4.1-mini
       temperature: 0.5
       max_tokens: 150
     next:
@@ -591,7 +591,7 @@ nodes:
     params:
       provider: openai
       api_key: ` + apiKey + `
-      model: gpt-3.5-turbo
+      model: gpt-4.1-mini
       temperature: 0.7
       max_tokens: 200
     next:
@@ -682,7 +682,7 @@ nodes:
 	// Step 5: Poll for execution completion (longer timeout for multiple LLM calls)
 	t.Log("Step 5: Polling for sequential multi-LLM execution completion...")
 
-	maxWait := 90 * time.Second  // Longer timeout for multiple LLM calls
+	maxWait := 90 * time.Second // Longer timeout for multiple LLM calls
 	pollInterval := 2 * time.Second
 	startTime := time.Now()
 
@@ -744,7 +744,7 @@ nodes:
 		assert.Equal(t, "completed", status, "Execution should complete successfully")
 	} else if status == "failed" {
 		t.Log("⚠️  Sequential multi-LLM execution failed - checking logs for details...")
-		
+
 		// Get execution logs for debugging
 		req, err = http.NewRequest(
 			"GET",
@@ -771,7 +771,7 @@ nodes:
 				}
 			}
 		}
-		
+
 		t.Log("However, the HTTP API integration is working correctly for multi-LLM flow:")
 		t.Log("  • User creation: ✅")
 		t.Log("  • Secret storage: ✅")
@@ -982,7 +982,7 @@ func TestLLMToolCallsFlowIntegration(t *testing.T) {
 
 	// Step 3: Create LLM flow with tool calling capabilities
 	t.Log("Step 3: Creating LLM flow with tool calling...")
-	
+
 	// Create a sophisticated flow that demonstrates tool calling
 	// The LLM will be configured with tools and should decide when to call them
 	flowYAML := `metadata:
@@ -997,7 +997,7 @@ nodes:
     params:
       provider: openai
       api_key: ` + apiKey + `
-      model: gpt-3.5-turbo
+      model: gpt-4.1-mini
       temperature: 0.3
       max_tokens: 300
       messages:
@@ -1085,7 +1085,7 @@ nodes:
     params:
       provider: openai
       api_key: ` + apiKey + `
-      model: gpt-3.5-turbo
+      model: gpt-4.1-mini
       temperature: 0.5
       max_tokens: 200
     next:
@@ -1192,7 +1192,7 @@ nodes:
 	// Step 5: Poll for execution completion
 	t.Log("Step 5: Polling for tool calling execution completion...")
 
-	maxWait := 120 * time.Second  // Longer timeout for tool calling flow
+	maxWait := 120 * time.Second // Longer timeout for tool calling flow
 	pollInterval := 2 * time.Second
 	startTime := time.Now()
 
@@ -1254,7 +1254,7 @@ nodes:
 		assert.Equal(t, "completed", status, "Execution should complete successfully")
 	} else if status == "failed" {
 		t.Log("⚠️  Tool calling execution failed - checking logs for details...")
-		
+
 		// Get execution logs for debugging
 		req, err = http.NewRequest(
 			"GET",
@@ -1281,7 +1281,7 @@ nodes:
 				}
 			}
 		}
-		
+
 		t.Log("However, the HTTP API integration is working correctly for tool calling flow:")
 		t.Log("  • User creation: ✅")
 		t.Log("  • Secret storage: ✅")
@@ -1339,53 +1339,53 @@ nodes:
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
-			var logs []map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&logs)
-			require.NoError(t, err)
+		var logs []map[string]interface{}
+		err = json.NewDecoder(resp.Body).Decode(&logs)
+		require.NoError(t, err)
 
-			t.Logf("Found %d log entries for tool calling execution", len(logs))
+		t.Logf("Found %d log entries for tool calling execution", len(logs))
 
-			// Print all logs first to see the actual LLM response
-			for i, log := range logs {
-				if message, ok := log["message"].(string); ok {
-					t.Logf("Log %d: %s", i+1, message)
-					
-					// Show ALL data for every log entry to debug
-					if data, ok := log["data"].(map[string]interface{}); ok && len(data) > 0 {
-						t.Logf("  📊 LOG DATA: %+v", data)
-					}
-					
-					// Also check if there are other fields
-					t.Logf("  � FULL LOG ENTRY: %+v", log)
+		// Print all logs first to see the actual LLM response
+		for i, log := range logs {
+			if message, ok := log["message"].(string); ok {
+				t.Logf("Log %d: %s", i+1, message)
+
+				// Show ALL data for every log entry to debug
+				if data, ok := log["data"].(map[string]interface{}); ok && len(data) > 0 {
+					t.Logf("  📊 LOG DATA: %+v", data)
 				}
+
+				// Also check if there are other fields
+				t.Logf("  � FULL LOG ENTRY: %+v", log)
 			}
+		}
 
 		// Count tool calling related activities
 		toolCallCount := 0
 		llmToolDefinitionCount := 0
 		conditionalRoutingCount := 0
-		
+
 		for _, log := range logs {
 			message, ok := log["message"].(string)
 			if !ok {
 				continue
 			}
-			
+
 			// Look for tool calling specific logs
 			msgLower := strings.ToLower(message)
-			if strings.Contains(msgLower, "tool") || 
-			   strings.Contains(msgLower, "function") ||
-			   strings.Contains(msgLower, "tool_calls") ||
-			   strings.Contains(msgLower, "search_web") ||
-			   strings.Contains(msgLower, "send_email_summary") {
+			if strings.Contains(msgLower, "tool") ||
+				strings.Contains(msgLower, "function") ||
+				strings.Contains(msgLower, "tool_calls") ||
+				strings.Contains(msgLower, "search_web") ||
+				strings.Contains(msgLower, "send_email_summary") {
 				toolCallCount++
 				t.Logf("Tool call activity log: %s", message)
 			}
-			
+
 			if strings.Contains(msgLower, "tools:") || strings.Contains(msgLower, "function") {
 				llmToolDefinitionCount++
 			}
-			
+
 			if strings.Contains(msgLower, "condition") || strings.Contains(msgLower, "routing") {
 				conditionalRoutingCount++
 			}

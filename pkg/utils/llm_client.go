@@ -196,6 +196,14 @@ func (c *LLMClient) completeOpenAI(ctx context.Context, request LLMRequest) (*LL
 		requestBody[key] = value
 	}
 
+	// Debug: Log what we're sending to OpenAI for tools
+	if len(request.Tools) > 0 {
+		fmt.Printf("[DEBUG] Sending %d tools to OpenAI API\n", len(request.Tools))
+		for i, tool := range request.Tools {
+			fmt.Printf("[DEBUG] Tool %d: %+v\n", i, tool)
+		}
+	}
+
 	// Create HTTP request
 	httpRequest := &HTTPRequest{
 		URL:    fmt.Sprintf("%s/chat/completions", c.baseURL),
@@ -226,6 +234,7 @@ func (c *LLMClient) completeOpenAI(ctx context.Context, request LLMRequest) (*LL
 		if err := json.Unmarshal(resp.RawBody, &errorResp); err != nil {
 			return nil, fmt.Errorf("OpenAI API error (status %d): %s", resp.StatusCode, string(resp.RawBody))
 		}
+		fmt.Printf("[DEBUG] OpenAI API Error: %s (Type: %s, Code: %s)\n", errorResp.Error.Message, errorResp.Error.Type, errorResp.Error.Code)
 		return &LLMResponse{
 			Error: &ErrorInfo{
 				Message: errorResp.Error.Message,
