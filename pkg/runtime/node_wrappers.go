@@ -42,28 +42,28 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 		// Get the parameters
 		params := w.Params()
 
-		// Determine if this is a flow execution or direct node call
-		// Flow execution: shared contains flow input data (may have "question", "input", etc.)
-		// Direct node call: shared is empty or only contains result storage
+		// For direct node usage, shared is typically an empty map or only contains result storage
+		// For flow execution, shared contains meaningful input data
 		var combinedInput map[string]interface{}
 		
 		if sharedMap, ok := shared.(map[string]interface{}); ok {
-			// Check if this looks like flow input (has question, input data, etc.)
+			// Check if this looks like flow input (has meaningful data keys)
 			hasFlowInput := false
-			for key := range sharedMap {
-				// These are typical flow input keys
-				if key == "question" || key == "input" || key == "context" || key == "data" {
-					hasFlowInput = true
-					break
-				}
-				// If it only has result keys, it's probably direct node usage
-				if key == "result" || key == "llm_result" || key == "http_result" {
+			for key, value := range sharedMap {
+				// Skip empty values
+				if value == nil {
 					continue
 				}
-				// If it has other non-result keys, assume it's flow input
-				if !strings.HasSuffix(key, "_result") {
-					hasFlowInput = true
-					break
+				// These are typical flow input keys with meaningful data
+				if key == "question" || key == "input" || key == "context" || key == "data" {
+					if str, ok := value.(string); ok && str != "" {
+						hasFlowInput = true
+						break
+					}
+					if _, ok := value.(map[string]interface{}); ok {
+						hasFlowInput = true
+						break
+					}
 				}
 			}
 			
@@ -81,7 +81,7 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 				}
 			}
 		} else {
-			// Non-map shared context: assume direct node usage
+			// Non-map shared context or nil: direct node usage
 			combinedInput = map[string]interface{}{
 				"params": params,
 				"input":  map[string]interface{}{},
