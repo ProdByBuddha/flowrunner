@@ -129,7 +129,7 @@
 
 - [x] 7. Implement expression evaluation and JavaScript engine
 
-  - [-] 7.1 Create expression evaluator
+  - [x] 7.1 Create expression evaluator
 
     - Implement syntax for referencing context, parameters, and secrets
     - Support mathematical and logical expressions

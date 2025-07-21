@@ -3,6 +3,8 @@ package scripting
 import (
 	"context"
 	"time"
+
+	"github.com/tcmartin/flowrunner/pkg/auth"
 )
 
 // ExpressionEvaluator evaluates expressions in YAML
@@ -12,6 +14,14 @@ type ExpressionEvaluator interface {
 
 	// EvaluateInObject processes all expressions in an object
 	EvaluateInObject(obj map[string]any, context map[string]any) (map[string]any, error)
+}
+
+// SecretAwareEvaluator extends ExpressionEvaluator with secret access
+type SecretAwareEvaluator interface {
+	ExpressionEvaluator
+
+	// SetSecretVault sets the secret vault to use for secret access
+	SetSecretVault(vault auth.SecretVault)
 }
 
 // ScriptEngine executes JavaScript code
