@@ -1045,20 +1045,69 @@ nodes:
     type: condition
     params:
       condition_script: |
-        // Check if LLM response contains tool calls
+        // Debug logging to understand input structure
+        console.log('=== CONDITION SCRIPT DEBUG ===');
+        console.log('Input keys:', Object.keys(input));
+        console.log('Input type:', typeof input);
+        console.log('Input structure:', JSON.stringify(input, null, 2));
+        
+        // Check if LLM response contains tool calls at different possible locations
+        var toolCalls = null;
+        var foundLocation = '';
+        
+        // First check: direct tool_calls
         if (input.tool_calls && input.tool_calls.length > 0) {
+          toolCalls = input.tool_calls;
+          foundLocation = 'input.tool_calls';
+        }
+        // Second check: result.tool_calls  
+        else if (input.result && input.result.tool_calls && input.result.tool_calls.length > 0) {
+          toolCalls = input.result.tool_calls;
+          foundLocation = 'input.result.tool_calls';
+        }
+        // Third check: llm_result.tool_calls
+        else if (input.llm_result && input.llm_result.tool_calls && input.llm_result.tool_calls.length > 0) {
+          toolCalls = input.llm_result.tool_calls;
+          foundLocation = 'input.llm_result.tool_calls';
+        }
+        // Fourth check: choices[0].message.tool_calls
+        else if (input.choices && input.choices.length > 0) {
+          var message = input.choices[0].message;
+          if (message && message.tool_calls && message.tool_calls.length > 0) {
+            toolCalls = message.tool_calls;
+            foundLocation = 'input.choices[0].message.tool_calls';
+          }
+        }
+        // Fifth check: result.choices[0].message.ToolCalls (capitalized)
+        else if (input.result && input.result.choices && input.result.choices.length > 0) {
+          var message = input.result.choices[0].Message;
+          if (message && message.ToolCalls && message.ToolCalls.length > 0) {
+            toolCalls = message.ToolCalls;
+            foundLocation = 'input.result.choices[0].Message.ToolCalls';
+          }
+        }
+        
+        if (toolCalls && toolCalls.length > 0) {
+          console.log('Found tool_calls at location:', foundLocation);
+          console.log('Tool calls count:', toolCalls.length);
           // Check for specific tool calls
-          for (let call of input.tool_calls) {
-            if (call.function.name === 'search_web') {
+          for (var i = 0; i < toolCalls.length; i++) {
+            var call = toolCalls[i];
+            var functionName = call.function ? call.function.name : (call.Function ? call.Function.Name : '');
+            console.log('Processing tool call:', functionName);
+            if (functionName === 'search_web') {
+              console.log('Routing to search');
               return 'search';
             }
-            if (call.function.name === 'send_email_summary') {
+            if (functionName === 'send_email_summary') {
+              console.log('Routing to email');
               return 'email';
             }
           }
         }
+        
         // If no tool calls or content only, go to final output
-        console.log('No tool calls found, routing to output. Input keys:', Object.keys(input));
+        console.log('No tool calls found, routing to output');
         if (input.has_tool_calls) {
           console.log('has_tool_calls flag is true');
         }

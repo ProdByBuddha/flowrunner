@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/robertkrimen/otto"
 	"github.com/tcmartin/flowlib"
 	"github.com/tcmartin/flowrunner/pkg/utils"
 )
@@ -519,21 +520,100 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 		node: baseNode,
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
-			// For condition node, we don't actually use the params in this placeholder implementation
-			// This is a placeholder - in a real implementation, this would evaluate
-			// the condition using the JavaScript engine
-			return true, nil
-		},
-		post: func(shared, p, e interface{}) (flowlib.Action, error) {
-			result, ok := e.(bool)
-			if !ok {
-				return "", fmt.Errorf("expected boolean result, got %T", e)
+			var nodeParams map[string]interface{}
+			var flowInput map[string]interface{}
+			
+			if combinedInput, ok := input.(map[string]interface{}); ok {
+				if paramsField, hasParams := combinedInput["params"]; hasParams {
+					// New format: combined input with params and input
+					if paramsMap, ok := paramsField.(map[string]interface{}); ok {
+						nodeParams = paramsMap
+					} else {
+						return nil, fmt.Errorf("expected params to be map[string]interface{}")
+					}
+					
+					if inputField, hasInput := combinedInput["input"]; hasInput {
+						if inputMap, ok := inputField.(map[string]interface{}); ok {
+							flowInput = inputMap
+						}
+					}
+				} else {
+					// Old format: direct params (backwards compatibility)
+					nodeParams = combinedInput
+				}
+			} else {
+				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
 			}
 
-			if result {
-				return "true", nil
+			// Extract condition script
+			conditionScript, ok := nodeParams["condition_script"].(string)
+			if !ok {
+				fmt.Printf("[Condition Node] ERROR: condition_script parameter is required\n")
+				return nil, fmt.Errorf("condition_script parameter is required")
 			}
-			return "false", nil
+
+			fmt.Printf("[Condition Node] Starting condition evaluation\n")
+			fmt.Printf("[Condition Node] Script length: %d characters\n", len(conditionScript))
+
+			// Create JavaScript engine
+			vm := otto.New()
+			
+			// Set up console.log for debugging
+			vm.Set("console", map[string]interface{}{
+				"log": func(args ...interface{}) {
+					fmt.Printf("[Condition Script] %v\n", args...)
+				},
+			})
+			
+			// Set the input context for the script
+			if flowInput != nil {
+				fmt.Printf("[Condition Node] Setting flow input with %d keys\n", len(flowInput))
+				vm.Set("input", flowInput)
+			} else {
+				fmt.Printf("[Condition Node] Using empty input\n")
+				vm.Set("input", map[string]interface{}{})
+			}
+			
+			fmt.Printf("[Condition Node] About to execute JavaScript\n")
+			
+			// Execute the condition script
+			// Wrap the script in a function to allow return statements
+			wrappedScript := "(function() {\n" + conditionScript + "\n})()"
+			result, err := vm.Run(wrappedScript)
+			if err != nil {
+				fmt.Printf("[Condition Node] JavaScript execution error: %v\n", err)
+				return nil, fmt.Errorf("failed to execute condition script: %w", err)
+			}
+			
+			fmt.Printf("[Condition Node] JavaScript execution successful\n")
+			
+			// Convert result to Go value
+			goValue, err := result.Export()
+			if err != nil {
+				fmt.Printf("[Condition Node] Result export error: %v\n", err)
+				return nil, fmt.Errorf("failed to export JavaScript result: %w", err)
+			}
+			
+			fmt.Printf("[Condition Node] Final result: %v (type: %T)\n", goValue, goValue)
+			return goValue, nil
+		},
+		post: func(shared, p, e interface{}) (flowlib.Action, error) {
+			// Handle the result from the condition script
+			// If it's a string, use it directly as the action
+			if action, ok := e.(string); ok {
+				return flowlib.Action(action), nil
+			}
+			
+			// If it's a boolean, convert to "true"/"false"
+			if result, ok := e.(bool); ok {
+				if result {
+					return "true", nil
+				}
+				return "false", nil
+			}
+			
+			// For other types, convert to string
+			return flowlib.Action(fmt.Sprintf("%v", e)), nil
 		},
 	}
 

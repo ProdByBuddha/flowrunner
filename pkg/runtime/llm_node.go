@@ -486,6 +486,21 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 				}
 			}
 
+			// Extract tool calls from the message for easier access
+			message := resp.Choices[0].Message
+			var hasToolCalls bool
+			var toolCalls []utils.ToolCall
+			
+			if len(message.ToolCalls) > 0 {
+				hasToolCalls = true
+				toolCalls = message.ToolCalls
+				
+				log.Printf("[LLM Node] Tool calls detected: %d calls", len(toolCalls))
+				for i, call := range toolCalls {
+					log.Printf("[LLM Node] Tool call %d: %s with args: %s", i, call.Function.Name, call.Function.Arguments)
+				}
+			}
+
 			// Return response
 			result := map[string]any{
 				"id":            resp.ID,
@@ -495,6 +510,8 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 				"content":       resp.Choices[0].Message.Content,
 				"finish_reason": resp.Choices[0].FinishReason,
 				"raw_response":  resp.RawResponse,
+				"has_tool_calls": hasToolCalls,
+				"tool_calls":    toolCalls,
 			}
 
 			// Add structured output if available
@@ -504,6 +521,14 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			}
 
 			log.Printf("[LLM Node] Execution completed successfully - Response ID: %s", resp.ID)
+			// Extract keys for debugging
+			keys := make([]string, 0, len(result))
+			for k := range result {
+				keys = append(keys, k)
+			}
+			log.Printf("[LLM Node] Result keys: %v", keys)
+			log.Printf("[LLM Node] Tool calls in result: %d", len(toolCalls))
+			log.Printf("[LLM Node] Has tool calls flag: %v", hasToolCalls)
 			return result, nil
 		},
 	}
