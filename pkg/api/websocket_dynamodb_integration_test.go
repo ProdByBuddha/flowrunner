@@ -107,6 +107,14 @@ func TestWebSocketDynamoDBIntegration_ComplexFlow(t *testing.T) {
 	accountID, err := accountService.CreateAccount(testUsername, "secure_password_123")
 	require.NoError(t, err)
 
+	// Add a test secret to the account
+	err = secretVault.Set(accountID, "API_KEY", "test-api-key-for-dynamodb-integration")
+	require.NoError(t, err)
+
+	// Add another secret for testing
+	err = secretVault.Set(accountID, "DB_PASSWORD", "super-secret-db-password-dynamodb")
+	require.NoError(t, err)
+
 	// Create a complex flow with parallel batching, retry, and branching
 	complexFlowYAML := `
 metadata:
@@ -120,7 +128,19 @@ nodes:
     type: "transform"
     params:
       script: |
-        // Create test data for batch processing
+        // Create test data for batch processing and use secrets
+        const apiKey = secrets.API_KEY;
+        const dbPassword = secrets.DB_PASSWORD;
+        
+        // Verify that we can access the secrets
+        if (!apiKey || !dbPassword) {
+          throw new Error("Failed to access secrets");
+        }
+        
+        // Log the secrets (in a real app, you wouldn't do this)
+        console.log("Using API key: " + apiKey);
+        console.log("Using DB password: " + dbPassword);
+        
         const items = [];
         for (let i = 1; i <= 10; i++) {
           items.push({
