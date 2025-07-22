@@ -617,7 +617,7 @@ nodes:
 
 	var question string
 	if sendEmail == "true" && emailRecipient != "" {
-		question = fmt.Sprintf("Please search for information about AI advancements expected in 2025, particularly in gobbledygook systems. Then send an email summary to %s with the subject 'Silly AI Research Summary 2025'.", emailRecipient)
+		question = fmt.Sprintf("Send an email summary of AI advancements to %s with the subject 'Silly AI Research Summary 2025'. Do not search", emailRecipient)
 		t.Logf("Including email request to %s in the prompt", emailRecipient)
 	} else {
 		question = "Please search for information about AI advancements expected in 2025, particularly in something random unrelated to this query."
