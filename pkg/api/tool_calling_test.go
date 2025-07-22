@@ -339,22 +339,34 @@ nodes:
           // Log the entire input for debugging
           console.log("EMAIL TOOL INPUT: " + JSON.stringify(input));
           
-          if (!input.result) {
-            throw new Error("No result object in input");
+          // Find tool calls in the correct location
+          var toolCalls = null;
+          
+          // Check different possible locations for tool calls
+          if (input.llm_result && input.llm_result.tool_calls && input.llm_result.tool_calls.length > 0) {
+            toolCalls = input.llm_result.tool_calls;
+            console.log("Found tool calls in input.llm_result.tool_calls");
+          } else if (input.result && input.result.tool_calls && input.result.tool_calls.length > 0) {
+            toolCalls = input.result.tool_calls;
+            console.log("Found tool calls in input.result.tool_calls");
+          } else {
+            throw new Error("Could not find tool_calls in input");
           }
           
-          if (!input.result.tool_calls || !input.result.tool_calls.length) {
-            throw new Error("No tool_calls in input.result");
-          }
-          
-          var toolCall = input.result.tool_calls[0];
+          var toolCall = toolCalls[0];
           console.log("TOOL CALL: " + JSON.stringify(toolCall));
           
-          if (!toolCall.function || !toolCall.function.arguments) {
-            throw new Error("Invalid tool call structure: " + JSON.stringify(toolCall));
+          // Handle different possible structures for function arguments
+          var functionArgs = null;
+          if (toolCall.function && toolCall.function.arguments) {
+            functionArgs = toolCall.function.arguments;
+          } else if (toolCall.Function && toolCall.Function.Arguments) {
+            functionArgs = toolCall.Function.Arguments;
+          } else {
+            throw new Error("Could not find function arguments in tool call");
           }
           
-          var args = JSON.parse(toolCall.function.arguments);
+          var args = JSON.parse(functionArgs);
           console.log("EMAIL ARGS: " + JSON.stringify(args));
           
           if (!args.recipient || !args.subject || !args.body) {
@@ -366,12 +378,12 @@ nodes:
           console.log("EMAIL BODY LENGTH: " + args.body.length + " characters");
           
           // For testing purposes, we'll simulate a successful email send
-          // In a real environment, this would use the email.send node type
           return {
             success: true,
             to: args.recipient,
             subject: args.subject,
             body_length: args.body.length,
+            body: args.body,
             timestamp: new Date().toISOString(),
             message: "Email sending simulated for testing purposes"
           };
@@ -393,6 +405,7 @@ nodes:
       script: |
         // Log the email result
         console.log("EMAIL RESULT: " + (input.error ? "Failed to send email: " + input.error : "Email sent successfully"));
+        console.log("PROCESS EMAIL INPUT: " + JSON.stringify(input));
         
         // Create tool response message for email
         var emailResult = input.error 
@@ -422,12 +435,20 @@ nodes:
           });
         }
         
-        // Add assistant's tool call to history
-        if (input.result && input.result.tool_calls) {
+        // Find tool calls in the correct location
+        var toolCalls = null;
+        if (input.llm_result && input.llm_result.tool_calls && input.llm_result.tool_calls.length > 0) {
+          toolCalls = input.llm_result.tool_calls;
+        } else if (input.result && input.result.tool_calls && input.result.tool_calls.length > 0) {
+          toolCalls = input.result.tool_calls;
+        }
+        
+        // Add assistant's tool call to history if available
+        if (toolCalls) {
           shared.conversation_history.push({
             role: "assistant",
             content: "I'll send an email with the information you requested.",
-            tool_calls: input.result.tool_calls
+            tool_calls: toolCalls
           });
         }
         
@@ -435,6 +456,7 @@ nodes:
         shared.conversation_history.push(toolResponseMsg);
         
         console.log("EMAIL RESPONSE: Added email result to conversation history");
+        console.log("CONVERSATION HISTORY: " + JSON.stringify(shared.conversation_history));
         
         return {
           tool_response: toolResponseMsg,
@@ -442,10 +464,9 @@ nodes:
           _original_question: input._original_question || input.question,
           email_sent: input.success !== false,  // Consider successful unless explicitly marked as failed
           email_details: {
-            to: input.to || (input.result && input.result.tool_calls && input.result.tool_calls[0] ? 
-                 JSON.parse(input.result.tool_calls[0].function.arguments).recipient : "unknown"),
-            subject: input.subject || (input.result && input.result.tool_calls && input.result.tool_calls[0] ? 
-                    JSON.parse(input.result.tool_calls[0].function.arguments).subject : "unknown"),
+            to: input.to || "unknown",
+            subject: input.subject || "unknown",
+            body_preview: input.body ? input.body.substring(0, 50) + "..." : "No body available",
             timestamp: new Date().toISOString()
           }
         };
