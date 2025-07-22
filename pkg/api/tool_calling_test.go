@@ -327,38 +327,64 @@ nodes:
       client_error: tool_response
       server_error: tool_response
 
-  # Email tool node - uses real SMTP node with environment variables
+  # Email tool node - uses transform node instead of real SMTP for testing
   email_tool:
-    type: "email.send"
+    type: "transform"
     params:
-      smtp_host: "smtp.gmail.com"
-      smtp_port: 587
-      username: "{{env.GMAIL_USERNAME}}"
-      password: "{{env.GMAIL_PASSWORD}}"
-      from: "{{env.GMAIL_USERNAME}}"
-      to: "{{input.result.tool_calls[0].function.arguments | fromjson | .recipient}}"
-      subject: "{{input.result.tool_calls[0].function.arguments | fromjson | .subject}}"
-      body: "{{input.result.tool_calls[0].function.arguments | fromjson | .body}}"
-      tls: true
       script: |
         // Log the email details for transparency
-        console.log("EMAIL REQUEST: Sending real email with the following details:");
+        console.log("EMAIL REQUEST: Processing email request in test mode");
+        
         try {
-          var args = JSON.parse(input.result.tool_calls[0].function.arguments);
+          // Log the entire input for debugging
+          console.log("EMAIL TOOL INPUT: " + JSON.stringify(input));
+          
+          if (!input.result) {
+            throw new Error("No result object in input");
+          }
+          
+          if (!input.result.tool_calls || !input.result.tool_calls.length) {
+            throw new Error("No tool_calls in input.result");
+          }
+          
+          var toolCall = input.result.tool_calls[0];
+          console.log("TOOL CALL: " + JSON.stringify(toolCall));
+          
+          if (!toolCall.function || !toolCall.function.arguments) {
+            throw new Error("Invalid tool call structure: " + JSON.stringify(toolCall));
+          }
+          
+          var args = JSON.parse(toolCall.function.arguments);
+          console.log("EMAIL ARGS: " + JSON.stringify(args));
+          
+          if (!args.recipient || !args.subject || !args.body) {
+            throw new Error("Missing required email fields in arguments");
+          }
+          
           console.log("EMAIL RECIPIENT: " + args.recipient);
           console.log("EMAIL SUBJECT: " + args.subject);
           console.log("EMAIL BODY LENGTH: " + args.body.length + " characters");
+          
+          // For testing purposes, we'll simulate a successful email send
+          // In a real environment, this would use the email.send node type
+          return {
+            success: true,
+            to: args.recipient,
+            subject: args.subject,
+            body_length: args.body.length,
+            timestamp: new Date().toISOString(),
+            message: "Email sending simulated for testing purposes"
+          };
         } catch (e) {
-          console.log("EMAIL ERROR: Failed to parse email arguments: " + e);
+          console.log("EMAIL ERROR: Failed to process email: " + e);
+          console.log("EMAIL ERROR STACK: " + e.stack);
+          return {
+            error: "Failed to process email: " + e.toString(),
+            success: false
+          };
         }
-        
-        // Return null to let the actual SMTP node handle the email sending
-        return null;
     next:
       default: process_email_results
-      success: process_email_results
-      client_error: process_email_results
-      server_error: process_email_results
       
   # Process email results and send back to LLM
   process_email_results:
@@ -414,10 +440,12 @@ nodes:
           tool_response: toolResponseMsg,
           conversation_history: shared.conversation_history,
           _original_question: input._original_question || input.question,
-          email_sent: !input.error,
+          email_sent: input.success !== false,  // Consider successful unless explicitly marked as failed
           email_details: {
-            to: input.to,
-            subject: input.subject,
+            to: input.to || (input.result && input.result.tool_calls && input.result.tool_calls[0] ? 
+                 JSON.parse(input.result.tool_calls[0].function.arguments).recipient : "unknown"),
+            subject: input.subject || (input.result && input.result.tool_calls && input.result.tool_calls[0] ? 
+                    JSON.parse(input.result.tool_calls[0].function.arguments).subject : "unknown"),
             timestamp: new Date().toISOString()
           }
         };
