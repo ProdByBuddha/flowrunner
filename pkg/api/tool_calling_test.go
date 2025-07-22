@@ -1,0 +1,665 @@
+package api
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"regexp"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tcmartin/flowrunner/pkg/config"
+	"github.com/tcmartin/flowrunner/pkg/loader"
+	"github.com/tcmartin/flowrunner/pkg/plugins"
+	"github.com/tcmartin/flowrunner/pkg/registry"
+	"github.com/tcmartin/flowrunner/pkg/runtime"
+	"github.com/tcmartin/flowrunner/pkg/services"
+	"github.com/tcmartin/flowrunner/pkg/storage"
+)
+
+// TestSimpleToolCalling tests a simple tool calling flow with looping
+func TestSimpleToolCalling(t *testing.T) {
+	// Load environment variables
+	_ = godotenv.Load("../../.env")
+
+	// Skip test if OpenAI API key is not available
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		t.Skip("Skipping tool calling test: OPENAI_API_KEY environment variable not set")
+	}
+
+	// Create in-memory storage provider
+	storageProvider := storage.NewMemoryProvider()
+	require.NoError(t, storageProvider.Initialize())
+
+	// Create account service
+	accountService := services.NewAccountService(storageProvider.GetAccountStore())
+
+	// Create secret vault
+	encryptionKey, err := services.GenerateEncryptionKey()
+	require.NoError(t, err)
+	secretVault, err := services.NewExtendedSecretVaultService(storageProvider.GetSecretStore(), encryptionKey)
+	require.NoError(t, err)
+
+	// Create plugin registry
+	pluginRegistry := plugins.NewPluginRegistry()
+
+	// Create YAML loader with core node types
+	nodeFactories := make(map[string]plugins.NodeFactory)
+	for nodeType, factory := range runtime.CoreNodeTypes() {
+		nodeFactories[nodeType] = &LLMTestRuntimeNodeFactoryAdapter{factory: factory}
+	}
+	yamlLoader := loader.NewYAMLLoader(nodeFactories, pluginRegistry)
+
+	// Create flow registry
+	flowRegistry := registry.NewFlowRegistry(storageProvider.GetFlowStore(), registry.FlowRegistryOptions{
+		YAMLLoader: yamlLoader,
+	})
+
+	// Create flow runtime adapter
+	registryAdapter := &LLMTestFlowRegistryAdapter{registry: flowRegistry}
+	executionStore := storageProvider.GetExecutionStore()
+	flowRuntime := runtime.NewFlowRuntimeWithStore(registryAdapter, yamlLoader, executionStore)
+
+	// Create configuration
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			Host: "localhost",
+			Port: 8080,
+		},
+	}
+
+	// Create and start server
+	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, pluginRegistry)
+	testServer := httptest.NewServer(server.router)
+	defer testServer.Close()
+
+	t.Logf("Test server started at: %s", testServer.URL)
+
+	// Step 1: Create a test user
+	t.Log("Step 1: Creating test user...")
+	username := fmt.Sprintf("testuser-simple-%d", time.Now().UnixNano())
+	password := "testpassword123"
+
+	accountReq := map[string]interface{}{
+		"username": username,
+		"password": password,
+	}
+
+	accountBody, err := json.Marshal(accountReq)
+	require.NoError(t, err)
+
+	resp, err := http.Post(
+		testServer.URL+"/api/v1/accounts",
+		"application/json",
+		bytes.NewReader(accountBody),
+	)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusCreated, resp.StatusCode, "Failed to create account")
+
+	var accountResp map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&accountResp)
+	require.NoError(t, err)
+
+	accountID, ok := accountResp["id"].(string)
+	require.True(t, ok, "Account ID should be returned")
+	t.Logf("Created account: %s (ID: %s)", username, accountID)
+
+	// Step 2: Store OpenAI API key as a secret
+	t.Log("Step 2: Storing OpenAI API key as secret...")
+	secretReq := map[string]interface{}{
+		"value": apiKey,
+	}
+
+	secretBody, err := json.Marshal(secretReq)
+	require.NoError(t, err)
+
+	client := &http.Client{}
+	req, err := http.NewRequest(
+		"POST",
+		testServer.URL+"/api/v1/accounts/"+accountID+"/secrets/OPENAI_API_KEY",
+		bytes.NewReader(secretBody),
+	)
+	require.NoError(t, err)
+
+	req.SetBasicAuth(username, password)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err = client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusCreated, resp.StatusCode, "Failed to create secret")
+	t.Log("Stored OpenAI API key as secret")
+
+	// Step 3: Create a simple flow with tool calling and looping
+	t.Log("Step 3: Creating simple tool calling flow...")
+
+	// Create a simple flow with tool calling and looping
+	flowYAML := `metadata:
+  name: "Simple Tool Calling Flow"
+  description: "A simple flow that demonstrates tool calling with looping"
+  version: "1.0.0"
+
+nodes:
+  # Start node - preserves original question
+  start:
+    type: transform
+    params:
+      script: |
+        // Preserve the original question for later use
+        return {
+          question: input.question,
+          _original_question: input.question,
+          context: input.context || "Tool calling test"
+        };
+    next:
+      default: llm_node
+      
+  # LLM node with tool calling capabilities - uses conversation history from shared store
+  llm_node:
+    type: "llm"
+    params:
+      provider: openai
+      api_key: ` + apiKey + `
+      model: gpt-4.1-mini
+      temperature: 0.3
+      max_tokens: 300
+      script: |
+        // Use conversation history from shared store if available
+        if (shared.conversation_history && shared.conversation_history.length > 0) {
+          console.log("Using conversation history from shared store with " + shared.conversation_history.length + " messages");
+          return {
+            messages: shared.conversation_history,
+            provider: "openai",
+            model: "gpt-4.1-mini",
+            temperature: 0.3,
+            max_tokens: 300
+          };
+        } else {
+          // Default messages if no history available
+          return {
+            messages: [
+              {
+                role: "system",
+                content: "You are a helpful assistant with access to tools. Use the search_web tool when asked to search for information."
+              },
+              {
+                role: "user",
+                content: input.question || "Please search for information about AI in 2025"
+              }
+            ],
+            provider: "openai",
+            model: "gpt-4.1-mini",
+            temperature: 0.3,
+            max_tokens: 300
+          };
+        }
+      tools:
+        - type: function
+          function:
+            name: search_web
+            description: Search the web for information
+            parameters:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: The search query
+              required: ["query"]
+    next:
+      default: router
+
+  # Router node to check for tool calls
+  router:
+    type: condition
+    params:
+      condition_script: |
+        // Check for tool calls in the LLM response
+        if (input.result && input.result.tool_calls && input.result.tool_calls.length > 0) {
+          return 'tool';
+        }
+        return 'output';
+    next:
+      tool: search_tool
+      output: output_node
+
+  # Search tool node - performs actual Google search with dynamic parameters
+  search_tool:
+    type: http.request
+    params:
+      url: "https://www.google.com/search"
+      method: "GET"
+      query_params:
+        q: "{{input.result.tool_calls[0].function.arguments | fromjson | .query}}"
+        num: "3"
+      headers:
+        User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    next:
+      default: tool_response
+
+  # Process tool response and maintain conversation history in shared store
+  tool_response:
+    type: transform
+    params:
+      script: |
+        // Initialize conversation history in shared store if it doesn't exist
+        if (!shared.conversation_history) {
+          shared.conversation_history = [];
+          
+          // Add system message as first item in history
+          shared.conversation_history.push({
+            role: "system",
+            content: "You are a helpful assistant with access to tools. Use the search_web tool when asked to search for information."
+          });
+          
+          // Add user's initial question
+          if (input._original_question) {
+            shared.conversation_history.push({
+              role: "user",
+              content: input._original_question
+            });
+          } else if (input.question) {
+            shared.conversation_history.push({
+              role: "user",
+              content: input.question
+            });
+          }
+        }
+        
+        // Extract search query from the tool call
+        var searchQuery = "";
+        if (input.result && input.result.tool_calls && input.result.tool_calls.length > 0) {
+          try {
+            var args = JSON.parse(input.result.tool_calls[0].function.arguments);
+            searchQuery = args.query;
+          } catch (e) {
+            console.log("Error parsing tool call arguments:", e);
+          }
+        }
+        
+        // Extract search results from HTTP response - REAL Google search results
+        var searchResults = "No search results found.";
+        if (input.body && typeof input.body === 'string') {
+          // Extract actual content from Google search response
+          var bodyLength = input.body.length;
+          
+          // Extract title tags from the HTML response
+          var titleRegex = /<h3[^>]*>(.*?)<\/h3>/g;
+          var titles = [];
+          var match;
+          
+          while ((match = titleRegex.exec(input.body)) !== null) {
+            if (match[1] && !match[1].includes("<")) {
+              titles.push(match[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&"));
+            }
+          }
+          
+          // Format the search results
+          searchResults = "Google search results for '" + searchQuery + "':\n\n";
+          
+          if (titles.length > 0) {
+            for (var i = 0; i < Math.min(titles.length, 5); i++) {
+              searchResults += (i+1) + ". " + titles[i] + "\n";
+            }
+          } else {
+            searchResults += "Received HTML response of " + bodyLength + " bytes, but couldn't extract specific results.";
+            
+            // Extract a small sample of the HTML for debugging
+            var sample = input.body.substring(0, 500) + "...";
+            searchResults += "\n\nSample of response: " + sample;
+          }
+        }
+        
+        // Create tool response message
+        var toolResponseMsg = {
+          role: "tool",
+          name: "search_web",
+          content: searchResults
+        };
+        
+        // Add tool response to conversation history
+        shared.conversation_history.push(toolResponseMsg);
+        
+        // Add assistant's previous response to history
+        if (input.result && input.result.content) {
+          shared.conversation_history.push({
+            role: "assistant",
+            content: input.result.content
+          });
+        } else if (input.result && input.result.tool_calls) {
+          // If the assistant used a tool, record that in the history
+          shared.conversation_history.push({
+            role: "assistant",
+            content: "I'll search for information about '" + searchQuery + "' for you.",
+            tool_calls: input.result.tool_calls
+          });
+        }
+        
+        // Log the conversation history for debugging
+        console.log("Current conversation history:", JSON.stringify(shared.conversation_history, null, 2));
+        
+        // Return the tool response and conversation history
+        return {
+          tool_response: toolResponseMsg,
+          conversation_history: shared.conversation_history,
+          _original_question: input._original_question || input.question
+        };
+    next:
+      default: llm_node  # Loop back to LLM
+
+  # Output node - shows final conversation history
+  output_node:
+    type: transform
+    params:
+      script: |
+        // Add the final assistant response to conversation history if available
+        if (shared.conversation_history && input.content) {
+          shared.conversation_history.push({
+            role: "assistant",
+            content: input.content
+          });
+        }
+        
+        // Return the complete conversation history and final response
+        return {
+          final_response: input.content || "No final response available",
+          conversation_history: shared.conversation_history || [],
+          execution_summary: {
+            completed_successfully: true,
+            conversation_turns: (shared.conversation_history || []).length
+          }
+        };
+`
+
+	flowReq := map[string]interface{}{
+		"name":    "Simple Tool Calling Flow",
+		"content": flowYAML,
+	}
+
+	flowBody, err := json.Marshal(flowReq)
+	require.NoError(t, err)
+
+	req, err = http.NewRequest(
+		"POST",
+		testServer.URL+"/api/v1/flows",
+		bytes.NewReader(flowBody),
+	)
+	require.NoError(t, err)
+
+	req.SetBasicAuth(username, password)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err = client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("Failed to create flow with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var flowResp map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&flowResp)
+	require.NoError(t, err)
+
+	flowID, ok := flowResp["id"].(string)
+	require.True(t, ok, "Flow ID should be returned")
+	t.Logf("Created flow: %s", flowID)
+
+	// Step 4: Execute the flow
+	t.Log("Step 4: Executing flow...")
+
+	execReq := map[string]interface{}{
+		"input": map[string]interface{}{
+			"question": "Please search for information about AI advancements expected in 2025, particularly in healthcare and autonomous systems.",
+		},
+	}
+
+	execBody, err := json.Marshal(execReq)
+	require.NoError(t, err)
+
+	req, err = http.NewRequest(
+		"POST",
+		testServer.URL+"/api/v1/flows/"+flowID+"/run",
+		bytes.NewReader(execBody),
+	)
+	require.NoError(t, err)
+
+	req.SetBasicAuth(username, password)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err = client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("Failed to execute flow with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var execResp map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&execResp)
+	require.NoError(t, err)
+
+	executionID, ok := execResp["execution_id"].(string)
+	require.True(t, ok, "Execution ID should be returned")
+	t.Logf("Started execution: %s", executionID)
+
+	// Step 5: Poll for execution completion
+	t.Log("Step 5: Polling for execution completion...")
+
+	maxWait := 30 * time.Second
+	pollInterval := 1 * time.Second
+	startTime := time.Now()
+
+	var finalStatus map[string]interface{}
+	var finalStatusCode int
+
+	for time.Since(startTime) < maxWait {
+		req, err = http.NewRequest(
+			"GET",
+			testServer.URL+"/api/v1/executions/"+executionID,
+			nil,
+		)
+		require.NoError(t, err)
+
+		req.SetBasicAuth(username, password)
+
+		resp, err = client.Do(req)
+		require.NoError(t, err)
+
+		finalStatusCode = resp.StatusCode
+
+		if resp.StatusCode == http.StatusOK {
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			resp.Body.Close()
+
+			err = json.Unmarshal(body, &finalStatus)
+			require.NoError(t, err)
+
+			status, ok := finalStatus["status"].(string)
+			if ok && (status == "completed" || status == "failed") {
+				t.Logf("Execution finished with status: %s", status)
+				break
+			}
+
+			t.Logf("Execution status: %s", status)
+		} else {
+			resp.Body.Close()
+		}
+
+		time.Sleep(pollInterval)
+	}
+
+	// Step 6: Verify execution completed successfully
+	t.Log("Step 6: Verifying execution results...")
+
+	assert.Equal(t, http.StatusOK, finalStatusCode, "Should be able to get execution status")
+	require.NotNil(t, finalStatus, "Should have final status")
+
+	status, ok := finalStatus["status"].(string)
+	require.True(t, ok, "Status should be a string")
+	assert.Equal(t, "completed", status, "Execution should complete successfully")
+
+	// Step 7: Get execution logs and results
+	t.Log("Step 7: Getting execution logs and results...")
+
+	req, err = http.NewRequest(
+		"GET",
+		testServer.URL+"/api/v1/executions/"+executionID+"/logs",
+		nil,
+	)
+	require.NoError(t, err)
+
+	req.SetBasicAuth(username, password)
+
+	resp, err = client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "Should be able to get execution logs")
+
+	var logs []map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&logs)
+	require.NoError(t, err)
+
+	t.Logf("Found %d log entries", len(logs))
+
+	// Variables to store extracted data
+	var toolCalls []map[string]interface{}
+	var toolResponses []map[string]interface{}
+	var conversationHistory []interface{}
+	var searchQuery string
+	var searchResults string
+
+	// Look for tool calls and search results in logs
+	for _, log := range logs {
+		// Extract search query from message
+		if message, ok := log["message"].(string); ok {
+			if strings.Contains(message, "Tool call") && strings.Contains(message, "search_web") {
+				// Extract search query from message
+				queryMatch := regexp.MustCompile(`search_web with args: \{.*"query":\s*"([^"]+)"`)
+				matches := queryMatch.FindStringSubmatch(message)
+				if len(matches) > 1 {
+					searchQuery = matches[1]
+				}
+			}
+		}
+
+		// Extract data from log
+		if data, ok := log["data"].(map[string]interface{}); ok {
+			// Extract tool response for search results
+			if toolResponse, ok := data["tool_response"].(map[string]interface{}); ok {
+				toolResponses = append(toolResponses, toolResponse)
+				if content, ok := toolResponse["content"].(string); ok && strings.Contains(content, "Google search results") {
+					searchResults = content
+				}
+			}
+
+			// Extract conversation history
+			if ch, ok := data["conversation_history"].([]interface{}); ok && len(ch) > 0 {
+				conversationHistory = ch
+			}
+
+			// Extract tool calls
+			if result, ok := data["result"].(map[string]interface{}); ok {
+				if tc, ok := result["tool_calls"].([]interface{}); ok && len(tc) > 0 {
+					for _, call := range tc {
+						if callMap, ok := call.(map[string]interface{}); ok {
+							toolCalls = append(toolCalls, callMap)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Print key logs for debugging
+	t.Log("\n📋 KEY EXECUTION LOGS:")
+	t.Log("===================")
+	for i, log := range logs {
+		if message, ok := log["message"].(string); ok {
+			nodeID, _ := log["node_id"].(string)
+
+			// Only print important logs
+			if strings.Contains(message, "Tool call") ||
+				strings.Contains(message, "search") ||
+				nodeID == "search_tool" ||
+				nodeID == "tool_response" {
+				if nodeID != "" {
+					t.Logf("Log %d [Node: %s]: %s", i+1, nodeID, message)
+				} else {
+					t.Logf("Log %d: %s", i+1, message)
+				}
+
+				// Print data for important logs
+				if data, ok := log["data"].(map[string]interface{}); ok {
+					if toolResponse, ok := data["tool_response"].(map[string]interface{}); ok {
+						trJSON, _ := json.MarshalIndent(toolResponse, "  ", "  ")
+						t.Logf("  Tool Response: %s", string(trJSON))
+					}
+				}
+			}
+		}
+	}
+
+	// Display search query and results
+	t.Log("\n🔍 SEARCH DETAILS:")
+	t.Log("================")
+	if searchQuery != "" {
+		t.Logf("Search Query: %s", searchQuery)
+	} else {
+		t.Log("No search query found in logs")
+	}
+
+	if searchResults != "" {
+		t.Logf("Search Results:\n%s", searchResults)
+	} else {
+		t.Log("No search results found in logs")
+	}
+
+	// Display tool calls
+	if len(toolCalls) > 0 {
+		t.Log("\n🛠️ TOOL CALLS:")
+		t.Log("============")
+		for i, call := range toolCalls {
+			callJSON, _ := json.MarshalIndent(call, "  ", "  ")
+			t.Logf("Tool Call %d:\n%s", i+1, string(callJSON))
+		}
+	}
+
+	// Display conversation history
+	if len(conversationHistory) > 0 {
+		t.Log("\n💬 CONVERSATION HISTORY:")
+		t.Log("=====================")
+		for i, msg := range conversationHistory {
+			if msgMap, ok := msg.(map[string]interface{}); ok {
+				role, _ := msgMap["role"].(string)
+				content, _ := msgMap["content"].(string)
+				t.Logf("%d. %s: %s", i+1, role, content)
+			}
+		}
+	}
+
+	// Display final execution results
+	if results, ok := finalStatus["results"].(map[string]interface{}); ok {
+		t.Log("\n📊 FINAL EXECUTION RESULTS:")
+		t.Log("========================")
+		resultsJSON, _ := json.MarshalIndent(results, "  ", "  ")
+		t.Logf("%s", string(resultsJSON))
+	}
+
+	t.Log("\n✅ Tool calling test with dynamic search and conversation history completed successfully!")
+}
