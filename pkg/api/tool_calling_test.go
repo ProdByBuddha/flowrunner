@@ -226,12 +226,31 @@ nodes:
     params:
       condition_script: |
         // Check for tool calls in the LLM response
+        console.log("ROUTER: Checking for tool calls in LLM response");
+        
         if (input.result && input.result.tool_calls && input.result.tool_calls.length > 0) {
-          return 'tool';
+          console.log("ROUTER: Found " + input.result.tool_calls.length + " tool calls");
+          
+          // Get the first tool call
+          var call = input.result.tool_calls[0];
+          var functionName = call.function ? call.function.name : (call.Function ? call.Function.Name : '');
+          
+          console.log("ROUTER: First tool call is for function: " + functionName);
+          
+          if (functionName === 'search_web') {
+            console.log("ROUTER: Routing to search_tool");
+            return 'search';
+          } else if (functionName === 'send_email_summary') {
+            console.log("ROUTER: Routing to email_tool");
+            return 'email';
+          }
         }
+        
+        console.log("ROUTER: No tool calls found, routing to output");
         return 'output';
     next:
-      tool: search_tool
+      search: search_tool
+      email: email_tool
       output: output_node
 
   # Search tool node - performs actual Google search with dynamic parameters
@@ -245,9 +264,112 @@ nodes:
         num: "3"
       headers:
         User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+      script: |
+        // Log the request details for transparency
+        console.log("SEARCH REQUEST: Making Google search with query: " + 
+          (input.result.tool_calls[0].function.arguments ? 
+          JSON.parse(input.result.tool_calls[0].function.arguments).query : 
+          "unknown query"));
+        
+        // Return the original request to be executed
+        return null;
     next:
       default: tool_response
 
+  # Email tool node - uses real SMTP node with environment variables
+  email_tool:
+    type: "email.send"
+    params:
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      username: "{{env.GMAIL_USERNAME}}"
+      password: "{{env.GMAIL_PASSWORD}}"
+      from: "{{env.GMAIL_USERNAME}}"
+      to: "{{input.result.tool_calls[0].function.arguments | fromjson | .recipient}}"
+      subject: "{{input.result.tool_calls[0].function.arguments | fromjson | .subject}}"
+      body: "{{input.result.tool_calls[0].function.arguments | fromjson | .body}}"
+      tls: true
+      script: |
+        // Log the email details for transparency
+        console.log("EMAIL REQUEST: Sending real email with the following details:");
+        try {
+          var args = JSON.parse(input.result.tool_calls[0].function.arguments);
+          console.log("EMAIL RECIPIENT: " + args.recipient);
+          console.log("EMAIL SUBJECT: " + args.subject);
+          console.log("EMAIL BODY LENGTH: " + args.body.length + " characters");
+        } catch (e) {
+          console.log("EMAIL ERROR: Failed to parse email arguments: " + e);
+        }
+        
+        // Return null to let the actual SMTP node handle the email sending
+        return null;
+    next:
+      default: process_email_results
+      
+  # Process email results and send back to LLM
+  process_email_results:
+    type: transform
+    params:
+      script: |
+        // Log the email result
+        console.log("EMAIL RESULT: " + (input.error ? "Failed to send email: " + input.error : "Email sent successfully"));
+        
+        // Create tool response message for email
+        var emailResult = input.error 
+          ? "Failed to send email: " + input.error 
+          : "Email sent successfully to " + (input.to || "recipient") + " with subject '" + (input.subject || "AI Research Summary") + "'";
+        
+        var toolResponseMsg = {
+          role: "tool",
+          name: "send_email_summary",
+          content: emailResult
+        };
+        
+        // Initialize conversation history if needed
+        if (!shared.conversation_history) {
+          shared.conversation_history = [];
+          
+          // Add system message
+          shared.conversation_history.push({
+            role: "system",
+            content: "You are a helpful assistant with access to tools. Use the search_web tool when asked to search for information."
+          });
+          
+          // Add user's question
+          shared.conversation_history.push({
+            role: "user",
+            content: input._original_question || input.question
+          });
+        }
+        
+        // Add assistant's tool call to history
+        if (input.result && input.result.tool_calls) {
+          shared.conversation_history.push({
+            role: "assistant",
+            content: "I'll send an email with the information you requested.",
+            tool_calls: input.result.tool_calls
+          });
+        }
+        
+        // Add tool response to conversation history
+        shared.conversation_history.push(toolResponseMsg);
+        
+        console.log("EMAIL RESPONSE: Added email result to conversation history");
+        
+        return {
+          tool_response: toolResponseMsg,
+          conversation_history: shared.conversation_history,
+          _original_question: input._original_question || input.question,
+          email_sent: !input.error,
+          email_details: {
+            to: input.to,
+            subject: input.subject,
+            timestamp: new Date().toISOString()
+          }
+        };
+    next:
+      default: llm_node  # Loop back to LLM
+      
   # Process tool response and maintain conversation history in shared store
   tool_response:
     type: transform
@@ -294,6 +416,9 @@ nodes:
           // Extract actual content from Google search response
           var bodyLength = input.body.length;
           
+          // Log the raw response for debugging
+          console.log("SEARCH RESPONSE: Received Google search response with " + bodyLength + " bytes");
+          
           // Extract title tags from the HTML response
           var titleRegex = /<h3[^>]*>(.*?)<\/h3>/g;
           var titles = [];
@@ -309,16 +434,22 @@ nodes:
           searchResults = "Google search results for '" + searchQuery + "':\n\n";
           
           if (titles.length > 0) {
+            console.log("SEARCH RESULTS: Found " + titles.length + " results from Google");
             for (var i = 0; i < Math.min(titles.length, 5); i++) {
               searchResults += (i+1) + ". " + titles[i] + "\n";
+              console.log("SEARCH RESULT " + (i+1) + ": " + titles[i]);
             }
           } else {
+            console.log("SEARCH WARNING: No titles extracted from Google response");
             searchResults += "Received HTML response of " + bodyLength + " bytes, but couldn't extract specific results.";
             
             // Extract a small sample of the HTML for debugging
             var sample = input.body.substring(0, 500) + "...";
             searchResults += "\n\nSample of response: " + sample;
+            console.log("SEARCH HTML SAMPLE: " + sample);
           }
+        } else {
+          console.log("SEARCH ERROR: No body in response or body is not a string");
         }
         
         // Create tool response message
@@ -420,9 +551,21 @@ nodes:
 	// Step 4: Execute the flow
 	t.Log("Step 4: Executing flow...")
 
+	// Check if we should send an email notification
+	sendEmail := os.Getenv("SEND_EMAIL_NOTIFICATION")
+	emailRecipient := os.Getenv("EMAIL_RECIPIENT")
+
+	var question string
+	if sendEmail == "true" && emailRecipient != "" {
+		question = fmt.Sprintf("Please search for information about AI advancements expected in 2025, particularly in healthcare and autonomous systems. Then send an email summary to %s with the subject 'AI Research Summary 2025'.", emailRecipient)
+		t.Logf("Including email request to %s in the prompt", emailRecipient)
+	} else {
+		question = "Please search for information about AI advancements expected in 2025, particularly in healthcare and autonomous systems."
+	}
+
 	execReq := map[string]interface{}{
 		"input": map[string]interface{}{
-			"question": "Please search for information about AI advancements expected in 2025, particularly in healthcare and autonomous systems.",
+			"question": question,
 		},
 	}
 
@@ -586,30 +729,44 @@ nodes:
 		}
 	}
 
-	// Print key logs for debugging
-	t.Log("\n📋 KEY EXECUTION LOGS:")
-	t.Log("===================")
+	// Print ALL logs for maximum transparency
+	t.Log("\n📋 FULL EXECUTION LOGS:")
+	t.Log("====================")
 	for i, log := range logs {
 		if message, ok := log["message"].(string); ok {
 			nodeID, _ := log["node_id"].(string)
+			timestamp, _ := log["timestamp"].(string)
 
-			// Only print important logs
-			if strings.Contains(message, "Tool call") ||
-				strings.Contains(message, "search") ||
-				nodeID == "search_tool" ||
-				nodeID == "tool_response" {
-				if nodeID != "" {
-					t.Logf("Log %d [Node: %s]: %s", i+1, nodeID, message)
-				} else {
-					t.Logf("Log %d: %s", i+1, message)
+			// Format the log entry
+			if nodeID != "" {
+				t.Logf("Log %d [Node: %s] [%s]: %s", i+1, nodeID, timestamp, message)
+			} else {
+				t.Logf("Log %d [%s]: %s", i+1, timestamp, message)
+			}
+
+			// Highlight search-related logs
+			if strings.Contains(message, "SEARCH") {
+				t.Logf("  🔍 SEARCH LOG: %s", message)
+			}
+
+			// Print data for all logs
+			if data, ok := log["data"].(map[string]interface{}); ok {
+				// Print tool response data
+				if toolResponse, ok := data["tool_response"].(map[string]interface{}); ok {
+					trJSON, _ := json.MarshalIndent(toolResponse, "  ", "  ")
+					t.Logf("  📊 TOOL RESPONSE: %s", string(trJSON))
 				}
 
-				// Print data for important logs
-				if data, ok := log["data"].(map[string]interface{}); ok {
-					if toolResponse, ok := data["tool_response"].(map[string]interface{}); ok {
-						trJSON, _ := json.MarshalIndent(toolResponse, "  ", "  ")
-						t.Logf("  Tool Response: %s", string(trJSON))
-					}
+				// Print result data for search results
+				if result, ok := data["result"].(map[string]interface{}); ok &&
+					(nodeID == "search_tool" || nodeID == "tool_response") {
+					resultJSON, _ := json.MarshalIndent(result, "  ", "  ")
+					t.Logf("  🔍 RESULT DATA: %s", string(resultJSON))
+				}
+
+				// Print any console logs
+				if console, ok := data["console"].(string); ok && strings.Contains(console, "SEARCH") {
+					t.Logf("  📝 CONSOLE LOG: %s", console)
 				}
 			}
 		}
