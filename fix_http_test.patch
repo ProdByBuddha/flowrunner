@@ -1,0 +1,65 @@
+diff --git a/pkg/api/tool_calling_test.go b/pkg/api/tool_calling_test.go
+--- a/pkg/api/tool_calling_test.go
++++ b/pkg/api/tool_calling_test.go
+@@ -6,6 +6,7 @@ import (
+ 	"net/http"
+ 	"net/http/httptest"
+ 	"os"
++	"strings"
+ 	"testing"
+ 	"time"
+
+@@ -18,6 +19,15 @@ func TestSimpleToolCalling(t *testing.T) {
+ 	apiKey := os.Getenv("OPENAI_API_KEY")
+ 	if apiKey == "" {
+ 		t.Skip("Skipping tool calling test: OPENAI_API_KEY environment variable not set")
++	}
+
++	// ────────────────────────────────────────────────────────────────────────
++	// Stand up a real HTTP stub so our http.request node actually runs
++	searchStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		w.Header().Set("Content-Type", "text/html")
++		fmt.Fprint(w, `<html><body>
++			<h3>Healthcare AI</h3>
++			<h3>Autonomous Systems AI</h3>
++			<h3>Regulatory Trends</h3>
++		</body></html>`)
++	}))
++	defer searchStub.Close()
+ 	// ────────────────────────────────────────────────────────────────────────
+
+ 	// Create in-memory storage provider
+@@ -34,8 +44,15 @@ func TestSimpleToolCalling(t *testing.T) {
+ 	pluginRegistry := plugins.NewPluginRegistry()
+
+-	// Create YAML loader with core node types
++	// Create YAML loader — but let http.request and email.send run for real
+ 	nodeFactories := make(map[string]plugins.NodeFactory)
+-	for nodeType, factory := range runtime.CoreNodeTypes() {
+-		nodeFactories[nodeType] = &LLMTestRuntimeNodeFactoryAdapter{factory: factory}
++	for nodeType, factory := range runtime.CoreNodeTypes() {
++		if strings.HasPrefix(nodeType, "http.") || strings.HasPrefix(nodeType, "email.") {
++			nodeFactories[nodeType] = factory
++		} else {
++			nodeFactories[nodeType] = &LLMTestRuntimeNodeFactoryAdapter{factory: factory}
++		}
+ 	}
+ 	yamlLoader := loader.NewYAMLLoader(nodeFactories, pluginRegistry)
+
+@@ -615,7 +632,7 @@ func TestSimpleToolCalling(t *testing.T) {
+   search_tool:
+     type: http.request
+     params:
+-      url: "https://www.google.com/search"
++      url: "%s"  // will be replaced by our local stub
+       method: "GET"
+       query_params:
+         q: "{{input.result.tool_calls[0].function.arguments | fromjson | .query}}"
+@@ -626,7 +643,7 @@ func TestSimpleToolCalling(t *testing.T) {
+         console.log("SEARCH REQUEST: Query=" + JSON.parse(input.result.tool_calls[0].function.arguments).query);
+         return null;
+       }
+-  next:
++    next:
+     default: tool_response
+

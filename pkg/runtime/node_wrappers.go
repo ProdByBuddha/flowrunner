@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/robertkrimen/otto"
@@ -46,7 +47,7 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 		// For direct node usage, shared is typically an empty map or only contains result storage
 		// For flow execution, shared contains meaningful input data
 		var combinedInput map[string]interface{}
-		
+
 		if sharedMap, ok := shared.(map[string]interface{}); ok {
 			// Check if this looks like flow input (has meaningful data keys)
 			hasFlowInput := false
@@ -67,7 +68,7 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 					}
 				}
 			}
-			
+
 			if hasFlowInput {
 				// Flow execution: create combined input format
 				combinedInput = map[string]interface{}{
@@ -148,7 +149,7 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
 			var params map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if nodeParams, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -306,11 +307,53 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 				followRedirects = followParam
 			}
 
+			// Extract query parameters and process templates
+			queryParams := make(map[string]string)
+			if queryParamsMap, ok := params["query_params"].(map[string]interface{}); ok {
+				fmt.Printf("HTTP Node: Found query_params: %+v\n", queryParamsMap)
+
+				// Get flow input for template processing
+				var flowInput map[string]interface{}
+				if combinedInput, ok := input.(map[string]interface{}); ok {
+					if inputField, ok := combinedInput["input"]; ok {
+						if inputMap, ok := inputField.(map[string]interface{}); ok {
+							flowInput = inputMap
+							fmt.Printf("HTTP Node: Using flow input for template processing: %+v\n", flowInput)
+						}
+					}
+				}
+
+				for key, value := range queryParamsMap {
+					fmt.Printf("HTTP Node: Processing query param %s = %v (type: %T)\n", key, value, value)
+					if strValue, ok := value.(string); ok {
+						// Check if it's a template
+						if strings.Contains(strValue, "{{") && strings.Contains(strValue, "}}") {
+							fmt.Printf("HTTP Node: Processing template: %s\n", strValue)
+							// Process template
+							processed, err := utils.ProcessTemplate(strValue, flowInput)
+							if err != nil {
+								fmt.Printf("HTTP Node: Error processing template %s: %v\n", strValue, err)
+								queryParams[key] = strValue // Use original value on error
+							} else {
+								fmt.Printf("HTTP Node: Template processed successfully: %s -> %s\n", strValue, processed)
+								queryParams[key] = processed
+							}
+						} else {
+							queryParams[key] = strValue
+						}
+					} else {
+						// Convert non-string values to string
+						queryParams[key] = fmt.Sprintf("%v", value)
+					}
+				}
+			}
+
 			// Create HTTP request
 			httpRequest := &utils.HTTPRequest{
 				URL:            url,
 				Method:         method,
 				Headers:        headers,
+				QueryParams:    queryParams,
 				Body:           body,
 				Timeout:        timeout,
 				Auth:           auth,
@@ -385,7 +428,7 @@ func NewStoreNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
 			var params map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if nodeParams, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -469,7 +512,7 @@ func NewDelayNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
 			var params map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if nodeParams, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -522,7 +565,7 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 			// Handle both old format (direct params) and new format (combined input)
 			var nodeParams map[string]interface{}
 			var flowInput map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if paramsField, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -531,7 +574,7 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 					} else {
 						return nil, fmt.Errorf("expected params to be map[string]interface{}")
 					}
-					
+
 					if inputField, hasInput := combinedInput["input"]; hasInput {
 						if inputMap, ok := inputField.(map[string]interface{}); ok {
 							flowInput = inputMap
@@ -557,14 +600,14 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 
 			// Create JavaScript engine
 			vm := otto.New()
-			
+
 			// Set up console.log for debugging
 			vm.Set("console", map[string]interface{}{
 				"log": func(args ...interface{}) {
 					fmt.Printf("[Condition Script] %v\n", args...)
 				},
 			})
-			
+
 			// Set the input context for the script
 			if flowInput != nil {
 				fmt.Printf("[Condition Node] Setting flow input with %d keys\n", len(flowInput))
@@ -573,9 +616,9 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				fmt.Printf("[Condition Node] Using empty input\n")
 				vm.Set("input", map[string]interface{}{})
 			}
-			
+
 			fmt.Printf("[Condition Node] About to execute JavaScript\n")
-			
+
 			// Execute the condition script
 			// Wrap the script in a function to allow return statements
 			wrappedScript := "(function() {\n" + conditionScript + "\n})()"
@@ -584,16 +627,16 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				fmt.Printf("[Condition Node] JavaScript execution error: %v\n", err)
 				return nil, fmt.Errorf("failed to execute condition script: %w", err)
 			}
-			
+
 			fmt.Printf("[Condition Node] JavaScript execution successful\n")
-			
+
 			// Convert result to Go value
 			goValue, err := result.Export()
 			if err != nil {
 				fmt.Printf("[Condition Node] Result export error: %v\n", err)
 				return nil, fmt.Errorf("failed to export JavaScript result: %w", err)
 			}
-			
+
 			fmt.Printf("[Condition Node] Final result: %v (type: %T)\n", goValue, goValue)
 			return goValue, nil
 		},
@@ -603,7 +646,7 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 			if action, ok := e.(string); ok {
 				return flowlib.Action(action), nil
 			}
-			
+
 			// If it's a boolean, convert to "true"/"false"
 			if result, ok := e.(bool); ok {
 				if result {
@@ -611,7 +654,7 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				}
 				return "false", nil
 			}
-			
+
 			// For other types, convert to string
 			return flowlib.Action(fmt.Sprintf("%v", e)), nil
 		},

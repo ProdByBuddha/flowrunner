@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -20,6 +21,7 @@ type HTTPRequest struct {
 	URL            string                 `json:"url"`
 	Method         string                 `json:"method"`
 	Headers        map[string]string      `json:"headers,omitempty"`
+	QueryParams    map[string]string      `json:"query_params,omitempty"`
 	Body           interface{}            `json:"body,omitempty"`
 	Timeout        time.Duration          `json:"timeout,omitempty"`
 	Auth           map[string]interface{} `json:"auth,omitempty"`
@@ -75,8 +77,29 @@ func (c *HTTPClient) Do(req *HTTPRequest) (*HTTPResponse, error) {
 		}
 	}
 
-	// Create HTTP request
-	httpReq, err := http.NewRequest(req.Method, req.URL, bodyReader)
+	// Create HTTP request with query parameters
+	parsedURL, err := url.Parse(req.URL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse URL: %w", err)
+	}
+
+	// Add query parameters if any
+	if len(req.QueryParams) > 0 {
+		// Get existing query values or create new ones
+		q := parsedURL.Query()
+
+		// Add query parameters
+		for key, value := range req.QueryParams {
+			q.Set(key, value)
+		}
+
+		// Update URL with query parameters
+		parsedURL.RawQuery = q.Encode()
+	}
+
+	reqURL := parsedURL.String()
+
+	httpReq, err := http.NewRequest(req.Method, reqURL, bodyReader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
