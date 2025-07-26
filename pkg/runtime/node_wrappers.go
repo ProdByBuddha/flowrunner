@@ -1,11 +1,14 @@
 package runtime
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/robertkrimen/otto"
 	"github.com/tcmartin/flowlib"
+	"github.com/tcmartin/flowrunner/pkg/auth"
 	"github.com/tcmartin/flowrunner/pkg/utils"
 )
 
@@ -43,6 +46,92 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 		// Get the parameters
 		params := w.Params()
 
+		// Extract FlowContext for template expression evaluation if available
+		var flowContext *FlowContext
+		if sharedMap, ok := shared.(map[string]interface{}); ok {
+			if flowContextData, hasFlowContext := sharedMap["_flow_context"]; hasFlowContext {
+				if fcMap, ok := flowContextData.(map[string]interface{}); ok {
+					// Try to reconstruct FlowContext from the data
+					if executionID, ok := sharedMap["_execution"].(map[string]interface{})["execution_id"].(string); ok {
+						if flowID, ok := sharedMap["_execution"].(map[string]interface{})["flow_id"].(string); ok {
+							if accountID, ok := sharedMap["accountID"].(string); ok {
+								// We need access to the secret vault to recreate FlowContext
+								// For now, we'll try to find it in the shared context
+								if secretVault, ok := sharedMap["_secret_vault"]; ok {
+									if vault, ok := secretVault.(auth.SecretVault); ok {
+										flowContext = NewFlowContext(executionID, flowID, accountID, vault)
+										// Import existing data
+										if nodeResults, ok := fcMap["node_results"].(map[string]any); ok {
+											for k, v := range nodeResults {
+												flowContext.SetNodeResult(k, v)
+											}
+										}
+										if sharedData, ok := fcMap["shared_data"].(map[string]any); ok {
+											for k, v := range sharedData {
+												flowContext.SetSharedData(k, v)
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Process node parameters through template engine if FlowContext is available
+		processedParams := params
+		if flowContext != nil {
+			// Update the flow context with current shared data for template evaluation
+			if sharedMap, ok := shared.(map[string]interface{}); ok {
+				// Log the complete shared state in readable JSON format
+				sharedJSON, _ := json.MarshalIndent(sharedMap, "", "  ")
+				fmt.Printf("\n🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:\n%s\n", string(sharedJSON))
+				
+				keys := make([]string, 0, len(sharedMap))
+				for key := range sharedMap {
+					keys = append(keys, key)
+				}
+				fmt.Printf("📋 [NodeWrapper] Available shared context keys: %v\n", keys)
+				
+				// Special logging for LLM results and tool calls
+				if result, exists := sharedMap["result"]; exists {
+					resultJSON, _ := json.MarshalIndent(result, "", "  ")
+					fmt.Printf("🧠 [NodeWrapper] LLM Result in shared.result:\n%s\n", string(resultJSON))
+				}
+				if llmResult, exists := sharedMap["llm_result"]; exists {
+					llmResultJSON, _ := json.MarshalIndent(llmResult, "", "  ")
+					fmt.Printf("🧠 [NodeWrapper] LLM Result in shared.llm_result:\n%s\n", string(llmResultJSON))
+				}
+				
+				for key, value := range sharedMap {
+					// Skip internal flow context keys
+					if !strings.HasPrefix(key, "_") && key != "accountID" {
+						flowContext.SetSharedData(key, value)
+					}
+				}
+				
+				// Log the template evaluation context
+				evalContext := flowContext.GetEvaluationContext()
+				evalJSON, _ := json.MarshalIndent(evalContext, "", "  ")
+				fmt.Printf("🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:\n%s\n", string(evalJSON))
+			}
+			
+			var err error
+			processedParams, err = flowContext.ProcessNodeParams(params)
+			if err != nil {
+				// Log the error but continue with original parameters to avoid breaking the flow
+				fmt.Printf("❌ [NodeWrapper] Template processing error: %v\n", err)
+				processedParams = params
+			} else {
+				fmt.Printf("✅ [NodeWrapper] Template expressions processed successfully\n")
+				// Log the processed parameters
+				processedJSON, _ := json.MarshalIndent(processedParams, "", "  ")
+				fmt.Printf("📝 [NodeWrapper] PROCESSED PARAMETERS:\n%s\n", string(processedJSON))
+			}
+		}
+
 		// For direct node usage, shared is typically an empty map or only contains result storage
 		// For flow execution, shared contains meaningful input data
 		var combinedInput map[string]interface{}
@@ -69,22 +158,22 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 			}
 			
 			if hasFlowInput {
-				// Flow execution: create combined input format
+				// Flow execution: create combined input format with processed parameters
 				combinedInput = map[string]interface{}{
-					"params": params,
+					"params": processedParams,  // Use processed parameters with resolved templates
 					"input":  shared,
 				}
 			} else {
-				// Direct node usage: use stored parameters only
+				// Direct node usage: use processed parameters only
 				combinedInput = map[string]interface{}{
-					"params": params,
+					"params": processedParams,  // Use processed parameters
 					"input":  map[string]interface{}{}, // empty flow input
 				}
 			}
 		} else {
 			// Non-map shared context or nil: direct node usage
 			combinedInput = map[string]interface{}{
-				"params": params,
+				"params": processedParams,  // Use processed parameters
 				"input":  map[string]interface{}{},
 			}
 		}
@@ -99,17 +188,17 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 		if sharedMap, ok := shared.(map[string]interface{}); ok {
 			// Store the result with a type-specific key
 			nodeType := "result"
-			if typeParam, ok := params["type"].(string); ok {
+			if typeParam, ok := processedParams["type"].(string); ok {
 				nodeType = typeParam
 			} else {
 				// Try to determine the node type from the parameters
-				if _, ok := params["url"]; ok {
+				if _, ok := processedParams["url"]; ok {
 					nodeType = "http"
-				} else if _, ok := params["smtp_host"]; ok {
+				} else if _, ok := processedParams["smtp_host"]; ok {
 					nodeType = "email"
-				} else if _, ok := params["model"]; ok {
+				} else if _, ok := processedParams["model"]; ok {
 					nodeType = "llm"
-				} else if _, ok := params["operation"]; ok {
+				} else if _, ok := processedParams["operation"]; ok {
 					nodeType = "store"
 				}
 			}
@@ -119,11 +208,20 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 
 			// Also store in the generic "result" key for backward compatibility
 			sharedMap["result"] = result
+			
+			// Log the result storage
+			fmt.Printf("💾 [NodeWrapper] Stored result as '%s_result' and 'result' in shared context\n", nodeType)
+			resultJSON, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Printf("📊 [NodeWrapper] STORED RESULT:\n%s\n", string(resultJSON))
+			
+			// Log the updated shared state after storing the result
+			sharedJSON, _ := json.MarshalIndent(sharedMap, "", "  ")
+			fmt.Printf("\n🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:\n%s\n", string(sharedJSON))
 		}
 
 		// Call the post function if provided
 		if w.post != nil {
-			return w.post(shared, params, result)
+			return w.post(shared, processedParams, result)
 		}
 
 		// Default to the "default" action

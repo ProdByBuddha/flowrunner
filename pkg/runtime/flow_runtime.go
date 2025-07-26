@@ -188,6 +188,7 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 			"shared_data":  flowContext.sharedData,
 		}
 		enhancedInput["accountID"] = execCtx.accountID
+		enhancedInput["_secret_vault"] = r.secretVault  // Add secret vault for NodeWrapper access
 	}
 
 	// Execute the flow

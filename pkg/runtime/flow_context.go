@@ -88,6 +88,9 @@ func (fc *FlowContext) createEvaluationContext() map[string]any {
 	// Add input context for backward compatibility
 	context["input"] = fc.sharedData
 
+	// Add shared context for template expressions that use shared.variable
+	context["shared"] = fc.sharedData
+
 	return context
 }
 
