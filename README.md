@@ -328,8 +328,21 @@ go run cmd/test_nodes/main.go openai anthropic template structured email
 
 ## Documentation
 
+### User Documentation
+
+- **[User Guide](docs/user_guide.md)** - Comprehensive guide for using FlowRunner
+- **[Flow Creation Guide](docs/flow_creation_guide.md)** - Detailed guide for creating flows with examples
+- **[CLI Guide](docs/cli_guide.md)** - Complete reference for the FlowRunner CLI
+- **[API Reference](docs/api_reference.md)** - Complete reference for the FlowRunner API
+- **[Storage Configuration](docs/storage_configuration.md)** - Guide for configuring different storage backends
+- **[LLM Node Documentation](docs/llm_node.md)** - Detailed documentation for the LLM node
+- **[Email Nodes Documentation](docs/email_nodes.md)** - Detailed documentation for email nodes
+
+### Developer Documentation
+
 - **[Internal Progress Documentation](INTERNAL_PROGRESS.md)** - Detailed implementation status and technical architecture
 - **[Contributors Guide](CONTRIBUTORS.md)** - How to contribute and contributor recognition
+- **[Development Guidelines](docs/development_guidelines.md)** - Guidelines for development
 - **[Implementation Tasks](/.kiro/specs/flowrunner-implementation/tasks.md)** - Detailed task breakdown and requirements
 
 ## License
