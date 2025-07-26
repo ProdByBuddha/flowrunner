@@ -7,6 +7,48 @@ import (
 	"github.com/tcmartin/flowrunner/pkg/auth"
 )
 
+// SecretsProxy provides dynamic access to secrets for JavaScript evaluation
+type SecretsProxy struct {
+	vault     auth.SecretVault
+	accountID string
+	cache     map[string]any
+}
+
+// Get retrieves a secret value by key
+func (sp *SecretsProxy) Get(key string) (any, error) {
+	// Check cache first
+	if sp.cache == nil {
+		sp.cache = make(map[string]any)
+	}
+
+	if value, exists := sp.cache[key]; exists {
+		return value, nil
+	}
+
+	// Fetch from vault
+	value, err := sp.vault.Get(sp.accountID, key)
+	if err != nil {
+		return nil, err
+	}
+
+	// Cache the value
+	sp.cache[key] = value
+	return value, nil
+}
+
+// GetField retrieves a specific field from a structured secret
+func (sp *SecretsProxy) GetField(key, field string) (any, error) {
+	// For structured secrets, we might need to implement field-level access
+	// For now, just return the whole secret
+	return sp.Get(key)
+}
+
+// Has checks if a secret exists
+func (sp *SecretsProxy) Has(key string) bool {
+	_, err := sp.Get(key)
+	return err == nil
+}
+
 // SecretAwareExpressionEvaluator extends JSExpressionEvaluator with secret access
 type SecretAwareExpressionEvaluator struct {
 	*JSExpressionEvaluator
@@ -36,70 +78,54 @@ func (e *SecretAwareExpressionEvaluator) Evaluate(expression string, context map
 		}
 	}
 
+	// Create enhanced context with secrets and node results
+	enhancedContext := e.createEnhancedContext(context)
+
+	// Use the parent evaluator with our enhanced context
+	return e.JSExpressionEvaluator.Evaluate(expression, enhancedContext)
+}
+
+// createEnhancedContext creates a context with secrets and node results
+func (e *SecretAwareExpressionEvaluator) createEnhancedContext(context map[string]any) map[string]any {
 	// Create a copy of the context to avoid modifying the original
-	contextWithSecrets := make(map[string]any)
+	enhancedContext := make(map[string]any)
 	for k, v := range context {
-		contextWithSecrets[k] = v
+		enhancedContext[k] = v
 	}
 
-	// Add a secrets object to the context
+	// Add secrets object to the context
 	if e.secretVault != nil && context["accountID"] != nil {
-		accountID, ok := context["accountID"].(string)
-		if ok && accountID != "" {
-			// Create a secrets object
-			secretsObj := make(map[string]any)
-
-			// Pre-load known secrets for this test
-			// In a real implementation, we might want to lazy-load secrets as needed
-			// but for simplicity, we'll pre-load the ones we know we'll need
-			if keys, err := e.secretVault.List(accountID); err == nil {
-				for _, key := range keys {
-					if value, err := e.secretVault.Get(accountID, key); err == nil {
-						secretsObj[key] = value
-					}
-				}
+		if accountID, ok := context["accountID"].(string); ok && accountID != "" {
+			// Create a dynamic secrets object that resolves secrets on-demand
+			secretsObj := &SecretsProxy{
+				vault:     e.secretVault,
+				accountID: accountID,
 			}
-
-			// Add the secrets object to the context
-			contextWithSecrets["secrets"] = secretsObj
+			enhancedContext["secrets"] = secretsObj
 		}
 	}
 
-	// Use the parent evaluator with our enhanced context
-	return e.JSExpressionEvaluator.Evaluate(expression, contextWithSecrets)
+	// Add node results to context for easy access
+	if flowContext, ok := context["_flow_context"].(map[string]any); ok {
+		// Add node results as 'results' object
+		if nodeResults, ok := flowContext["node_results"].(map[string]any); ok {
+			enhancedContext["results"] = nodeResults
+		}
+
+		// Add shared context data as 'shared' object
+		if sharedData, ok := flowContext["shared_data"].(map[string]any); ok {
+			enhancedContext["shared"] = sharedData
+		}
+	}
+
+	return enhancedContext
 }
 
 // EvaluateInObject processes all expressions in an object with secret access
 func (e *SecretAwareExpressionEvaluator) EvaluateInObject(obj map[string]any, context map[string]any) (map[string]any, error) {
-	// Create a copy of the context to avoid modifying the original
-	contextWithSecrets := make(map[string]any)
-	for k, v := range context {
-		contextWithSecrets[k] = v
-	}
-
-	// Add a secrets object to the context
-	if e.secretVault != nil && context["accountID"] != nil {
-		accountID, ok := context["accountID"].(string)
-		if ok && accountID != "" {
-			// Create a secrets object
-			secretsObj := make(map[string]any)
-
-			// Pre-load known secrets for this test
-			// In a real implementation, we might want to lazy-load secrets as needed
-			// but for simplicity, we'll pre-load the ones we know we'll need
-			if keys, err := e.secretVault.List(accountID); err == nil {
-				for _, key := range keys {
-					if value, err := e.secretVault.Get(accountID, key); err == nil {
-						secretsObj[key] = value
-					}
-				}
-			}
-
-			// Add the secrets object to the context
-			contextWithSecrets["secrets"] = secretsObj
-		}
-	}
+	// Create enhanced context with secrets and node results
+	enhancedContext := e.createEnhancedContext(context)
 
 	// Use the parent evaluator with our enhanced context
-	return e.JSExpressionEvaluator.EvaluateInObject(obj, contextWithSecrets)
+	return e.JSExpressionEvaluator.EvaluateInObject(obj, enhancedContext)
 }

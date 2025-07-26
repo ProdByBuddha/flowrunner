@@ -33,7 +33,7 @@ func (e *JSExpressionEvaluator) Evaluate(expression string, context map[string]a
 
 	// Set up the context in the JavaScript VM
 	for key, value := range context {
-		e.vm.Set(key, value)
+		e.setContextValue(key, value)
 	}
 
 	// Evaluate the expression
@@ -59,9 +59,49 @@ func (e *JSExpressionEvaluator) Evaluate(expression string, context map[string]a
 	}
 }
 
+// setContextValue sets a value in the JavaScript VM with special handling for certain types
+func (e *JSExpressionEvaluator) setContextValue(key string, value any) {
+	// Handle SecretsProxy specially to make secrets accessible in JavaScript
+	if key == "secrets" {
+		if secretsProxy, ok := value.(*SecretsProxy); ok {
+			// Create a JavaScript-accessible secrets object
+			secretsObj := make(map[string]any)
+
+			// Get all available secret keys and create lazy getters
+			if keys, err := secretsProxy.vault.List(secretsProxy.accountID); err == nil {
+				for _, secretKey := range keys {
+					secretKey := secretKey // capture for closure
+					// Create a getter function for each secret
+					secretsObj[secretKey] = func() any {
+						if val, err := secretsProxy.Get(secretKey); err == nil {
+							return val
+						}
+						return nil
+					}()
+
+					// Also try to get the value directly
+					if val, err := secretsProxy.Get(secretKey); err == nil {
+						secretsObj[secretKey] = val
+					}
+				}
+			}
+			e.vm.Set(key, secretsObj)
+			return
+		}
+	}
+
+	// Default handling for other values
+	e.vm.Set(key, value)
+}
+
 // EvaluateInObject processes all expressions in an object
 func (e *JSExpressionEvaluator) EvaluateInObject(obj map[string]any, context map[string]any) (map[string]any, error) {
 	result := make(map[string]any)
+
+	// Set up the context in the JavaScript VM with special handling
+	for key, value := range context {
+		e.setContextValue(key, value)
+	}
 
 	for key, value := range obj {
 		// Evaluate the key if it's an expression

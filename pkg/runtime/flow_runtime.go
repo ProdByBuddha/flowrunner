@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tcmartin/flowrunner/pkg/auth"
 	"github.com/tcmartin/flowrunner/pkg/loader"
 )
 
@@ -24,6 +25,7 @@ type flowRuntime struct {
 	registry       FlowRegistry
 	yamlLoader     loader.YAMLLoader
 	executionStore ExecutionStore
+	secretVault    auth.SecretVault // Add secret vault support
 
 	// In-memory tracking for active executions
 	activeExecutions map[string]*executionContext
@@ -56,6 +58,27 @@ func NewFlowRuntimeWithStore(registry FlowRegistry, yamlLoader loader.YAMLLoader
 		registry:         registry,
 		yamlLoader:       yamlLoader,
 		executionStore:   executionStore,
+		activeExecutions: make(map[string]*executionContext),
+	}
+}
+
+// NewFlowRuntimeWithSecrets creates a new FlowRuntime with secret vault support
+func NewFlowRuntimeWithSecrets(registry FlowRegistry, yamlLoader loader.YAMLLoader, secretVault auth.SecretVault) FlowRuntime {
+	return &flowRuntime{
+		registry:         registry,
+		yamlLoader:       yamlLoader,
+		secretVault:      secretVault,
+		activeExecutions: make(map[string]*executionContext),
+	}
+}
+
+// NewFlowRuntimeWithStoreAndSecrets creates a new FlowRuntime with execution store and secret vault
+func NewFlowRuntimeWithStoreAndSecrets(registry FlowRegistry, yamlLoader loader.YAMLLoader, executionStore ExecutionStore, secretVault auth.SecretVault) FlowRuntime {
+	return &flowRuntime{
+		registry:         registry,
+		yamlLoader:       yamlLoader,
+		executionStore:   executionStore,
+		secretVault:      secretVault,
 		activeExecutions: make(map[string]*executionContext),
 	}
 }
@@ -134,19 +157,37 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 
 	r.logExecution(execCtx.status.ID, "info", "Starting flow execution", map[string]interface{}{"flowID": execCtx.flowID, "accountID": execCtx.accountID})
 
+	// Create FlowContext for proper expression evaluation
+	var flowContext *FlowContext
+	if r.secretVault != nil {
+		flowContext = NewFlowContext(execCtx.status.ID, execCtx.flowID, execCtx.accountID, r.secretVault)
+	}
+
 	// Inject execution context into the input for nodes to use
 	enhancedInput := make(map[string]interface{})
-	if input != nil {
-		for k, v := range input {
-			enhancedInput[k] = v
+	for k, v := range input {
+		enhancedInput[k] = v
+		// Also set in flow context if available
+		if flowContext != nil {
+			flowContext.SetSharedData(k, v)
 		}
 	}
+	
 	// Add execution context for logging and debugging
 	enhancedInput["_execution"] = map[string]interface{}{
 		"execution_id": execCtx.status.ID,
 		"flow_id":      execCtx.flowID,
 		"account_id":   execCtx.accountID,
 		"logger":       r.logExecution,
+	}
+
+	// Add flow context if available for expression evaluation
+	if flowContext != nil {
+		enhancedInput["_flow_context"] = map[string]interface{}{
+			"node_results": flowContext.nodeResults,
+			"shared_data":  flowContext.sharedData,
+		}
+		enhancedInput["accountID"] = execCtx.accountID
 	}
 
 	// Execute the flow
