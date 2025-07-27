@@ -32,6 +32,54 @@ func max(a, b int) int {
 	return b
 }
 
+/* ---------- Thread-safe shared state for parallel execution ---------- */
+
+// SplitNodeResults provides thread-safe coordination for SplitNode map-reduce operations
+type SplitNodeResults struct {
+	mu      sync.Mutex
+	results []interface{}
+}
+
+// NewSplitNodeResults creates a new thread-safe results collector
+func NewSplitNodeResults() *SplitNodeResults {
+	return &SplitNodeResults{
+		results: make([]interface{}, 0),
+	}
+}
+
+// Add safely adds a result to the collection
+func (snr *SplitNodeResults) Add(result interface{}) {
+	snr.mu.Lock()
+	defer snr.mu.Unlock()
+	snr.results = append(snr.results, result)
+}
+
+// GetAll safely returns all collected results
+func (snr *SplitNodeResults) GetAll() []interface{} {
+	snr.mu.Lock()
+	defer snr.mu.Unlock()
+	// Return a copy to prevent external modification
+	results := make([]interface{}, len(snr.results))
+	copy(results, snr.results)
+	return results
+}
+
+// NewSyncSharedState creates a thread-safe shared state wrapper
+func NewSyncSharedState(shared interface{}) interface{} {
+	// For SplitNode, we'll inject a thread-safe results collector
+	if sharedMap, ok := shared.(map[string]interface{}); ok {
+		// Clone the map to avoid modifying the original
+		syncShared := make(map[string]interface{})
+		for k, v := range sharedMap {
+			syncShared[k] = v
+		}
+		// Add the thread-safe results collector
+		syncShared["_split_results"] = NewSplitNodeResults()
+		return syncShared
+	}
+	return shared
+}
+
 /* ---------- Node interface & base ---------- */
 type Node interface {
 	SetParams(map[string]any)
@@ -394,6 +442,7 @@ func NewSplitNode() *SplitNode {
 
 // Run executes all successors in parallel and waits for them to complete.
 // This enables true fan-out behavior where multiple branches run simultaneously.
+// Uses thread-safe shared state synchronization for proper map-reduce patterns.
 func (s *SplitNode) Run(shared any) (Action, error) {
 	successors := s.successors
 	if len(successors) == 0 {
@@ -401,15 +450,18 @@ func (s *SplitNode) Run(shared any) (Action, error) {
 		return "", nil
 	}
 
+	// Create thread-safe shared state for parallel execution
+	syncShared := NewSyncSharedState(shared)
+
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(successors))
 
-	// Launch all successors in parallel
+	// Launch all successors in parallel with thread-safe shared state
 	for action, n := range successors {
 		wg.Add(1)
 		go func(a Action, node Node) {
 			defer wg.Done()
-			_, err := node.Run(shared)
+			_, err := node.Run(syncShared)
 			if err != nil {
 				errCh <- fmt.Errorf("SplitNode action %q failed: %w", a, err)
 			}
@@ -419,6 +471,18 @@ func (s *SplitNode) Run(shared any) (Action, error) {
 	// Wait for all to complete
 	wg.Wait()
 	close(errCh)
+
+	// After all parallel executions complete, merge results back to original shared state
+	if originalMap, ok := shared.(map[string]interface{}); ok {
+		if syncMap, ok := syncShared.(map[string]interface{}); ok {
+			if splitResults, exists := syncMap["_split_results"]; exists {
+				if collector, ok := splitResults.(*SplitNodeResults); ok {
+					// Merge the collected results into the original shared state
+					originalMap["mapper_results"] = collector.GetAll()
+				}
+			}
+		}
+	}
 
 	// Check for any errors
 	select {

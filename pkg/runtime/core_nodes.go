@@ -85,9 +85,7 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				"log": func(args ...interface{}) {
 					fmt.Printf("[Transform Script] %v\n", args...)
 				},
-			})
-
-			// Set up the context
+			})			// Set up the context
 			// If we have flow input, add it as 'input' context
 			if flowInput != nil {
 				vm.Set("input", flowInput)
@@ -95,8 +93,67 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				// For backwards compatibility, if no flow input, use the node params as input
 				vm.Set("input", nodeParams)
 			}
-
-			// Execute the transform script
+			
+			// Make the shared context available to JavaScript with thread-safe support
+			var sharedMap map[string]interface{}
+			if combinedInput, ok := input.(map[string]interface{}); ok {
+				if inputField, hasInput := combinedInput["input"]; hasInput {
+					if inputMapActual, ok := inputField.(map[string]interface{}); ok {
+						sharedMap = inputMapActual
+						
+						// Create a custom shared object that intercepts mapper_results operations
+						vm.Set("shared", sharedMap)
+						
+						// Add console logging to debug (keep the existing console.log simple)
+						vm.Set("console", map[string]interface{}{
+							"log": func(args ...interface{}) {
+								fmt.Printf("[Transform Script] %v\n", args...)
+							},
+						})
+						
+						// Create a custom mapper_results object that provides thread-safe operations
+						mapperResultsProxy := map[string]interface{}{
+							"push": func(item interface{}) int {
+								fmt.Printf("[GO DEBUG] Thread-safe push called with: %+v\n", item)
+								
+								// Add to thread-safe collector
+								if splitResults, exists := sharedMap["_split_results"]; exists {
+									if collector, ok := splitResults.(interface{ Add(interface{}) }); ok {
+										collector.Add(item)
+										fmt.Printf("[GO DEBUG] Added to thread-safe collector\n")
+									}
+								}
+								
+								// Also maintain local state for immediate access within this VM
+								if _, exists := sharedMap["mapper_results"]; !exists {
+									sharedMap["mapper_results"] = make([]interface{}, 0)
+								}
+								if localResults, ok := sharedMap["mapper_results"].([]interface{}); ok {
+									localResults = append(localResults, item)
+									sharedMap["mapper_results"] = localResults
+									fmt.Printf("[GO DEBUG] Added to local array, now has %d items\n", len(localResults))
+									return len(localResults)
+								}
+								return 1
+							},
+							"length": 0,
+						}
+						
+						// Provide the proxy object to JavaScript FIRST
+						vm.Set("__mapperResultsProxy", mapperResultsProxy)
+						
+						// Then override the mapper_results in JavaScript to use our proxy
+						vm.Run(`
+							console.log("[DEBUG] Setting up thread-safe mapper_results proxy");
+							
+							// Replace shared.mapper_results with our thread-safe proxy
+							shared.mapper_results = __mapperResultsProxy;
+							
+							console.log("[DEBUG] Thread-safe proxy setup complete");
+						`)
+					}
+				}
+			}// Execute the transform script
 			// Wrap the script in a function to allow return statements
 			wrappedScript := "(function() {\n" + script + "\n})()"
 			result, err := vm.Run(wrappedScript)
