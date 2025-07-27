@@ -27,6 +27,8 @@ func CoreNodeTypes() map[string]NodeFactory {
 		"webhook":       NewWebhookNodeWrapper,
 		"dynamodb":      NewDynamoDBNodeWrapper,
 		"postgres":      NewPostgresNodeWrapper,
+		"split":         NewSplitNodeWrapper,
+		"split.async":   NewAsyncSplitNodeWrapper,
 	}
 }
 
@@ -530,4 +532,28 @@ func NewWebhookNodeWrapper(params map[string]interface{}) (flowlib.Node, error) 
 	wrapper.SetParams(params)
 
 	return wrapper, nil
+}
+
+// NewSplitNodeWrapper creates a new SplitNode wrapper for parallel fan-out
+func NewSplitNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
+	// Create the SplitNode directly from flowlib
+	splitNode := flowlib.NewSplitNode()
+	
+	// Set the parameters
+	splitNode.SetParams(params)
+
+	// Return the SplitNode directly - no wrapper needed as it already implements flowlib.Node
+	return splitNode, nil
+}
+
+// NewAsyncSplitNodeWrapper creates a new AsyncSplitNode wrapper for async parallel fan-out
+func NewAsyncSplitNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
+	// Create the AsyncSplitNode directly from flowlib
+	asyncSplitNode := flowlib.NewAsyncSplitNode()
+	
+	// Set the parameters
+	asyncSplitNode.SetParams(params)
+
+	// Return the AsyncSplitNode directly - no wrapper needed as it already implements flowlib.Node
+	return asyncSplitNode, nil
 }
