@@ -85,16 +85,23 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 		if flowContext != nil {
 			// Update the flow context with current shared data for template evaluation
 			if sharedMap, ok := shared.(map[string]interface{}); ok {
-				// Log the complete shared state in readable JSON format
-				sharedJSON, _ := json.MarshalIndent(sharedMap, "", "  ")
+				// Log the complete shared state in readable JSON format (thread-safe)
+				sharedCopy := make(map[string]interface{})
+				for k, v := range sharedMap {
+					// Skip potentially problematic keys that might be modified concurrently
+					if k != "_split_results" && k != "mapper_results" {
+						sharedCopy[k] = v
+					}
+				}
+				sharedJSON, _ := json.MarshalIndent(sharedCopy, "", "  ")
 				fmt.Printf("\n🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:\n%s\n", string(sharedJSON))
-				
+
 				keys := make([]string, 0, len(sharedMap))
 				for key := range sharedMap {
 					keys = append(keys, key)
 				}
 				fmt.Printf("📋 [NodeWrapper] Available shared context keys: %v\n", keys)
-				
+
 				// Special logging for LLM results and tool calls
 				if result, exists := sharedMap["result"]; exists {
 					resultJSON, _ := json.MarshalIndent(result, "", "  ")
@@ -104,20 +111,20 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 					llmResultJSON, _ := json.MarshalIndent(llmResult, "", "  ")
 					fmt.Printf("🧠 [NodeWrapper] LLM Result in shared.llm_result:\n%s\n", string(llmResultJSON))
 				}
-				
+
 				for key, value := range sharedMap {
 					// Skip internal flow context keys
 					if !strings.HasPrefix(key, "_") && key != "accountID" {
 						flowContext.SetSharedData(key, value)
 					}
 				}
-				
+
 				// Log the template evaluation context
 				evalContext := flowContext.GetEvaluationContext()
 				evalJSON, _ := json.MarshalIndent(evalContext, "", "  ")
 				fmt.Printf("🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:\n%s\n", string(evalJSON))
 			}
-			
+
 			var err error
 			processedParams, err = flowContext.ProcessNodeParams(params)
 			if err != nil {
@@ -135,7 +142,7 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 		// For direct node usage, shared is typically an empty map or only contains result storage
 		// For flow execution, shared contains meaningful input data
 		var combinedInput map[string]interface{}
-		
+
 		if sharedMap, ok := shared.(map[string]interface{}); ok {
 			// Check if this looks like flow input (has meaningful data keys)
 			hasFlowInput := false
@@ -156,24 +163,24 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 					}
 				}
 			}
-			
+
 			if hasFlowInput {
 				// Flow execution: create combined input format with processed parameters
 				combinedInput = map[string]interface{}{
-					"params": processedParams,  // Use processed parameters with resolved templates
+					"params": processedParams, // Use processed parameters with resolved templates
 					"input":  shared,
 				}
 			} else {
 				// Direct node usage: use processed parameters only
 				combinedInput = map[string]interface{}{
-					"params": processedParams,  // Use processed parameters
+					"params": processedParams,          // Use processed parameters
 					"input":  map[string]interface{}{}, // empty flow input
 				}
 			}
 		} else {
 			// Non-map shared context or nil: direct node usage
 			combinedInput = map[string]interface{}{
-				"params": processedParams,  // Use processed parameters
+				"params": processedParams, // Use processed parameters
 				"input":  map[string]interface{}{},
 			}
 		}
@@ -208,14 +215,39 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 
 			// Also store in the generic "result" key for backward compatibility
 			sharedMap["result"] = result
-			
+
+			// SPECIAL HANDLING FOR MAPPER RESULTS
+			// Check if this result looks like a mapper result and add it to the SplitNode collector
+			if resultMap, ok := result.(map[string]interface{}); ok {
+				if branch, hasBranch := resultMap["branch"]; hasBranch {
+					if branchStr, ok := branch.(string); ok && strings.HasPrefix(branchStr, "mapper") {
+						fmt.Printf("🔧 [NodeWrapper] Detected mapper result for branch %s, adding to SplitNode collector\n", branchStr)
+
+						// Add to the SplitNode thread-safe collector if it exists
+						if splitResults, exists := sharedMap["_split_results"]; exists {
+							if collector, ok := splitResults.(interface{ Add(interface{}) }); ok {
+								collector.Add(resultMap)
+								fmt.Printf("🔧 [NodeWrapper] Added mapper result to SplitNode collector\n")
+							}
+						}
+					}
+				}
+			}
+
 			// Log the result storage
 			fmt.Printf("💾 [NodeWrapper] Stored result as '%s_result' and 'result' in shared context\n", nodeType)
 			resultJSON, _ := json.MarshalIndent(result, "", "  ")
 			fmt.Printf("📊 [NodeWrapper] STORED RESULT:\n%s\n", string(resultJSON))
-			
-			// Log the updated shared state after storing the result
-			sharedJSON, _ := json.MarshalIndent(sharedMap, "", "  ")
+
+			// Log the updated shared state after storing the result (thread-safe)
+			sharedCopy := make(map[string]interface{})
+			for k, v := range sharedMap {
+				// Skip potentially problematic keys that might be modified concurrently
+				if k != "_split_results" && k != "mapper_results" {
+					sharedCopy[k] = v
+				}
+			}
+			sharedJSON, _ := json.MarshalIndent(sharedCopy, "", "  ")
 			fmt.Printf("\n🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:\n%s\n", string(sharedJSON))
 		}
 
@@ -246,7 +278,7 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
 			var params map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if nodeParams, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -483,7 +515,7 @@ func NewStoreNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
 			var params map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if nodeParams, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -567,7 +599,7 @@ func NewDelayNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
 			var params map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if nodeParams, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -620,7 +652,7 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 			// Handle both old format (direct params) and new format (combined input)
 			var nodeParams map[string]interface{}
 			var flowInput map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if paramsField, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -629,7 +661,7 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 					} else {
 						return nil, fmt.Errorf("expected params to be map[string]interface{}")
 					}
-					
+
 					if inputField, hasInput := combinedInput["input"]; hasInput {
 						if inputMap, ok := inputField.(map[string]interface{}); ok {
 							flowInput = inputMap
@@ -655,14 +687,14 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 
 			// Create JavaScript engine
 			vm := otto.New()
-			
+
 			// Set up console.log for debugging
 			vm.Set("console", map[string]interface{}{
 				"log": func(args ...interface{}) {
 					fmt.Printf("[Condition Script] %v\n", args...)
 				},
 			})
-			
+
 			// Set the input context for the script
 			if flowInput != nil {
 				fmt.Printf("[Condition Node] Setting flow input with %d keys\n", len(flowInput))
@@ -671,9 +703,9 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				fmt.Printf("[Condition Node] Using empty input\n")
 				vm.Set("input", map[string]interface{}{})
 			}
-			
+
 			fmt.Printf("[Condition Node] About to execute JavaScript\n")
-			
+
 			// Execute the condition script
 			// Wrap the script in a function to allow return statements
 			wrappedScript := "(function() {\n" + conditionScript + "\n})()"
@@ -682,16 +714,16 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				fmt.Printf("[Condition Node] JavaScript execution error: %v\n", err)
 				return nil, fmt.Errorf("failed to execute condition script: %w", err)
 			}
-			
+
 			fmt.Printf("[Condition Node] JavaScript execution successful\n")
-			
+
 			// Convert result to Go value
 			goValue, err := result.Export()
 			if err != nil {
 				fmt.Printf("[Condition Node] Result export error: %v\n", err)
 				return nil, fmt.Errorf("failed to export JavaScript result: %w", err)
 			}
-			
+
 			fmt.Printf("[Condition Node] Final result: %v (type: %T)\n", goValue, goValue)
 			return goValue, nil
 		},
@@ -701,7 +733,7 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 			if action, ok := e.(string); ok {
 				return flowlib.Action(action), nil
 			}
-			
+
 			// If it's a boolean, convert to "true"/"false"
 			if result, ok := e.(bool); ok {
 				if result {
@@ -709,7 +741,7 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				}
 				return "false", nil
 			}
-			
+
 			// For other types, convert to string
 			return flowlib.Action(fmt.Sprintf("%v", e)), nil
 		},

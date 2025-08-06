@@ -478,10 +478,14 @@ nodes:
             to: input.to,
             subject: input.subject,
             timestamp: new Date().toISOString()
+          },
+          final_response: "Email sent successfully. The flow is now complete.",
+          execution_summary: {
+            completed_successfully: true,
+            email_sent: !input.error
           }
         };
-    next:
-      default: llm_node  # Loop back to LLM
+    # No next section - this terminates the flow
       
   # Process tool response and maintain conversation history in shared store
   tool_response:
@@ -603,10 +607,15 @@ nodes:
         return {
           tool_response: toolResponseMsg,
           conversation_history: shared.conversation_history,
-          _original_question: input._original_question || input.question
+          _original_question: input._original_question || input.question,
+          search_completed: true,
+          execution_summary: {
+            completed_successfully: true,
+            search_query: searchQuery,
+            results_found: titles.length || 0
+          }
         };
-    next:
-      default: llm_node  # Loop back to LLM
+    # No next section - this terminates the flow after search
 
   # Output node - shows final conversation history
   output_node:
@@ -630,6 +639,7 @@ nodes:
             conversation_turns: (shared.conversation_history || []).length
           }
         };
+    # No next section - this terminates the flow
 `
 
 	flowReq := map[string]interface{}{
