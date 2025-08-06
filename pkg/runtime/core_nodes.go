@@ -47,7 +47,7 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 			// Handle both old format (direct params) and new format (combined input)
 			var nodeParams map[string]interface{}
 			var flowInput map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if paramsField, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -56,7 +56,7 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 					} else {
 						return nil, fmt.Errorf("expected params to be map[string]interface{}")
 					}
-					
+
 					// Extract flow input
 					if inputField, hasInput := combinedInput["input"]; hasInput {
 						if inputMap, ok := inputField.(map[string]interface{}); ok {
@@ -85,7 +85,7 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				"log": func(args ...interface{}) {
 					fmt.Printf("[Transform Script] %v\n", args...)
 				},
-			})			// Set up the context
+			}) // Set up the context
 			// If we have flow input, add it as 'input' context
 			if flowInput != nil {
 				vm.Set("input", flowInput)
@@ -93,73 +93,65 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				// For backwards compatibility, if no flow input, use the node params as input
 				vm.Set("input", nodeParams)
 			}
-			
+
 			// Make the shared context available to JavaScript with thread-safe support
 			var sharedMap map[string]interface{}
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if inputField, hasInput := combinedInput["input"]; hasInput {
 					if inputMapActual, ok := inputField.(map[string]interface{}); ok {
 						sharedMap = inputMapActual
-						
-						// Create a custom shared object that intercepts mapper_results operations
-						vm.Set("shared", sharedMap)
-						
-						// Add console logging to debug (keep the existing console.log simple)
+
+						// Create a thread-safe proxy for the shared context
+						sharedProxy := make(map[string]interface{})
+
+						// Copy non-sensitive data to the proxy
+						for k, v := range sharedMap {
+							if k != "_split_results" && k != "_execution" && k != "_flow_context" && k != "_secret_vault" && k != "mapper_results" {
+								sharedProxy[k] = v
+							}
+						}
+						// Don't pre-create mapper_results - let JavaScript create its own native array
+
+						// Set the proxy as the shared context for JavaScript
+						vm.Set("shared", sharedProxy)
+
+						// Add console logging to debug
 						vm.Set("console", map[string]interface{}{
 							"log": func(args ...interface{}) {
-								fmt.Printf("[Transform Script] %v\n", args...)
+								fmt.Printf("[Transform Script] [DEBUG] %v\n", args...)
 							},
 						})
-						
-						// Create a custom mapper_results object that provides thread-safe operations
-						mapperResultsProxy := map[string]interface{}{
-							"push": func(item interface{}) int {
-								fmt.Printf("[GO DEBUG] Thread-safe push called with: %+v\n", item)
-								
-								// Add to thread-safe collector
-								if splitResults, exists := sharedMap["_split_results"]; exists {
-									if collector, ok := splitResults.(interface{ Add(interface{}) }); ok {
-										collector.Add(item)
-										fmt.Printf("[GO DEBUG] Added to thread-safe collector\n")
-									}
-								}
-								
-								// Also maintain local state for immediate access within this VM
-								if _, exists := sharedMap["mapper_results"]; !exists {
-									sharedMap["mapper_results"] = make([]interface{}, 0)
-								}
-								if localResults, ok := sharedMap["mapper_results"].([]interface{}); ok {
-									localResults = append(localResults, item)
-									sharedMap["mapper_results"] = localResults
-									fmt.Printf("[GO DEBUG] Added to local array, now has %d items\n", len(localResults))
-									return len(localResults)
-								}
-								return 1
-							},
-							"length": 0,
-						}
-						
-						// Provide the proxy object to JavaScript FIRST
-						vm.Set("__mapperResultsProxy", mapperResultsProxy)
-						
-						// Then override the mapper_results in JavaScript to use our proxy
+
+						// Simple test: just set up a basic mapper_results array
+						fmt.Printf("[Transform Script] [DEBUG] Setting up basic mapper_results\n")
+
+						// Simple test: just set up a basic mapper_results array
 						vm.Run(`
-							console.log("[DEBUG] Setting up thread-safe mapper_results proxy");
+							console.log("Setting up basic mapper_results array");
+							if (!shared.mapper_results) {
+								shared.mapper_results = [];
+							}
+							console.log("mapper_results setup complete, length:", shared.mapper_results.length);
 							
-							// Replace shared.mapper_results with our thread-safe proxy
-							shared.mapper_results = __mapperResultsProxy;
-							
-							console.log("[DEBUG] Thread-safe proxy setup complete");
+							// Test basic push
+							console.log("Testing basic push...");
+							shared.mapper_results.push({test: "basic_test"});
+							console.log("After basic push, length:", shared.mapper_results.length);
 						`)
 					}
 				}
-			}// Execute the transform script
+			} // Execute the transform script
 			// Wrap the script in a function to allow return statements
+
 			wrappedScript := "(function() {\n" + script + "\n})()"
+
+			fmt.Printf("[Transform Script] [DEBUG] About to execute script\n")
 			result, err := vm.Run(wrappedScript)
 			if err != nil {
+				fmt.Printf("[Transform Script] [ERROR] Script execution failed: %v\n", err)
 				return nil, fmt.Errorf("failed to execute transform script: %w", err)
 			}
+			fmt.Printf("[Transform Script] [DEBUG] Script execution completed successfully\n")
 
 			// Convert result to Go value
 			goValue, err := result.Export()
@@ -190,7 +182,7 @@ func NewSMTPNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
 			var params map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if nodeParams, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -389,7 +381,7 @@ func NewIMAPNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
 			var params map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if nodeParams, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -559,7 +551,7 @@ func NewWebhookNodeWrapper(params map[string]interface{}) (flowlib.Node, error) 
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
 			var params map[string]interface{}
-			
+
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if nodeParams, hasParams := combinedInput["params"]; hasParams {
 					// New format: combined input with params and input
@@ -593,11 +585,15 @@ func NewWebhookNodeWrapper(params map[string]interface{}) (flowlib.Node, error) 
 
 // NewSplitNodeWrapper creates a new SplitNode wrapper for parallel fan-out
 func NewSplitNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
+	fmt.Printf("[SplitNode] Creating new SplitNode with params: %+v\n", params)
+
 	// Create the SplitNode directly from flowlib
 	splitNode := flowlib.NewSplitNode()
-	
+
 	// Set the parameters
 	splitNode.SetParams(params)
+
+	fmt.Printf("[SplitNode] SplitNode created successfully\n")
 
 	// Return the SplitNode directly - no wrapper needed as it already implements flowlib.Node
 	return splitNode, nil
@@ -607,7 +603,7 @@ func NewSplitNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 func NewAsyncSplitNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 	// Create the AsyncSplitNode directly from flowlib
 	asyncSplitNode := flowlib.NewAsyncSplitNode()
-	
+
 	// Set the parameters
 	asyncSplitNode.SetParams(params)
 
