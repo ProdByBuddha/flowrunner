@@ -137,7 +137,7 @@ nodes:
       mapper1: mapper_branch_1
       mapper2: mapper_branch_2
       mapper3: mapper_branch_3
-      default: reducer  # After all parallel branches complete, continue to reducer
+      default: join_results  # After all parallel branches complete, continue to join node
 
   # Mapper branch 1 - processes first number
   mapper_branch_1:
@@ -149,21 +149,10 @@ nodes:
         var num = numbers[0];
         var result = num * num;  // Square the number
         
-        // Store result in shared context for reducer
-        if (!shared.mapper_results) {
-          shared.mapper_results = [];
-        }
-        shared.mapper_results.push({
+        return {
           branch: "mapper1",
           input: num,
           output: result,
-          timestamp: new Date().toISOString()
-        });
-        
-        return {
-          branch: "mapper1",
-          processed: num,
-          result: result,
           message: "Mapper 1 completed: " + num + "² = " + result
         };
 
@@ -177,21 +166,10 @@ nodes:
         var num = numbers[1];
         var result = num * num;  // Square the number
         
-        // Store result in shared context for reducer
-        if (!shared.mapper_results) {
-          shared.mapper_results = [];
-        }
-        shared.mapper_results.push({
+        return {
           branch: "mapper2",
           input: num,
           output: result,
-          timestamp: new Date().toISOString()
-        });
-        
-        return {
-          branch: "mapper2",
-          processed: num,
-          result: result,
           message: "Mapper 2 completed: " + num + "² = " + result
         };
 
@@ -205,50 +183,44 @@ nodes:
         var num = numbers[2];
         var result = num * num;  // Square the number
         
-        // Store result in shared context for reducer
-        if (!shared.mapper_results) {
-          shared.mapper_results = [];
-        }
-        shared.mapper_results.push({
+        return {
           branch: "mapper3",
           input: num,
           output: result,
-          timestamp: new Date().toISOString()
-        });
-        
-        return {
-          branch: "mapper3",
-          processed: num,
-          result: result,
           message: "Mapper 3 completed: " + num + "² = " + result
         };
+
+  # JoinNode - collects parallel results into clean format
+  join_results:
+    type: join
+    params:
+      format: array
+    next:
+      default: reducer
 
   # Reducer - aggregates results from all mappers
   reducer:
     type: transform
     params:
       script: |
-        // Wait a bit to ensure all mappers have completed
-        // In a real scenario, this would be more sophisticated
-        var maxWait = 100; // 100ms max wait
-        var waited = 0;
-        
-        while ((!shared.mapper_results || shared.mapper_results.length < 3) && waited < maxWait) {
-          // Simple busy wait - in production you'd use proper synchronization
-          waited += 10;
-        }
-        
-        var results = shared.mapper_results || [];
+        // Clean, simple processing with JoinNode-structured data
+        var results = input || [];
         var total = 0;
         var processedInputs = [];
         var messages = [];
         
-        // Aggregate results from all mappers
+        // Process the clean array from JoinNode
         for (var i = 0; i < results.length; i++) {
           var result = results[i];
           total += result.output;
           processedInputs.push(result.input);
           messages.push(result.message);
+        }
+        
+        // Create individual squares array manually (Otto doesn't support map)
+        var individualSquares = [];
+        for (var i = 0; i < results.length; i++) {
+          individualSquares.push(results[i].output);
         }
         
         return {
@@ -261,9 +233,9 @@ nodes:
           execution_summary: {
             operation: "parallel_square_and_sum",
             inputs: processedInputs,
-            individual_squares: results.map(function(r) { return r.output; }),
+            individual_squares: individualSquares,
             final_sum: total,
-            parallel_execution: "SplitNode enabled true parallel processing"
+            parallel_execution: "JoinNode enabled clean parallel processing"
           }
         };
     next:
@@ -449,7 +421,7 @@ nodes:
 
 	t.Log("\n📋 EXECUTION LOGS ANALYSIS:")
 	t.Log("==========================")
-	
+
 	for i, log := range logs {
 		if message, ok := log["message"].(string); ok {
 			nodeID, _ := log["node_id"].(string)
