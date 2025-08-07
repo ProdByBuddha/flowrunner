@@ -320,12 +320,18 @@ func (r *flowRuntime) Cancel(executionID string) error {
 // Helper methods
 
 func (r *flowRuntime) logExecution(executionID, level, message string, data map[string]interface{}) {
-	log := ExecutionLog{
-		Timestamp: time.Now(),
-		Level:     level,
-		Message:   message,
-		Data:      data,
-	}
+    log := ExecutionLog{
+        Timestamp: time.Now(),
+        Level:     level,
+        Message:   message,
+        Data:      data,
+    }
+    // If caller provided a node_id in data, populate NodeID field
+    if data != nil {
+        if nodeID, ok := data["node_id"].(string); ok {
+            log.NodeID = nodeID
+        }
+    }
 
 	// Save to execution store if available
 	if r.executionStore != nil {

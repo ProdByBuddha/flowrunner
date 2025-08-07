@@ -141,58 +141,37 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 
 		// For direct node usage, shared is typically an empty map or only contains result storage
 		// For flow execution, shared contains meaningful input data
-		var combinedInput map[string]interface{}
+        var combinedInput map[string]interface{}
 
-		if sharedMap, ok := shared.(map[string]interface{}); ok {
-			// Check if this looks like flow input (has meaningful data keys)
-			hasFlowInput := false
-			for key, value := range sharedMap {
-				// Skip empty values
-				if value == nil {
-					continue
-				}
-				// These are typical flow input keys with meaningful data
-				if key == "question" || key == "input" || key == "context" || key == "data" {
-					if str, ok := value.(string); ok && str != "" {
-						hasFlowInput = true
-						break
-					}
-					if _, ok := value.(map[string]interface{}); ok {
-						hasFlowInput = true
-						break
-					}
-				}
-			}
+        if sharedMap, ok := shared.(map[string]interface{}); ok {
+            // Prefer the current node "input" prepared by previous nodes (e.g., JoinNode)
+            var flowInput interface{}
+            if preparedInput, exists := sharedMap["input"]; exists {
+                flowInput = preparedInput
+            } else {
+                // Fallback to passing the entire shared map
+                flowInput = sharedMap
+            }
 
-			if hasFlowInput {
-				// Flow execution: create combined input format with processed parameters
-				combinedInput = map[string]interface{}{
-					"params": processedParams, // Use processed parameters with resolved templates
-					"input":  shared,
-				}
-			} else {
-				// Direct node usage: use processed parameters only
-				combinedInput = map[string]interface{}{
-					"params": processedParams,          // Use processed parameters
-					"input":  map[string]interface{}{}, // empty flow input
-				}
-			}
-		} else {
-			// Non-map shared context or nil: direct node usage
-			combinedInput = map[string]interface{}{
-				"params": processedParams, // Use processed parameters
-				"input":  map[string]interface{}{},
-			}
-		}
+            combinedInput = map[string]interface{}{
+                "params": processedParams,
+                "input":  flowInput,
+            }
+        } else {
+            combinedInput = map[string]interface{}{
+                "params": processedParams,
+                "input":  map[string]interface{}{},
+            }
+        }
 
-		// Execute the function
-		result, err := w.exec(combinedInput)
+        // Execute the function
+        result, err := w.exec(combinedInput)
 		if err != nil {
 			return "", err
 		}
 
 		// Store the result in the shared context if it's a map
-		if sharedMap, ok := shared.(map[string]interface{}); ok {
+        if sharedMap, ok := shared.(map[string]interface{}); ok {
 			// Store the result with a type-specific key
 			nodeType := "result"
 			if typeParam, ok := processedParams["type"].(string); ok {
@@ -211,12 +190,12 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 			}
 
 			// Store the result with the node type as the key
-			sharedMap[nodeType+"_result"] = result
+            sharedMap[nodeType+"_result"] = result
 
 			// Also store in the generic "result" key for backward compatibility
 			sharedMap["result"] = result
 
-			// SPECIAL HANDLING FOR MAPPER RESULTS
+            // SPECIAL HANDLING FOR MAPPER RESULTS
 			// Check if this result looks like a mapper result and add it to the SplitNode collector
 			if resultMap, ok := result.(map[string]interface{}); ok {
 				if branch, hasBranch := resultMap["branch"]; hasBranch {
@@ -233,6 +212,19 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 					}
 				}
 			}
+
+            // Emit execution log entry if logger is available
+            if execInfo, ok := sharedMap["_execution"].(map[string]interface{}); ok {
+                if logger, ok := execInfo["logger"].(func(string, string, string, map[string]interface{})); ok {
+                    nodeID, _ := processedParams["node_id"].(string)
+                    // Include key result fields if present
+                    data := map[string]interface{}{
+                        "node_id": nodeID,
+                        "result":  result,
+                    }
+                    logger(execInfo["execution_id"].(string), "info", fmt.Sprintf("Node %s executed", nodeID), data)
+                }
+            }
 
 			// Log the result storage
 			fmt.Printf("💾 [NodeWrapper] Stored result as '%s_result' and 'result' in shared context\n", nodeType)
