@@ -46,8 +46,8 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 		node: baseNode,
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
-			var nodeParams map[string]interface{}
-			var flowInput map[string]interface{}
+            var nodeParams map[string]interface{}
+            var flowInput interface{}
 
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if paramsField, hasParams := combinedInput["params"]; hasParams {
@@ -58,12 +58,10 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 						return nil, fmt.Errorf("expected params to be map[string]interface{}")
 					}
 
-					// Extract flow input
-					if inputField, hasInput := combinedInput["input"]; hasInput {
-						if inputMap, ok := inputField.(map[string]interface{}); ok {
-							flowInput = inputMap
-						}
-					}
+                    // Extract flow input (any JSON-like value)
+                    if inputField, hasInput := combinedInput["input"]; hasInput {
+                        flowInput = inputField
+                    }
 				} else {
 					// Old format: direct params (backwards compatibility)
 					nodeParams = combinedInput
@@ -88,19 +86,19 @@ func NewTransformNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				},
 			}) // Set up the context
 			// If we have flow input, add it as 'input' context
-			if flowInput != nil {
-				vm.Set("input", flowInput)
-			} else {
+            if flowInput != nil {
+                vm.Set("input", flowInput)
+            } else {
 				// For backwards compatibility, if no flow input, use the node params as input
 				vm.Set("input", nodeParams)
 			}
 
 			// Make the shared context available to JavaScript with thread-safe support
-			var sharedMap map[string]interface{}
-			if combinedInput, ok := input.(map[string]interface{}); ok {
-				if inputField, hasInput := combinedInput["input"]; hasInput {
-					if inputMapActual, ok := inputField.(map[string]interface{}); ok {
-						sharedMap = inputMapActual
+            var sharedMap map[string]interface{}
+            if combinedInput, ok := input.(map[string]interface{}); ok {
+                if inputField, hasInput := combinedInput["input"]; hasInput {
+                    if inputMapActual, ok := inputField.(map[string]interface{}); ok {
+                        sharedMap = inputMapActual
 
 						// Create a thread-safe proxy for the shared context
 						sharedProxy := make(map[string]interface{})
@@ -275,7 +273,7 @@ func NewSMTPNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 				for _, recipient := range ccArray {
 					if recipientStr, ok := recipient.(string); ok {
 						cc = append(cc, recipientStr)
-					}
+                    }
 				}
 			}
 

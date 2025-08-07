@@ -1,3 +1,3 @@
 module github.com/tcmartin/flowlib
 
-go 1.24.3
+go 1.23

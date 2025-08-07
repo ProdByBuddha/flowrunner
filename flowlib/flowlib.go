@@ -450,6 +450,32 @@ func (s *SplitNode) Run(shared any) (Action, error) {
 		return "", nil
 	}
 
+    // Emit execution log for SplitNode start if logger is available
+    var execLogger func(string, string, string, map[string]interface{})
+    var executionID string
+    var nodeID string
+    if p := s.Params(); p != nil {
+        if id, ok := p["node_id"].(string); ok {
+            nodeID = id
+        }
+    }
+    if sharedMap, ok := shared.(map[string]interface{}); ok {
+        if execInfo, ok := sharedMap["_execution"].(map[string]interface{}); ok {
+            if logger, ok := execInfo["logger"].(func(string, string, string, map[string]interface{})); ok {
+                execLogger = logger
+            }
+            if id, ok := execInfo["execution_id"].(string); ok {
+                executionID = id
+            }
+        }
+    }
+    if execLogger != nil && executionID != "" {
+        execLogger(executionID, "info", "SplitNode started", map[string]interface{}{
+            "node_id":  nodeID,
+            "branches": len(successors),
+        })
+    }
+
 	// Create thread-safe shared state for parallel execution
 	syncShared := NewSyncSharedState(shared)
 
@@ -483,6 +509,14 @@ func (s *SplitNode) Run(shared any) (Action, error) {
 			}
 		}
 	}
+
+    // Emit execution log for SplitNode completion
+    if execLogger != nil && executionID != "" {
+        execLogger(executionID, "info", "SplitNode completed", map[string]interface{}{
+            "node_id":  nodeID,
+            "branches": len(successors),
+        })
+    }
 
 	// Check for any errors
 	select {
