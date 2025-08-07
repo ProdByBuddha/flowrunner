@@ -29,6 +29,7 @@ func CoreNodeTypes() map[string]NodeFactory {
 		"postgres":      NewPostgresNodeWrapper,
 		"split":         NewSplitNodeWrapper,
 		"split.async":   NewAsyncSplitNodeWrapper,
+		"join":          NewJoinNodeWrapper,
 	}
 }
 
@@ -609,4 +610,20 @@ func NewAsyncSplitNodeWrapper(params map[string]interface{}) (flowlib.Node, erro
 
 	// Return the AsyncSplitNode directly - no wrapper needed as it already implements flowlib.Node
 	return asyncSplitNode, nil
+}
+
+// NewJoinNodeWrapper creates a new JoinNode wrapper for collecting parallel results
+func NewJoinNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
+	fmt.Printf("[JoinNode] Creating new JoinNode with params: %+v\n", params)
+
+	// Create the JoinNode directly from flowlib
+	joinNode := flowlib.NewJoinNode()
+
+	// Set the parameters
+	joinNode.SetParams(params)
+
+	fmt.Printf("[JoinNode] JoinNode created successfully\n")
+
+	// Return the JoinNode directly - no wrapper needed as it already implements flowlib.Node
+	return joinNode, nil
 }
