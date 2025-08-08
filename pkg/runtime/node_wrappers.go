@@ -704,6 +704,22 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 				vm.Set("input", map[string]interface{}{})
 			}
 
+            // Make the shared context available to JavaScript similar to Transform node
+            if combinedInput, ok := input.(map[string]interface{}); ok {
+                if inputField, hasInput := combinedInput["input"]; hasInput {
+                    if inputMapActual, ok := inputField.(map[string]interface{}); ok {
+                        // Create a thread-safe proxy for the shared context
+                        sharedProxy := make(map[string]interface{})
+                        for k, v := range inputMapActual {
+                            if k != "_split_results" && k != "_execution" && k != "_flow_context" && k != "_secret_vault" && k != "mapper_results" {
+                                sharedProxy[k] = v
+                            }
+                        }
+                        vm.Set("shared", sharedProxy)
+                    }
+                }
+            }
+
 			fmt.Printf("[Condition Node] About to execute JavaScript\n")
 
             // Execute the condition script

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -43,7 +44,7 @@ func TestWebSocketPostgreSQLIntegration_ComplexFlow(t *testing.T) {
 		t.Skip("Skipping PostgreSQL integration test. Set FLOWRUNNER_POSTGRES_HOST in .env file to run.")
 	}
 
-	// Get PostgreSQL configuration from standard environment variables
+    // Get PostgreSQL configuration from standard environment variables
 	host := os.Getenv("FLOWRUNNER_POSTGRES_HOST")
 	if host == "" {
 		host = "localhost"
@@ -65,9 +66,16 @@ func TestWebSocketPostgreSQLIntegration_ComplexFlow(t *testing.T) {
 		sslMode = "disable"
 	}
 
-	if user == "" || password == "" || dbName == "" {
+    if user == "" || password == "" || dbName == "" {
 		t.Skip("Skipping PostgreSQL integration test as credentials are not set")
 	}
+
+    // Pre-flight connectivity check to avoid hard failures in CI environments
+    conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), 2*time.Second)
+    if err != nil {
+        t.Skipf("Skipping PostgreSQL integration test: cannot connect to %s:%d (%v)", host, port, err)
+    }
+    _ = conn.Close()
 
 	t.Logf("PostgreSQL integration test config: host=%s, port=%d, user=%s, database=%s, sslmode=%s",
 		host, port, user, dbName, sslMode)
@@ -665,7 +673,12 @@ func TestWebSocketPostgreSQLIntegration_SimpleBranching(t *testing.T) {
 		sslMode = "disable"
 	}
 
-	t.Logf("Testing with PostgreSQL: %s:%d/%s (user: %s)", host, port, dbName, user)
+    // Pre-flight connectivity check to avoid hard failures in CI environments
+    if conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), 2*time.Second); err != nil {
+        t.Skipf("Skipping PostgreSQL test: cannot connect to %s:%d (%v)", host, port, err)
+    } else { _ = conn.Close() }
+
+    t.Logf("Testing with PostgreSQL: %s:%d/%s (user: %s)", host, port, dbName, user)
 
 	// Create PostgreSQL storage provider
 	postgresProvider, err := storage.NewProvider(storage.ProviderConfig{

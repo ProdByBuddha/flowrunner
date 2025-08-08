@@ -1,14 +1,15 @@
 package runtime
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"time"
+    "context"
+    "encoding/json"
+    "fmt"
+    "os"
+    "time"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/robfig/cron/v3"
-	"github.com/tcmartin/flowlib"
+    "github.com/go-redis/redis/v8"
+    "github.com/robfig/cron/v3"
+    "github.com/tcmartin/flowlib"
 )
 
 // Global cron scheduler
@@ -36,12 +37,19 @@ func initCronSystem() error {
 		return nil
 	}
 
-	// Create Redis client
-	redisClient = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379", // Default Redis address
-		Password: "",               // No password
-		DB:       0,                // Default DB
-	})
+    // Create Redis client (respect existing client or env vars)
+    if redisClient == nil {
+        addr := os.Getenv("FLOWRUNNER_REDIS_ADDR")
+        if addr == "" {
+            addr = "localhost:6379"
+        }
+        password := os.Getenv("FLOWRUNNER_REDIS_PASSWORD")
+        redisClient = redis.NewClient(&redis.Options{
+            Addr:     addr,
+            Password: password,
+            DB:       0,
+        })
+    }
 
 	// Test Redis connection
 	ctx := context.Background()
@@ -49,9 +57,11 @@ func initCronSystem() error {
 		return fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 
-	// Create cron scheduler with seconds field
-	cronScheduler = cron.New(cron.WithSeconds())
-	cronScheduler.Start()
+    // Create cron scheduler with seconds field
+    if cronScheduler == nil {
+        cronScheduler = cron.New(cron.WithSeconds())
+        cronScheduler.Start()
+    }
 
 	// Load existing jobs from Redis
 	loadExistingJobs(ctx)

@@ -232,9 +232,17 @@ func (c *EmailClient) SendEmail(message EmailMessage) error {
 	recipients = append(recipients, message.Cc...)
 	recipients = append(recipients, message.Bcc...)
 
-	// Send the email using smtp.SendMail
-	smtpAddr := fmt.Sprintf("%s:%d", c.smtpHost, c.smtpPort)
-	err := smtp.SendMail(smtpAddr, auth, message.From, recipients, buf.Bytes())
+    // Send the email using smtp.SendMail (STARTTLS will be negotiated if supported)
+    smtpAddr := fmt.Sprintf("%s:%d", c.smtpHost, c.smtpPort)
+    // Try a short retry loop for transient failures
+    var err error
+    for attempt := 1; attempt <= 2; attempt++ {
+        err = smtp.SendMail(smtpAddr, auth, message.From, recipients, buf.Bytes())
+        if err == nil {
+            break
+        }
+        time.Sleep(500 * time.Millisecond)
+    }
 	if err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
