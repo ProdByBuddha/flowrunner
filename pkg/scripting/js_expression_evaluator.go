@@ -59,29 +59,58 @@ func (e *JSExpressionEvaluator) setContextValue(key string, value any) {
 	// Handle SecretsProxy specially to make secrets accessible in JavaScript
 	if key == "secrets" {
 		if secretsProxy, ok := value.(*SecretsProxy); ok {
-			// Create a JavaScript-accessible secrets object
-			secretsObj := make(map[string]any)
+            // Prefer a dynamic Proxy-based resolver so we don't depend on List()
+            // Expose a tiny Go-backed getter into JS
+            _ = e.vm.Set("__goGetSecret", func(k any) any {
+                // Convert to string key
+                var keyStr string
+                switch t := k.(type) {
+                case string:
+                    keyStr = t
+                default:
+                    keyStr = fmt.Sprintf("%v", t)
+                }
+                if keyStr == "" || keyStr == "toJSON" {
+                    return nil
+                }
+                if val, err := secretsProxy.Get(keyStr); err == nil {
+                    return val
+                }
+                return nil
+            })
 
-			// Get all available secret keys and create lazy getters
-			if keys, err := secretsProxy.vault.List(secretsProxy.accountID); err == nil {
-				for _, secretKey := range keys {
-					secretKey := secretKey // capture for closure
-					// Create a getter function for each secret
-					secretsObj[secretKey] = func() any {
-						if val, err := secretsProxy.Get(secretKey); err == nil {
-							return val
-						}
-						return nil
-					}()
+            // Define a JS Proxy that resolves arbitrary property access
+            // to __goGetSecret(prop)
+            proxyScript := `
+                (function() {
+                  try {
+                    var handler = { get: function(target, prop) {
+                      // Avoid special engine lookups
+                      if (prop === Symbol.toStringTag || prop === 'inspect') { return undefined; }
+                      return __goGetSecret(String(prop));
+                    }};
+                    return new Proxy({}, handler);
+                  } catch (e) {
+                    // Fallback: empty object when Proxy unavailable
+                    return {};
+                  }
+                })()`
+            if v, err := e.vm.RunString(proxyScript); err == nil {
+                e.vm.Set(key, v)
+                return
+            }
 
-					// Also try to get the value directly
-					if val, err := secretsProxy.Get(secretKey); err == nil {
-						secretsObj[secretKey] = val
-					}
-				}
-			}
+            // Final fallback: pre-load via List() if available
+            secretsObj := make(map[string]any)
+            if keys, err := secretsProxy.vault.List(secretsProxy.accountID); err == nil {
+                for _, secretKey := range keys {
+                    if val, err := secretsProxy.Get(secretKey); err == nil {
+                        secretsObj[secretKey] = val
+                    }
+                }
+            }
             e.vm.Set(key, secretsObj)
-			return
+            return
 		}
 	}
 

@@ -1,8 +1,6 @@
 module github.com/tcmartin/flowrunner
 
-go 1.23.0
-
-toolchain go1.23.1
+go 1.19
 
 require (
 	github.com/alicebob/miniredis/v2 v2.35.0
@@ -11,7 +9,7 @@ require (
 	github.com/emersion/go-imap v1.2.1
 	github.com/emersion/go-message v0.18.2
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/golang-jwt/jwt/v5 v5.2.3
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
