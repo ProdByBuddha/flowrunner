@@ -18,7 +18,6 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/r3labs/sse/v2 v2.10.0
-	github.com/robertkrimen/otto v0.5.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.8.1
@@ -45,7 +44,6 @@ require (
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
-	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 )
 
 replace github.com/tcmartin/flowlib => ./flowlib
