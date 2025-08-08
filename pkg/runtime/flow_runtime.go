@@ -140,7 +140,7 @@ func (r *flowRuntime) Execute(accountID string, flowID string, input map[string]
 }
 
 func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext, flow interface{}, input map[string]interface{}) {
-	defer func() {
+    defer func() {
 		if rec := recover(); rec != nil {
 			r.logExecution(execCtx.status.ID, "error", "Flow execution panicked", map[string]interface{}{"panic": rec})
 			r.updateExecutionStatus(execCtx.status.ID, "failed", fmt.Sprintf("Flow execution panicked: %v", rec), nil)
@@ -149,10 +149,14 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 		// Close log channel when execution is done
 		close(execCtx.logChannel)
 
-		// Remove from active executions
-		r.mu.Lock()
-		delete(r.activeExecutions, execCtx.status.ID)
-		r.mu.Unlock()
+        // Keep completed executions in-memory if no persistent store is configured,
+        // so that status/logs remain queryable right after completion.
+        // If a persistent execution store is present, we can safely remove it.
+        if r.executionStore != nil {
+            r.mu.Lock()
+            delete(r.activeExecutions, execCtx.status.ID)
+            r.mu.Unlock()
+        }
 	}()
 
 	r.logExecution(execCtx.status.ID, "info", "Starting flow execution", map[string]interface{}{"flowID": execCtx.flowID, "accountID": execCtx.accountID})
@@ -204,15 +208,34 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 		Run(shared interface{}) (interface{}, error)
 	}); ok {
 		result, err = flowRunner.Run(enhancedInput)
-	} else if flowlibFlow, ok := flow.(interface {
+    } else if flowlibFlow, ok := flow.(interface {
 		Run(shared any) (string, error)
 	}); ok {
 		// Handle flowlib.Flow which returns (Action, error)
-		var action string
-		action, err = flowlibFlow.Run(enhancedInput)
-		if err == nil {
-			result = map[string]interface{}{"action": action}
-		}
+        var action string
+        action, err = flowlibFlow.Run(enhancedInput)
+        if err == nil {
+            // Prefer rich result from shared context if available
+            if sharedResult, ok := enhancedInput["result"]; ok {
+                // Ensure it's a map; if not, wrap
+                if rm, ok := sharedResult.(map[string]interface{}); ok {
+                    // Attach action metadata as well
+                    rmCopy := make(map[string]interface{}, len(rm)+1)
+                    for k, v := range rm {
+                        rmCopy[k] = v
+                    }
+                    rmCopy["action"] = action
+                    result = rmCopy
+                } else {
+                    result = map[string]interface{}{
+                        "action": action,
+                        "result": sharedResult,
+                    }
+                }
+            } else {
+                result = map[string]interface{}{"action": action}
+            }
+        }
 	} else {
 		err = fmt.Errorf("flow does not implement expected execution interface")
 	}

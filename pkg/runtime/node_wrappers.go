@@ -1,15 +1,15 @@
 package runtime
 
 import (
-	"encoding/json"
-	"fmt"
-	"strings"
-	"time"
+    "encoding/json"
+    "fmt"
+    "strings"
+    "time"
 
-	"github.com/robertkrimen/otto"
-	"github.com/tcmartin/flowlib"
-	"github.com/tcmartin/flowrunner/pkg/auth"
-	"github.com/tcmartin/flowrunner/pkg/utils"
+    "github.com/dop251/goja"
+    "github.com/tcmartin/flowlib"
+    "github.com/tcmartin/flowrunner/pkg/auth"
+    "github.com/tcmartin/flowrunner/pkg/utils"
 )
 
 // NodeWrapper is a base wrapper for flowlib.Node implementations
@@ -226,7 +226,10 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
                 }
             }
 
-			// Log the result storage
+            // Make this result the next node's input
+            sharedMap["input"] = result
+
+            // Log the result storage
 			fmt.Printf("💾 [NodeWrapper] Stored result as '%s_result' and 'result' in shared context\n", nodeType)
 			resultJSON, _ := json.MarshalIndent(result, "", "  ")
 			fmt.Printf("📊 [NodeWrapper] STORED RESULT:\n%s\n", string(resultJSON))
@@ -677,15 +680,20 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 			fmt.Printf("[Condition Node] Starting condition evaluation\n")
 			fmt.Printf("[Condition Node] Script length: %d characters\n", len(conditionScript))
 
-			// Create JavaScript engine
-			vm := otto.New()
+            // Create JavaScript engine (goja)
+            vm := goja.New()
 
-			// Set up console.log for debugging
-			vm.Set("console", map[string]interface{}{
-				"log": func(args ...interface{}) {
-					fmt.Printf("[Condition Script] %v\n", args...)
-				},
-			})
+            // Set up console.log for debugging
+            console := vm.NewObject()
+            _ = console.Set("log", func(call goja.FunctionCall) goja.Value {
+                parts := make([]interface{}, 0, len(call.Arguments))
+                for _, a := range call.Arguments {
+                    parts = append(parts, a.Export())
+                }
+                fmt.Println(append([]interface{}{"[Condition Script]"}, parts...)...)
+                return goja.Undefined()
+            })
+            vm.Set("console", console)
 
 			// Set the input context for the script
 			if flowInput != nil {
@@ -698,10 +706,19 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 
 			fmt.Printf("[Condition Node] About to execute JavaScript\n")
 
-			// Execute the condition script
-			// Wrap the script in a function to allow return statements
-			wrappedScript := "(function() {\n" + conditionScript + "\n})()"
-			result, err := vm.Run(wrappedScript)
+            // Execute the condition script
+            // Provide minimal compatibility layer for goja (just in case) and wrap for return
+            processed := conditionScript
+            processed = strings.ReplaceAll(processed, "const ", "var ")
+            processed = strings.ReplaceAll(processed, "let ", "var ")
+            processed = strings.ReplaceAll(processed, "...input,", "__merge(input),")
+            processed = strings.ReplaceAll(processed, ", ...input", ", __merge(input)")
+            processed = strings.ReplaceAll(processed, "{ ...input }", "__merge(input)")
+            processed = strings.ReplaceAll(processed, "{...input}", "__merge(input)")
+            prelude := "function __merge(o){ var r={}; if(o){ for (var k in o){ if(Object.prototype.hasOwnProperty.call(o,k)){ r[k]=o[k]; } } } return r; }\n"
+            // Wrap the script in a function to allow return statements
+            wrappedScript := "(function() {\n" + prelude + processed + "\n})()"
+            result, err := vm.RunString(wrappedScript)
 			if err != nil {
 				fmt.Printf("[Condition Node] JavaScript execution error: %v\n", err)
 				return nil, fmt.Errorf("failed to execute condition script: %w", err)
@@ -709,15 +726,9 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 
 			fmt.Printf("[Condition Node] JavaScript execution successful\n")
 
-			// Convert result to Go value
-			goValue, err := result.Export()
-			if err != nil {
-				fmt.Printf("[Condition Node] Result export error: %v\n", err)
-				return nil, fmt.Errorf("failed to export JavaScript result: %w", err)
-			}
-
-			fmt.Printf("[Condition Node] Final result: %v (type: %T)\n", goValue, goValue)
-			return goValue, nil
+            exported := result.Export()
+            fmt.Printf("[Condition Node] Final result: %v (type: %T)\n", exported, exported)
+            return exported, nil
 		},
 		post: func(shared, p, e interface{}) (flowlib.Action, error) {
 			// Handle the result from the condition script

@@ -2,23 +2,21 @@
 package scripting
 
 import (
-	"fmt"
-	"strings"
+    "fmt"
+    "strings"
 
-	"github.com/robertkrimen/otto"
+    "github.com/dop251/goja"
 )
 
 // JSExpressionEvaluator is an implementation of the ExpressionEvaluator interface using a JavaScript engine
 type JSExpressionEvaluator struct {
-	vm *otto.Otto
+    vm *goja.Runtime
 }
 
 // NewJSExpressionEvaluator creates a new JSExpressionEvaluator
 func NewJSExpressionEvaluator() *JSExpressionEvaluator {
-	vm := otto.New()
-	return &JSExpressionEvaluator{
-		vm: vm,
-	}
+    vm := goja.New()
+    return &JSExpressionEvaluator{vm: vm}
 }
 
 // Evaluate processes an expression string with the given context
@@ -37,16 +35,13 @@ func (e *JSExpressionEvaluator) Evaluate(expression string, context map[string]a
 	}
 
 	// Evaluate the expression
-	result, err := e.vm.Run(expr)
+    result, err := e.vm.RunString(expr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to evaluate expression '%s': %w", expr, err)
 	}
 
 	// Convert the result to a Go value
-	goValue, err := result.Export()
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert result to Go value: %w", err)
-	}
+    goValue := result.Export()
 
 	// Ensure consistent type conversion for numeric values
 	switch v := goValue.(type) {
@@ -85,13 +80,13 @@ func (e *JSExpressionEvaluator) setContextValue(key string, value any) {
 					}
 				}
 			}
-			e.vm.Set(key, secretsObj)
+            e.vm.Set(key, secretsObj)
 			return
 		}
 	}
 
 	// Default handling for other values
-	e.vm.Set(key, value)
+    e.vm.Set(key, value)
 }
 
 // EvaluateInObject processes all expressions in an object
