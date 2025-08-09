@@ -42,11 +42,19 @@ func TestE2ELLMAgentParallel(t *testing.T) {
     _ = godotenv.Load("../.env")
     _ = godotenv.Load(".env")
 
-    // Capture console logs to include in an email
+    // Capture console logs to include in an email (scoped to this test only)
     var consoleBuf bytes.Buffer
+    prevLogFlags := log.Flags()
+    prevLogPrefix := log.Prefix()
     prevLogWriter := log.Writer()
+    log.SetFlags(0)
+    log.SetPrefix("")
     log.SetOutput(&consoleBuf)
-    defer log.SetOutput(prevLogWriter)
+    defer func() {
+        log.SetOutput(prevLogWriter)
+        log.SetFlags(prevLogFlags)
+        log.SetPrefix(prevLogPrefix)
+    }()
 
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
