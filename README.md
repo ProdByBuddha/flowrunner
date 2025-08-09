@@ -31,7 +31,7 @@ Flowrunner is a lightweight, YAML-driven orchestration service built on top of F
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/tcmartin/flowrunner.git
+   git clone https://github.com/ProdByBuddha/flowrunner.git
    cd flowrunner
    ```
 
@@ -40,14 +40,18 @@ Flowrunner is a lightweight, YAML-driven orchestration service built on top of F
    go mod download
    ```
 
-3. Build the project:
+3. Build the server and CLI:
    ```bash
+   # Server
    go build -o flowrunner cmd/flowrunner/main.go
+
+   # CLI
+   go build -o flowrunner-cli cmd/flowrunner-cli/main.go
    ```
 
 ### Configuration
 
-Create a `.env` file in the project root with the following variables (see `.env.example` for a complete template):
+Create a `.env` file in the project root (copy from `.env.local.example`) with the following variables:
 
 ```
 # Server configuration
@@ -93,23 +97,35 @@ You can also use a configuration file or command-line flags. Environment variabl
 ### Running the Server
 
 ```bash
-./flowrunner server --port 8080
+# Start the HTTP API server (loads .env automatically)
+./flowrunner
+
+# Optional: specify a config file
+./flowrunner -config ./configs/config.json
 ```
 
 ### Using the CLI
 
 ```bash
-# Create a new flow
-./flowrunner create myflow --file flow.yaml
+# Run DB migrations and readiness checks (Postgres + Redis ping)
+./flowrunner-cli migrate
 
-# List all flows
-./flowrunner list
+# Accounts
+./flowrunner-cli account create
+./flowrunner-cli account info
 
-# Run a flow
-./flowrunner run flow-id --input input.json
+# Flows
+./flowrunner-cli flow list
+./flowrunner-cli flow create "My Flow" flow.yaml
+./flowrunner-cli flow get <flow-id>
+./flowrunner-cli flow update <flow-id> flow.yaml
+./flowrunner-cli flow delete <flow-id>
 
-# View execution logs
-./flowrunner logs execution-id
+# Secrets
+./flowrunner-cli secret list
+./flowrunner-cli secret set API_KEY your-api-key
+./flowrunner-cli secret get API_KEY
+./flowrunner-cli secret delete API_KEY
 ```
 
 ### API Endpoints
