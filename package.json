@@ -1,0 +1,12 @@
+{
+  "name": "flowrunner-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter flowrunner-gui dev",
+    "build": "pnpm --filter flowrunner-gui build",
+    "start": "pnpm --filter flowrunner-gui start"
+  }
+}
