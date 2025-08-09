@@ -164,11 +164,96 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
             }
         }
 
-        // Execute the function
-        result, err := w.exec(combinedInput)
-		if err != nil {
-			return "", err
-		}
+        // Idempotency: if params include an idempotency_key, skip duplicate execution within the same run
+        var cachedResult interface{}
+        var hasIdempotency bool
+        var idempotencyKey string
+        if keyRaw, ok := processedParams["idempotency_key"]; ok {
+            hasIdempotency = true
+            switch v := keyRaw.(type) {
+            case string:
+                idempotencyKey = v
+            default:
+                idempotencyKey = fmt.Sprintf("%v", v)
+            }
+        }
+
+        if hasIdempotency {
+            if sharedMap, ok := shared.(map[string]interface{}); ok {
+                // First try durable store
+                if storeAny, ok := sharedMap["_idempotency_store"]; ok {
+                    if store, ok := storeAny.(interface{ GetIdempotency(accountID, flowID, nodeID, keyHash string) (map[string]interface{}, bool, error) }); ok {
+                        var accountID, flowID, nodeID string
+                        if exec, ok := sharedMap["_execution"].(map[string]interface{}); ok {
+                            if v, ok := exec["flow_id"].(string); ok { flowID = v }
+                            if v, ok := exec["account_id"].(string); ok { accountID = v }
+                        }
+                        if pnode, ok := processedParams["node_id"].(string); ok { nodeID = pnode }
+                        if res, okFound, _ := store.GetIdempotency(accountID, flowID, nodeID, idempotencyKey); okFound {
+                            cachedResult = res
+                        }
+                    }
+                }
+                // Fallback to in-memory per-execution cache
+                if cachedResult == nil {
+                    idem, _ := sharedMap["_idempotency"].(map[string]interface{})
+                    if idem == nil {
+                        idem = make(map[string]interface{})
+                        sharedMap["_idempotency"] = idem
+                    }
+                    if prior, exists := idem[idempotencyKey]; exists {
+                        cachedResult = prior
+                    }
+                }
+            }
+        }
+
+        var result interface{}
+        var err error
+        if cachedResult != nil {
+            result = cachedResult
+        } else {
+            // Execute the function
+            result, err = w.exec(combinedInput)
+            if err != nil {
+                return "", err
+            }
+            // Cache the result if idempotency_key provided
+            if hasIdempotency {
+                if sharedMap, ok := shared.(map[string]interface{}); ok {
+                    if idem, _ := sharedMap["_idempotency"].(map[string]interface{}); idem != nil {
+                        idem[idempotencyKey] = result
+                    }
+                }
+            }
+        }
+
+        // Durable idempotency: optionally persist to store if available and result is a JSON-like map
+        if hasIdempotency {
+            if sharedMap, ok := shared.(map[string]interface{}); ok {
+                if storeAny, ok := sharedMap["_idempotency_store"]; ok {
+                    if store, ok := storeAny.(interface{ PutIdempotency(accountID, flowID, nodeID, keyHash string, result map[string]interface{}, ttlUntil *time.Time) error }); ok {
+                        var accountID, flowID, nodeID string
+                        if exec, ok := sharedMap["_execution"].(map[string]interface{}); ok {
+                            if v, ok := exec["flow_id"].(string); ok { flowID = v }
+                            if v, ok := exec["account_id"].(string); ok { accountID = v }
+                        }
+                        if pnode, ok := processedParams["node_id"].(string); ok { nodeID = pnode }
+                        if resMap, ok := result.(map[string]interface{}); ok {
+                            // optional TTL via params.idempotency_ttl
+                            var ttl *time.Time
+                            if ttlStr, ok := processedParams["idempotency_ttl"].(string); ok {
+                                if d, err := time.ParseDuration(ttlStr); err == nil {
+                                    t := time.Now().Add(d)
+                                    ttl = &t
+                                }
+                            }
+                            _ = store.PutIdempotency(accountID, flowID, nodeID, idempotencyKey, resMap, ttl)
+                        }
+                    }
+                }
+            }
+        }
 
 		// Store the result in the shared context if it's a map
         if sharedMap, ok := shared.(map[string]interface{}); ok {
@@ -734,7 +819,25 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
             prelude := "function __merge(o){ var r={}; if(o){ for (var k in o){ if(Object.prototype.hasOwnProperty.call(o,k)){ r[k]=o[k]; } } } return r; }\n"
             // Wrap the script in a function to allow return statements
             wrappedScript := "(function() {\n" + prelude + processed + "\n})()"
-            result, err := vm.RunString(wrappedScript)
+            // Optional sandbox timeout via params.timeout
+            var timeout time.Duration
+            if tStr, ok := nodeParams["timeout"].(string); ok {
+                if d, err2 := time.ParseDuration(tStr); err2 == nil {
+                    timeout = d
+                }
+            }
+            var result goja.Value
+            var err error
+            if timeout > 0 {
+                timer := time.AfterFunc(timeout, func() { vm.Interrupt("timeout") })
+                defer timer.Stop()
+                result, err = vm.RunString(wrappedScript)
+                if err != nil && fmt.Sprint(err) == "timeout" {
+                    return nil, fmt.Errorf("failed to execute condition script: timed out after %s", timeout)
+                }
+            } else {
+                result, err = vm.RunString(wrappedScript)
+            }
 			if err != nil {
 				fmt.Printf("[Condition Node] JavaScript execution error: %v\n", err)
 				return nil, fmt.Errorf("failed to execute condition script: %w", err)
@@ -770,4 +873,82 @@ func NewConditionNodeWrapper(params map[string]interface{}) (flowlib.Node, error
 	wrapper.SetParams(params)
 
 	return wrapper, nil
+}
+
+// NewHumanApprovalNodeWrapper creates a node that pauses execution until a human approves or rejects
+func NewHumanApprovalNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
+    baseNode := flowlib.NewNode(0, 0)
+
+    wrapper := &NodeWrapper{
+        node: baseNode,
+        exec: func(input interface{}) (interface{}, error) {
+            // Pass-through; gating happens in post()
+            if m, ok := input.(map[string]interface{}); ok {
+                return m, nil
+            }
+            return input, nil
+        },
+        post: func(shared, p, e interface{}) (flowlib.Action, error) {
+            // Extract approval channel/state from execution context
+            var executionID, nodeID string
+            var timeout time.Duration
+            if pm, ok := p.(map[string]interface{}); ok {
+                if tStr, ok := pm["timeout"].(string); ok {
+                    if d, err := time.ParseDuration(tStr); err == nil {
+                        timeout = d
+                    }
+                }
+                if id, ok := pm["node_id"].(string); ok { nodeID = id }
+            }
+            if sm, ok := shared.(map[string]interface{}); ok {
+                if exec, ok := sm["_execution"].(map[string]interface{}); ok {
+                    if id, ok := exec["execution_id"].(string); ok { executionID = id }
+                }
+                // Initialize human-in-loop control block
+                hil, _ := sm["_human_in_loop"].(map[string]interface{})
+                if hil == nil {
+                    hil = make(map[string]interface{})
+                    sm["_human_in_loop"] = hil
+                }
+                gateKey := nodeID
+                if gateKey == "" { gateKey = "human.approval" }
+
+                // If already decided, route accordingly
+                if decision, decided := hil[gateKey+":decision"]; decided {
+                    if approved, ok := decision.(bool); ok {
+                        if approved { return "approved", nil }
+                        return "rejected", nil
+                    }
+                }
+
+                // Emit a log entry instructing external system to collect approval
+                if exec, ok := sm["_execution"].(map[string]interface{}); ok {
+                    if logger, ok := exec["logger"].(func(string, string, string, map[string]interface{})); ok {
+                        logger(executionID, "info", "Human approval required", map[string]interface{}{
+                            "node_id": nodeID,
+                            "gate_key": gateKey,
+                            "instructions": "Set shared._human_in_loop[gate_key+':decision']=true|false to continue",
+                            "timeout": timeout.String(),
+                        })
+                    }
+                }
+
+                // Pause by returning a special action to loop here until decision available
+                // Caller can wire "wait" back to this node (self-loop) or to a wait node.
+                // We also set a hint so orchestrator/UI can poll.
+                hil[gateKey+":pending"] = true
+
+                // If a timeout is configured, surface a different action so flows can branch
+                if timeout > 0 {
+                    // The runtime is synchronous per node; actual timing handled by a timer node
+                    return "awaiting_approval", nil
+                }
+                return "awaiting_approval", nil
+            }
+            return flowlib.DefaultAction, nil
+        },
+    }
+
+    wrapper.SetParams(params)
+    return wrapper, nil
 }

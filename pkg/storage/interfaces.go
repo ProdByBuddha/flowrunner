@@ -2,8 +2,9 @@
 package storage
 
 import (
-	"github.com/tcmartin/flowrunner/pkg/auth"
-	"github.com/tcmartin/flowrunner/pkg/runtime"
+    "time"
+    "github.com/tcmartin/flowrunner/pkg/auth"
+    "github.com/tcmartin/flowrunner/pkg/runtime"
 )
 
 // StorageProvider defines the interface for persistence backends
@@ -151,6 +152,12 @@ type ExecutionStore interface {
 
 	// GetExecutionLogs retrieves logs for an execution
 	GetExecutionLogs(executionID string) ([]runtime.ExecutionLog, error)
+}
+
+// DurableIdempotencyStore adds exactly-once support across process restarts
+type DurableIdempotencyStore interface {
+    GetIdempotency(accountID, flowID, nodeID, keyHash string) (map[string]interface{}, bool, error)
+    PutIdempotency(accountID, flowID, nodeID, keyHash string, result map[string]interface{}, ttlUntil *time.Time) error
 }
 
 // AccountStore manages account persistence

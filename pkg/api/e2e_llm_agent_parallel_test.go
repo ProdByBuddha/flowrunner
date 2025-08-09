@@ -23,7 +23,6 @@ import (
 	"github.com/tcmartin/flowrunner/pkg/runtime"
 	"github.com/tcmartin/flowrunner/pkg/services"
 	"github.com/tcmartin/flowrunner/pkg/storage"
-	"github.com/tcmartin/flowrunner/pkg/utils"
 )
 
 // TestE2ELLMAgentParallel performs an end-to-end integration test (via HTTP API) that:
@@ -414,23 +413,7 @@ nodes:
 	var final map[string]any
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&final))
 
-	// Send an additional email with the captured console logs
-	{
-		client := utils.NewEmailClient("smtp.gmail.com", 587, "imap.gmail.com", 993, gmailUser, gmailPass)
-		if err := client.Connect(); err == nil {
-			defer client.Close()
-			logBody := consoleBuf.String()
-			if len(logBody) > 20000 {
-				logBody = logBody[len(logBody)-20000:]
-			}
-			_ = client.SendEmail(utils.EmailMessage{
-				From:    gmailUser,
-				To:      []string{recipient},
-				Subject: fmt.Sprintf("Flowrunner test logs — %s", time.Now().Format(time.RFC3339)),
-				Body:    logBody,
-			})
-		}
-	}
+    // Skip email log to avoid external dependency; rely on execution logs API
 
 	// Basic assertions
 	if status != "completed" {

@@ -9,6 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/tcmartin/flowrunner/pkg/auth"
 	"github.com/tcmartin/flowrunner/pkg/loader"
+    "os"
+    "strconv"
+    "strings"
+    "github.com/tcmartin/flowrunner/pkg/utils"
 )
 
 // ExecutionStore interface - we'll use this instead of importing storage to avoid cycles
@@ -41,6 +45,16 @@ type executionContext struct {
 	logChannel  chan ExecutionLog
 	subscribers []chan ExecutionLog
 	mu          sync.RWMutex
+}
+
+// IdempotencyStore is an optional extension that a backing execution store may implement
+// to provide durable idempotency across retries and restarts.
+type IdempotencyStore interface {
+    // GetIdempotency returns a previously stored result for the given key.
+    // ok == true when found.
+    GetIdempotency(accountID, flowID, nodeID, keyHash string) (map[string]interface{}, bool, error)
+    // PutIdempotency persists a result for the given key. ttlUntil may be nil.
+    PutIdempotency(accountID, flowID, nodeID, keyHash string, result map[string]interface{}, ttlUntil *time.Time) error
 }
 
 // NewFlowRuntime creates a new FlowRuntime
@@ -185,7 +199,7 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 		"logger":       r.logExecution,
 	}
 
-	// Add flow context if available for expression evaluation
+    // Add flow context if available for expression evaluation
 	if flowContext != nil {
 		enhancedInput["_flow_context"] = map[string]interface{}{
 			"node_results": flowContext.nodeResults,
@@ -194,6 +208,11 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 		enhancedInput["accountID"] = execCtx.accountID
 		enhancedInput["_secret_vault"] = r.secretVault  // Add secret vault for NodeWrapper access
 	}
+
+    // Inject optional durable idempotency store for nodes that opt in
+    if store, ok := r.executionStore.(IdempotencyStore); ok {
+        enhancedInput["_idempotency_store"] = store
+    }
 
 	// Execute the flow
 	var result interface{}
@@ -256,8 +275,11 @@ func (r *flowRuntime) executeFlow(ctx context.Context, execCtx *executionContext
 		}
 	}
 
-	r.logExecution(execCtx.status.ID, "info", "Flow execution completed successfully", map[string]interface{}{"result": result})
-	r.updateExecutionStatus(execCtx.status.ID, "completed", "", resultMap)
+    r.logExecution(execCtx.status.ID, "info", "Flow execution completed successfully", map[string]interface{}{"result": result})
+    r.updateExecutionStatus(execCtx.status.ID, "completed", "", resultMap)
+
+    // Optional: email execution logs on completion if enabled via environment
+    go r.maybeEmailExecutionLogs(execCtx.status.ID, execCtx.accountID, execCtx.flowID)
 }
 
 func (r *flowRuntime) GetStatus(executionID string) (ExecutionStatus, error) {
@@ -411,6 +433,85 @@ func (r *flowRuntime) updateExecutionStatus(executionID, status, errorMsg string
 			fmt.Printf("Failed to save execution status: %v\n", err)
 		}
 	}
+}
+
+// maybeEmailExecutionLogs sends execution logs via email when EMAIL_TURING_LOGS=1 and SMTP/IMAP env vars are set.
+func (r *flowRuntime) maybeEmailExecutionLogs(executionID, accountID, flowID string) {
+    if os.Getenv("EMAIL_TURING_LOGS") != "1" {
+        return
+    }
+    // Read SMTP/IMAP settings from existing env variables in env.local.example
+    smtpHost := getenvDefault("EMAIL_LOGS_SMTP_HOST", getenvDefault("SMTP_HOST", ""))
+    smtpPort := getenvInt("EMAIL_LOGS_SMTP_PORT", getenvInt("SMTP_PORT", 587))
+    imapHost := getenvDefault("EMAIL_LOGS_IMAP_HOST", getenvDefault("IMAP_HOST", ""))
+    imapPort := getenvInt("EMAIL_LOGS_IMAP_PORT", getenvInt("IMAP_PORT", 993))
+    username := getenvDefault("EMAIL_LOGS_USERNAME", getenvDefault("GMAIL_USERNAME", getenvDefault("EMAIL_USERNAME", "")))
+    password := getenvDefault("EMAIL_LOGS_PASSWORD", getenvDefault("GMAIL_PASSWORD", getenvDefault("EMAIL_PASSWORD", "")))
+    from := getenvDefault("EMAIL_LOGS_FROM", username)
+    // EMAIL_LOGS_TO should map to EMAIL_RECIPIENT per request
+    to := getenvDefault("EMAIL_LOGS_TO", getenvDefault("EMAIL_RECIPIENT", ""))
+    if smtpHost == "" || imapHost == "" || username == "" || password == "" || to == "" {
+        return
+    }
+    if r.executionStore == nil {
+        return
+    }
+    // Fetch logs
+    logs, err := r.executionStore.GetExecutionLogs(executionID)
+    if err != nil {
+        r.logExecution(executionID, "error", "Failed to load logs for emailing", map[string]interface{}{"error": err.Error()})
+        return
+    }
+    // Build body
+    body := fmt.Sprintf("Execution %s (flow %s) logs\n\n", executionID, flowID)
+    max := 1000
+    if len(logs) < max { max = len(logs) }
+    for i := 0; i < max; i++ {
+        lg := logs[i]
+        line := fmt.Sprintf("[%s] %s: %s\n", lg.Level, lg.NodeID, lg.Message)
+        if len(body)+len(line) > 200000 { // cap ~200KB
+            break
+        }
+        body += line
+    }
+    // Send
+    client := utils.NewEmailClient(smtpHost, smtpPort, imapHost, imapPort, username, password)
+    if err := client.Connect(); err != nil {
+        r.logExecution(executionID, "error", "Email client connect failed", map[string]interface{}{"error": err.Error()})
+        return
+    }
+    defer client.Close()
+    msg := utils.EmailMessage{
+        From:    from,
+        To:      splitCSV(to),
+        Subject: fmt.Sprintf("Turing completion logs — %s", time.Now().Format(time.RFC3339)),
+        Body:    body,
+    }
+    if err := client.SendEmail(msg); err != nil {
+        r.logExecution(executionID, "error", "Email send failed", map[string]interface{}{"error": err.Error()})
+        return
+    }
+    r.logExecution(executionID, "info", "Turing completion logs emailed", map[string]interface{}{"to": to})
+}
+
+func getenvDefault(k, d string) string {
+    if v := os.Getenv(k); v != "" { return v }
+    return d
+}
+func getenvInt(k string, def int) int {
+    if v := os.Getenv(k); v != "" {
+        if d, err := strconv.Atoi(v); err == nil { return d }
+    }
+    return def
+}
+func splitCSV(s string) []string {
+    parts := strings.Split(s, ",")
+    out := make([]string, 0, len(parts))
+    for _, p := range parts {
+        p = strings.TrimSpace(p)
+        if p != "" { out = append(out, p) }
+    }
+    return out
 }
 
 func (r *flowRuntime) ListExecutions(accountID string) ([]ExecutionStatus, error) {

@@ -52,7 +52,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&token, "token", "", "API token")
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "", "Path to config file")
 
-	// Add login command
+    // Add login command
 	rootCmd.AddCommand(loginCmd)
 
 	// Account commands
@@ -152,8 +152,10 @@ func main() {
 
 	secretCmd.AddCommand(secretListCmd, secretGetCmd, secretSetCmd, secretDeleteCmd)
 
-	// Add commands to root
-	rootCmd.AddCommand(accountCmd, flowCmd, secretCmd)
+    // Add commands to root
+    rootCmd.AddCommand(accountCmd, flowCmd, secretCmd)
+    // Attach migrate subcommand
+    attachMigrate(rootCmd)
 
 	// Execute
 	if err := rootCmd.Execute(); err != nil {

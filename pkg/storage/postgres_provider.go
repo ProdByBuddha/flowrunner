@@ -18,6 +18,7 @@ type PostgreSQLProvider struct {
 	secretStore    *PostgreSQLSecretStore
 	executionStore *PostgreSQLExecutionStore
 	accountStore   *PostgreSQLAccountStore
+    // future: idempotency ledger store for exactly-once semantics
 }
 
 // PostgreSQLProviderConfig contains configuration for the PostgreSQL provider
@@ -586,7 +587,84 @@ func (s *PostgreSQLExecutionStore) Initialize() error {
 		return fmt.Errorf("failed to create execution logs table: %w", err)
 	}
 
+	// Create durable idempotency ledger and outbox tables
+	_, err = s.db.Exec(`
+		CREATE TABLE IF NOT EXISTS idempotency_ledger (
+			account_id TEXT NOT NULL,
+			flow_id    TEXT NOT NULL,
+			node_id    TEXT NOT NULL,
+			key_hash   TEXT NOT NULL,
+			result_json JSONB,
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			ttl_until  TIMESTAMP,
+			PRIMARY KEY (account_id, key_hash)
+		);
+		CREATE INDEX IF NOT EXISTS idx_idem_flow_node ON idempotency_ledger (flow_id, node_id);
+
+		CREATE TABLE IF NOT EXISTS outbox (
+			id BIGSERIAL PRIMARY KEY,
+			account_id TEXT NOT NULL,
+			flow_id    TEXT NOT NULL,
+			node_id    TEXT NOT NULL,
+			demarcation TEXT NOT NULL,
+			idem_key   TEXT NOT NULL,
+			payload    JSONB NOT NULL,
+			status     TEXT NOT NULL DEFAULT 'pending',
+			attempt    INT NOT NULL DEFAULT 0,
+			last_error TEXT,
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			sent_at    TIMESTAMP
+		);
+		CREATE UNIQUE INDEX IF NOT EXISTS uniq_outbox_idem ON outbox (account_id, idem_key);
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to create idempotency/outbox tables: %w", err)
+	}
+
 	return nil
+}
+
+// Implement durable idempotency lookups on the execution store
+func (s *PostgreSQLExecutionStore) GetIdempotency(accountID, flowID, nodeID, keyHash string) (map[string]interface{}, bool, error) {
+    var resultJSON []byte
+    err := s.db.QueryRow(
+        "SELECT result_json FROM idempotency_ledger WHERE account_id=$1 AND key_hash=$2",
+        accountID, keyHash,
+    ).Scan(&resultJSON)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return nil, false, nil
+        }
+        return nil, false, fmt.Errorf("idempotency lookup failed: %w", err)
+    }
+    var result map[string]interface{}
+    if len(resultJSON) > 0 {
+        if err := json.Unmarshal(resultJSON, &result); err != nil {
+            return nil, false, fmt.Errorf("failed to unmarshal idempotency result: %w", err)
+        }
+    }
+    return result, true, nil
+}
+
+func (s *PostgreSQLExecutionStore) PutIdempotency(accountID, flowID, nodeID, keyHash string, result map[string]interface{}, ttlUntil *time.Time) error {
+    var resultJSON []byte
+    var err error
+    if result != nil {
+        resultJSON, err = json.Marshal(result)
+        if err != nil {
+            return fmt.Errorf("failed to marshal idempotency result: %w", err)
+        }
+    }
+    _, err = s.db.Exec(
+        `INSERT INTO idempotency_ledger (account_id, flow_id, node_id, key_hash, result_json, created_at, ttl_until)
+         VALUES ($1,$2,$3,$4,$5,NOW(),$6)
+         ON CONFLICT (account_id, key_hash) DO NOTHING`,
+        accountID, flowID, nodeID, keyHash, resultJSON, ttlUntil,
+    )
+    if err != nil {
+        return fmt.Errorf("failed to upsert idempotency result: %w", err)
+    }
+    return nil
 }
 
 // SaveExecution persists execution data

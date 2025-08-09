@@ -139,8 +139,9 @@ func TestEnhancedFlowRuntime_Execute(t *testing.T) {
 	// Set up mock expectations
 	mockRegistry.On("GetFlow", "test-account", "test-flow").Return(flowDef, nil)
 	mockYAMLLoader.On("Parse", flowDef.YAML).Return(flowlibFlow, nil)
-	mockExecutionStore.On("SaveExecution", mock.AnythingOfType("ExecutionStatus")).Return(nil)
-	mockExecutionStore.On("SaveExecutionLog", mock.AnythingOfType("string"), mock.AnythingOfType("ExecutionLog")).Return(nil)
+    mockExecutionStore.On("SaveExecution", mock.AnythingOfType("ExecutionStatus")).Return(nil)
+    mockExecutionStore.On("SaveExecutionLog", mock.AnythingOfType("string"), mock.AnythingOfType("ExecutionLog")).Return(nil)
+    mockExecutionStore.On("GetExecutionLogs", mock.AnythingOfType("string")).Return([]ExecutionLog{}, nil)
 	// Add expectation for GetExecution when the execution has completed
 	mockExecutionStore.On("GetExecution", mock.AnythingOfType("string")).Return(ExecutionStatus{
 		ID:       "test-execution",
@@ -186,8 +187,9 @@ func TestEnhancedFlowRuntime_GetStatus(t *testing.T) {
 
 	mockRegistry.On("GetFlow", "test-account", "test-flow").Return(flowDef, nil)
 	mockYAMLLoader.On("Parse", flowDef.YAML).Return(flowlibFlow, nil)
-	mockExecutionStore.On("SaveExecution", mock.AnythingOfType("ExecutionStatus")).Return(nil)
-	mockExecutionStore.On("SaveExecutionLog", mock.AnythingOfType("string"), mock.AnythingOfType("ExecutionLog")).Return(nil)
+    mockExecutionStore.On("SaveExecution", mock.AnythingOfType("ExecutionStatus")).Return(nil)
+    mockExecutionStore.On("SaveExecutionLog", mock.AnythingOfType("string"), mock.AnythingOfType("ExecutionLog")).Return(nil)
+    mockExecutionStore.On("GetExecutionLogs", mock.AnythingOfType("string")).Return([]ExecutionLog{}, nil)
 	// Add expectation for GetExecution when the execution has completed
 	mockExecutionStore.On("GetExecution", mock.AnythingOfType("string")).Return(ExecutionStatus{
 		ID:       "test-execution",
@@ -305,8 +307,9 @@ func TestEnhancedFlowRuntime_Cancel(t *testing.T) {
 
 	mockRegistry.On("GetFlow", "test-account", "test-flow").Return(flowDef, nil)
 	mockYAMLLoader.On("Parse", flowDef.YAML).Return(flowlibFlow, nil)
-	mockExecutionStore.On("SaveExecution", mock.AnythingOfType("ExecutionStatus")).Return(nil)
-	mockExecutionStore.On("SaveExecutionLog", mock.AnythingOfType("string"), mock.AnythingOfType("ExecutionLog")).Return(nil)
+    mockExecutionStore.On("SaveExecution", mock.AnythingOfType("ExecutionStatus")).Return(nil)
+    mockExecutionStore.On("SaveExecutionLog", mock.AnythingOfType("string"), mock.AnythingOfType("ExecutionLog")).Return(nil)
+    mockExecutionStore.On("GetExecutionLogs", mock.AnythingOfType("string")).Return([]ExecutionLog{}, nil)
 	// Add expectation for GetExecution in case execution finishes before cancel
 	mockExecutionStore.On("GetExecution", mock.AnythingOfType("string")).Return(ExecutionStatus{
 		ID:     "test-execution-id",
@@ -358,8 +361,9 @@ func TestEnhancedFlowRuntime_SubscribeToLogs(t *testing.T) {
 
 	mockRegistry.On("GetFlow", "test-account", "test-flow").Return(flowDef, nil)
 	mockYAMLLoader.On("Parse", flowDef.YAML).Return(flowlibFlow, nil)
-	mockExecutionStore.On("SaveExecution", mock.AnythingOfType("ExecutionStatus")).Return(nil)
-	mockExecutionStore.On("SaveExecutionLog", mock.AnythingOfType("string"), mock.AnythingOfType("ExecutionLog")).Return(nil)
+    mockExecutionStore.On("SaveExecution", mock.AnythingOfType("ExecutionStatus")).Return(nil)
+    mockExecutionStore.On("SaveExecutionLog", mock.AnythingOfType("string"), mock.AnythingOfType("ExecutionLog")).Return(nil)
+    mockExecutionStore.On("GetExecutionLogs", mock.AnythingOfType("string")).Return([]ExecutionLog{}, nil)
 
 	flowRuntime := NewFlowRuntimeWithStore(mockRegistry, mockYAMLLoader, mockExecutionStore)
 
