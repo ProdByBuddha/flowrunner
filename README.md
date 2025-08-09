@@ -349,6 +349,7 @@ go run cmd/test_nodes/main.go openai anthropic template structured email
 - **[User Guide](docs/user_guide.md)** - Comprehensive guide for using FlowRunner
 - **[Flow Creation Guide](docs/flow_creation_guide.md)** - Detailed guide for creating flows with examples
 - **[CLI Guide](docs/cli_guide.md)** - Complete reference for the FlowRunner CLI
+- **GUI (optional)**: A modern cyberpunk-themed dashboard lives under `apps/gui` (Next.js + Tailwind). See `apps/gui/README.md` for setup.
 - **[API Reference](docs/api_reference.md)** - Complete reference for the FlowRunner API
 - **[Storage Configuration](docs/storage_configuration.md)** - Guide for configuring different storage backends
 - **[LLM Node Documentation](docs/llm_node.md)** - Detailed documentation for the LLM node
