@@ -84,6 +84,14 @@ func (l *DefaultYAMLLoader) Parse(yamlContent string) (*flowlib.Flow, error) {
 	for nodeName, nodeDef := range flowDef.Nodes {
 		node := nodes[nodeName]
 		for action, nextNodeName := range nodeDef.Next {
+			// Dynamic goto support: if nextNodeName is "*", wire this node to all nodes by their names.
+			if nextNodeName == "*" {
+				for targetName, targetNode := range nodes {
+					// Optionally skip self to avoid trivial self-edges unless desired; allow it for flexibility
+					node.Next(flowlib.Action(targetName), targetNode)
+				}
+				continue
+			}
 			nextNode, exists := nodes[nextNodeName]
 			if !exists {
 				return nil, fmt.Errorf("node '%s' references non-existent node '%s' for action '%s'", nodeName, nextNodeName, action)
@@ -130,6 +138,10 @@ func (l *DefaultYAMLLoader) Validate(yamlContent string) error {
 	// Validate node references
 	for nodeName, nodeDef := range flowDef.Nodes {
 		for action, nextNode := range nodeDef.Next {
+			// Allow dynamic goto sentinel "*" which means any node
+			if nextNode == "*" {
+				continue
+			}
 			if _, exists := flowDef.Nodes[nextNode]; !exists {
 				return fmt.Errorf("node '%s' references non-existent node '%s' for action '%s'", nodeName, nextNode, action)
 			}
