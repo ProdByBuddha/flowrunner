@@ -360,7 +360,14 @@ func TestWebSocketConcurrentConnections(t *testing.T) {
 		connections[i] = ws
 	}
 
-	// Verify all connections are tracked
+	// Verify all connections are tracked (allow brief propagation time)
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		if server.wsManager.GetConnectedClients() == numConnections {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	assert.Equal(t, numConnections, server.wsManager.GetConnectedClients())
 
 	// Send ping messages on all connections

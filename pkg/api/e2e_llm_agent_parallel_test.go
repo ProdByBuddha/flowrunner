@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -22,6 +23,7 @@ import (
 	"github.com/tcmartin/flowrunner/pkg/runtime"
 	"github.com/tcmartin/flowrunner/pkg/services"
 	"github.com/tcmartin/flowrunner/pkg/storage"
+	"github.com/tcmartin/flowrunner/pkg/utils"
 )
 
 // TestE2ELLMAgentParallel performs an end-to-end integration test (via HTTP API) that:
@@ -39,6 +41,12 @@ func TestE2ELLMAgentParallel(t *testing.T) {
     _ = godotenv.Load("../../.env")
     _ = godotenv.Load("../.env")
     _ = godotenv.Load(".env")
+
+    // Capture console logs to include in an email
+    var consoleBuf bytes.Buffer
+    prevLogWriter := log.Writer()
+    log.SetOutput(&consoleBuf)
+    defer log.SetOutput(prevLogWriter)
 
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
@@ -240,7 +248,7 @@ nodes:
       password: ${secrets.GMAIL_PASSWORD}
       from: ${secrets.GMAIL_USERNAME}
       to: ${secrets.EMAIL_RECIPIENT}
-      subject: ${(() => { try { var html = (shared.http_result && (shared.http_result.body || shared.http_result.raw_body)) || ""; var key = '<meta name="description" content="'; var idx = html.indexOf(key); var s = 'Versabot Summary'; if (idx >= 0) { var start = idx + key.length; var end = html.indexOf('"', start); if (end > start) { s = 'Versabot - ' + html.slice(start, Math.min(end, start+70)); } } return s; } catch(e){} return 'Versabot Summary'; })()}
+      subject: ${(() => { try { var html = (shared.http_result && (shared.http_result.body || shared.http_result.raw_body)) || ""; var openT = '<title>'; var closeT = '</title>'; var i = html.indexOf(openT); if (i >= 0) { var j = html.indexOf(closeT, i + openT.length); if (j > i) { var title = html.slice(i + openT.length, j).trim(); if (title) { return title + ' — Summary'; } } } var key = '<meta name="description" content="'; var idx = html.indexOf(key); if (idx >= 0) { var start = idx + key.length; var end = html.indexOf('"', start); if (end > start) { var desc = html.slice(start, Math.min(end, start + 70)).trim(); if (desc) { return 'Summary — ' + desc; } } } var url = (shared.http_result && shared.http_result.metadata && shared.http_result.metadata.request_url) || 'Website'; try { var host = (new URL(url)).host || url; return host + ' — Summary'; } catch(_) { return 'Website — Summary'; } } catch(e) { return 'Website — Summary'; } })()}
       body: ${(() => { try { var html = (shared.http_result && (shared.http_result.body || shared.http_result.raw_body)) || ""; var text = html; try { text = text.replace(new RegExp('<[^>]+>','g'), ' '); } catch(_) {} text = text.replace(new RegExp('\\s+','g'),' ').trim(); return 'Website summary - ' + text.slice(0,400); } catch(e){} return 'Website summary unavailable.'; })()}
     next:
       default: join_tools
@@ -397,6 +405,24 @@ nodes:
 	defer resp.Body.Close()
 	var final map[string]any
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&final))
+
+	// Send an additional email with the captured console logs
+	{
+		client := utils.NewEmailClient("smtp.gmail.com", 587, "imap.gmail.com", 993, gmailUser, gmailPass)
+		if err := client.Connect(); err == nil {
+			defer client.Close()
+			logBody := consoleBuf.String()
+			if len(logBody) > 20000 {
+				logBody = logBody[len(logBody)-20000:]
+			}
+			_ = client.SendEmail(utils.EmailMessage{
+				From:    gmailUser,
+				To:      []string{recipient},
+				Subject: fmt.Sprintf("Flowrunner test logs — %s", time.Now().Format(time.RFC3339)),
+				Body:    logBody,
+			})
+		}
+	}
 
 	// Basic assertions
 	if status != "completed" {
