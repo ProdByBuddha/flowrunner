@@ -32,6 +32,54 @@ func max(a, b int) int {
 	return b
 }
 
+/* ---------- Thread-safe shared state for parallel execution ---------- */
+
+// SplitNodeResults provides thread-safe coordination for SplitNode map-reduce operations
+type SplitNodeResults struct {
+	mu      sync.Mutex
+	results []interface{}
+}
+
+// NewSplitNodeResults creates a new thread-safe results collector
+func NewSplitNodeResults() *SplitNodeResults {
+	return &SplitNodeResults{
+		results: make([]interface{}, 0),
+	}
+}
+
+// Add safely adds a result to the collection
+func (snr *SplitNodeResults) Add(result interface{}) {
+	snr.mu.Lock()
+	defer snr.mu.Unlock()
+	snr.results = append(snr.results, result)
+}
+
+// GetAll safely returns all collected results
+func (snr *SplitNodeResults) GetAll() []interface{} {
+	snr.mu.Lock()
+	defer snr.mu.Unlock()
+	// Return a copy to prevent external modification
+	results := make([]interface{}, len(snr.results))
+	copy(results, snr.results)
+	return results
+}
+
+// NewSyncSharedState creates a thread-safe shared state wrapper
+func NewSyncSharedState(shared interface{}) interface{} {
+	// For SplitNode, we'll inject a thread-safe results collector
+	if sharedMap, ok := shared.(map[string]interface{}); ok {
+		// Clone the map to avoid modifying the original
+		syncShared := make(map[string]interface{})
+		for k, v := range sharedMap {
+			syncShared[k] = v
+		}
+		// Add the thread-safe results collector
+		syncShared["_split_results"] = NewSplitNodeResults()
+		return syncShared
+	}
+	return shared
+}
+
 /* ---------- Node interface & base ---------- */
 type Node interface {
 	SetParams(map[string]any)
@@ -301,6 +349,183 @@ func (an *asyncNode) PostAsync(ctx context.Context, shared, p, e any) (Action, e
 }
 func (an *asyncNode) ExecFallbackAsync(ctx context.Context, p any, err error) (any, error) {
 	return nil, err
+}
+
+/* ---------- AsyncSplitNode ---------- */
+
+type AsyncSplitNode struct {
+	baseNode
+}
+
+func NewAsyncSplitNode() *AsyncSplitNode {
+	return &AsyncSplitNode{newBaseNode()}
+}
+
+// RunAsync executes all successors in parallel and returns when all complete
+func (as *AsyncSplitNode) RunAsync(ctx context.Context, shared any) <-chan Result {
+	ch := make(chan Result, 1)
+	go func() {
+		defer close(ch)
+
+		successors := as.successors
+		if len(successors) == 0 {
+			warn("AsyncSplitNode has no successors")
+			ch <- Result{"", nil, nil}
+			return
+		}
+
+		var wg sync.WaitGroup
+		errCh := make(chan error, len(successors))
+
+		// Launch all successors in parallel
+		for action, n := range successors {
+			wg.Add(1)
+			go func(a Action, node Node) {
+				defer wg.Done()
+
+				var err error
+				if asyncNode, ok := node.(AsyncNode); ok {
+					r := <-asyncNode.RunAsync(ctx, shared)
+					err = r.Err
+				} else {
+					_, err = node.Run(shared)
+				}
+
+				if err != nil {
+					errCh <- fmt.Errorf("AsyncSplitNode action %q failed: %w", a, err)
+				}
+			}(action, n)
+		}
+
+		// Wait for all to complete or context cancellation
+		done := make(chan struct{})
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+
+		select {
+		case <-ctx.Done():
+			ch <- Result{"", nil, ctx.Err()}
+			return
+		case <-done:
+		}
+
+		// Check for any errors
+		close(errCh)
+		select {
+		case err := <-errCh:
+			ch <- Result{"", nil, err}
+		default:
+			ch <- Result{DefaultAction, nil, nil}
+		}
+	}()
+	return ch
+}
+
+// Run implements the Node interface for non-async usage
+func (as *AsyncSplitNode) Run(shared any) (Action, error) {
+	ctx := context.Background()
+	r := <-as.RunAsync(ctx, shared)
+	return r.Act, r.Err
+}
+
+/* ---------- SplitNode (parallel fan-out) ---------- */
+
+type SplitNode struct {
+	baseNode
+}
+
+func NewSplitNode() *SplitNode {
+	return &SplitNode{newBaseNode()}
+}
+
+// Run executes all successors in parallel and waits for them to complete.
+// This enables true fan-out behavior where multiple branches run simultaneously.
+// Uses thread-safe shared state synchronization for proper map-reduce patterns.
+func (s *SplitNode) Run(shared any) (Action, error) {
+	successors := s.successors
+	if len(successors) == 0 {
+		warn("SplitNode has no successors")
+		return "", nil
+	}
+
+    // Emit execution log for SplitNode start if logger is available
+    var execLogger func(string, string, string, map[string]interface{})
+    var executionID string
+    var nodeID string
+    if p := s.Params(); p != nil {
+        if id, ok := p["node_id"].(string); ok {
+            nodeID = id
+        }
+    }
+    if sharedMap, ok := shared.(map[string]interface{}); ok {
+        if execInfo, ok := sharedMap["_execution"].(map[string]interface{}); ok {
+            if logger, ok := execInfo["logger"].(func(string, string, string, map[string]interface{})); ok {
+                execLogger = logger
+            }
+            if id, ok := execInfo["execution_id"].(string); ok {
+                executionID = id
+            }
+        }
+    }
+    if execLogger != nil && executionID != "" {
+        execLogger(executionID, "info", "SplitNode started", map[string]interface{}{
+            "node_id":  nodeID,
+            "branches": len(successors),
+        })
+    }
+
+	// Create thread-safe shared state for parallel execution
+	syncShared := NewSyncSharedState(shared)
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(successors))
+
+	// Launch all successors in parallel with thread-safe shared state
+	for action, n := range successors {
+		wg.Add(1)
+		go func(a Action, node Node) {
+			defer wg.Done()
+			_, err := node.Run(syncShared)
+			if err != nil {
+				errCh <- fmt.Errorf("SplitNode action %q failed: %w", a, err)
+			}
+		}(action, n)
+	}
+
+	// Wait for all to complete
+	wg.Wait()
+	close(errCh)
+
+	// After all parallel executions complete, merge results back to original shared state
+	if originalMap, ok := shared.(map[string]interface{}); ok {
+		if syncMap, ok := syncShared.(map[string]interface{}); ok {
+			if splitResults, exists := syncMap["_split_results"]; exists {
+				if collector, ok := splitResults.(*SplitNodeResults); ok {
+					// Merge the collected results into the original shared state
+					originalMap["mapper_results"] = collector.GetAll()
+				}
+			}
+		}
+	}
+
+    // Emit execution log for SplitNode completion
+    if execLogger != nil && executionID != "" {
+        execLogger(executionID, "info", "SplitNode completed", map[string]interface{}{
+            "node_id":  nodeID,
+            "branches": len(successors),
+        })
+    }
+
+	// Check for any errors
+	select {
+	case err := <-errCh:
+		return "", err
+	default:
+		// After split completes, continue with default action to next node
+		return DefaultAction, nil
+	}
 }
 
 /* ---------- Batch & ParallelBatch ---------- */

@@ -492,14 +492,32 @@ func (s *Server) handleGetExecution(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	executionID := vars["id"]
 
-	status, err := s.flowRuntime.GetStatus(executionID)
+    status, err := s.flowRuntime.GetStatus(executionID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(status)
+    // Backward/forward compatibility: include both 'results' and legacy 'result'
+    resp := map[string]interface{}{
+        "id":           status.ID,
+        "flow_id":      status.FlowID,
+        "status":       status.Status,
+        "start_time":   status.StartTime,
+        "end_time":     status.EndTime,
+        "error":        status.Error,
+        "results":      status.Results,
+        "progress":     status.Progress,
+        "current_node": status.CurrentNode,
+        "metadata":     status.Metadata,
+    }
+    // Legacy alias expected by some tests
+    if status.Results != nil {
+        resp["result"] = status.Results
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(resp)
 }
 
 // handleGetExecutionLogs handles getting execution logs
