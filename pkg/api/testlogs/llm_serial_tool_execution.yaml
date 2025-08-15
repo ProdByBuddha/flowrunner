@@ -76,9 +76,11 @@ nodes:
     next:
       success: format_http_response
       default: format_http_response
+      client_error: format_http_response
+      server_error: format_http_response
 
   format_http_response:
-    type: format
+    type: transform
     params:
       script: |
         // Initialize conversation history
@@ -94,30 +96,31 @@ nodes:
             }
           ];
         }
-        
+
         // Format HTTP result
         var toolResult = "No content retrieved";
         if (input.body) {
-          var preview = input.body.substring(0, 1000);
-          toolResult = "Successfully retrieved website content (" + input.body.length + " characters):\n\n" + preview;
-          if (input.body.length > 1000) {
+          var bodyStr = JSON.stringify(input.body, null, 2);
+          var preview = bodyStr.substring(0, 1000);
+          toolResult = "Successfully retrieved website content (" + bodyStr.length + " characters):\n\n" + preview;
+          if (bodyStr.length > 1000) {
             toolResult += "\n\n[Content truncated for brevity]";
           }
         }
-        
+
         // Create tool response message
         var toolResponseMsg = {
           role: "tool",
           name: "get_website",
           content: toolResult,
-          tool_call_id: input.tool_call ? input.tool_call.id : "unknown"
+          tool_call_id: shared.active_tool_call ? shared.active_tool_call.id : "unknown"
         };
         
         // Add to conversation history
         shared.conversation_history.push({
           role: "assistant",
           content: "I'll fetch the website content for you.",
-          tool_calls: input.tool_call ? [input.tool_call] : []
+          tool_calls: shared.active_tool_call ? [shared.active_tool_call] : []
         });
         shared.conversation_history.push(toolResponseMsg);
         
@@ -146,7 +149,7 @@ nodes:
       default: format_email_response
 
   format_email_response:
-    type: format
+    type: transform
     params:
       script: |
         // Format email result
@@ -159,7 +162,7 @@ nodes:
           role: "tool",
           name: "send_email",
           content: toolResult,
-          tool_call_id: input.tool_call ? input.tool_call.id : "unknown"
+          tool_call_id: shared.active_tool_call ? shared.active_tool_call.id : "unknown"
         };
         
         // Add to conversation history
@@ -170,7 +173,7 @@ nodes:
         shared.conversation_history.push({
           role: "assistant",
           content: "I'll send the email for you.",
-          tool_calls: input.tool_call ? [input.tool_call] : []
+          tool_calls: shared.active_tool_call ? [shared.active_tool_call] : []
         });
         shared.conversation_history.push(toolResponseMsg);
         

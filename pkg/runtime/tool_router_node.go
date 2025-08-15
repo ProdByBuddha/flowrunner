@@ -206,15 +206,21 @@ func NewRouterNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 			}, nil
 		},
 		post: func(shared, params, result interface{}) (flowlib.Action, error) {
-			// Extract the tool name from the result and return it as the action
-			// This allows the flow to use its YAML-defined routing (e.g., get_website: http_tool)
 			if resultMap, ok := result.(map[string]interface{}); ok {
+				// Store the active tool call in the shared context for downstream nodes
+				if sharedMap, ok := shared.(map[string]interface{}); ok {
+					if toolCall, exists := resultMap["tool_call"]; exists {
+						sharedMap["active_tool_call"] = toolCall
+					}
+				}
+
+				// Extract the tool name from the result to use as the action for routing
 				if toolName, ok := resultMap["tool_name"].(string); ok {
 					log.Printf("[Router] Returning action: %s", toolName)
 					return flowlib.Action(toolName), nil
 				}
 			}
-			
+
 			// Fallback to default action if no tool name found
 			log.Printf("[Router] No tool name found in result, using default action")
 			return flowlib.DefaultAction, nil
