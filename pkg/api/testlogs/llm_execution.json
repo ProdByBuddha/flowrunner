@@ -1,0 +1,13 @@
+{
+  "current_node": "",
+  "end_time": "2025-08-15T04:12:47.092328825Z",
+  "error": "failed to get emails: fetch failed: imap: connection closed",
+  "flow_id": "e2e-llm-agent-parallel-1755231069382866620",
+  "id": "9f35a452-4579-4365-8c39-4f93cda8044c",
+  "metadata": null,
+  "progress": 100,
+  "result": {},
+  "results": {},
+  "start_time": "2025-08-15T04:11:09.444769576Z",
+  "status": "failed"
+}
