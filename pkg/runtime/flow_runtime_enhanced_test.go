@@ -9,7 +9,7 @@ import (
 	"github.com/tcmartin/flowlib"
 )
 
-// Mock implementation for testing enhanced runtime
+// Mock implementation for testing flow runtime with execution store
 
 type MockExecutionStore struct {
 	mock.Mock
@@ -114,7 +114,7 @@ func (m *MockEnhancedNode) Run(shared interface{}) (flowlib.Action, error) {
 	return args.String(0), args.Error(1)
 }
 
-// Test cases for enhanced flow runtime
+// Test cases for flow runtime with execution store integration
 
 func TestEnhancedFlowRuntime_Execute(t *testing.T) {
 	// Create mocks

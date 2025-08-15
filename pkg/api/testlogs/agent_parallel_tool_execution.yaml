@@ -1,0 +1,218 @@
+metadata:
+  name: "Agent Parallel Tool Execution Test"
+  description: "Test Agent node with parallel tool execution: multiple website searches and email sending"
+  version: "1.0.0"
+
+nodes:
+  start:
+    type: transform
+    params:
+      script: |
+        return {
+          prompt: "Search these websites in parallel: https://httpbin.org/json and https://httpbin.org/uuid, then send email summaries to beatsbybuddha@gmail.com",
+          context: "agent-parallel-tool-test"
+        };
+    next:
+      default: agent_node
+
+  agent_node:
+    type: agent
+    params:
+      provider: openai
+      api_key: ${secrets.OPENAI_API_KEY}
+      model: gpt-4o-mini
+      temperature: 0.3
+      max_tokens: 600
+      prompt: "Search these websites in parallel: https://httpbin.org/json and https://httpbin.org/uuid, then send email summaries to beatsbybuddha@gmail.com"
+      tools:
+        - type: function
+          function:
+            name: get_website
+            description: Fetch content from a website URL
+            parameters:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: The URL to fetch content from
+              required: ["url"]
+        - type: function
+          function:
+            name: send_email
+            description: Send an email with subject and body
+            parameters:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  description: Email subject line
+                body:
+                  type: string
+                  description: Email body content
+                recipient:
+                  type: string
+                  description: Email recipient address
+              required: ["subject", "body", "recipient"]
+    next:
+      default: router
+
+  router:
+    type: router
+    params:
+      condition_script: |
+        console.log("AGENT ROUTER: Checking for parallel tool calls");
+        
+        // Check for completion
+        if (input && input.content && typeof input.content === 'string') {
+          var content = input.content.toLowerCase();
+          if (content.includes('all tasks') || content.includes('completed')) {
+            console.log("AGENT ROUTER: All tasks completed, routing to finish");
+            return 'finish';
+          }
+        }
+        
+        console.log("AGENT ROUTER: Continuing with parallel tool execution");
+        return 'output';
+    next:
+      http_tool: split_tools
+      email_tool: split_tools
+      finish: end
+      output: end
+
+  # Split node to handle parallel tool execution for agent
+  split_tools:
+    type: split
+    next:
+      http1: http_request_1
+      http2: http_request_2
+      email1: email_send_1
+      default: join_tools
+
+  http_request_1:
+    type: http.request
+    params:
+      url: "https://httpbin.org/json"
+      method: GET
+      headers:
+        User-Agent: "FlowRunner-Agent-Parallel-Test/1.0"
+      timeout: 30
+    next:
+      default: join_tools
+
+  http_request_2:
+    type: http.request
+    params:
+      url: "https://httpbin.org/uuid"
+      method: GET
+      headers:
+        User-Agent: "FlowRunner-Agent-Parallel-Test/1.0"
+      timeout: 30
+    next:
+      default: join_tools
+
+  email_send_1:
+    type: email.send
+    params:
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      username: ${secrets.GMAIL_USERNAME}
+      password: ${secrets.GMAIL_PASSWORD}
+      from: ${secrets.GMAIL_USERNAME}
+      to: "beatsbybuddha@gmail.com"
+      subject: "Agent Parallel Tool Execution Test Results"
+      body: "This email was sent as part of an agent parallel tool execution test."
+      tls: true
+    next:
+      default: join_tools
+
+  join_tools:
+    type: join
+    next:
+      default: format_parallel_response
+
+  format_parallel_response:
+    type: format
+    params:
+      script: |
+        // Initialize conversation history for agent
+        if (!shared.agent_conversation_history) {
+          shared.agent_conversation_history = [
+            {
+              role: "system",
+              content: "You are an AI agent with access to tools. You can execute multiple tools in parallel."
+            },
+            {
+              role: "user", 
+              content: input._original_prompt || input.prompt || "Execute parallel tool calls"
+            }
+          ];
+        }
+        
+        // Collect results from parallel execution
+        var results = [];
+        
+        // Check for HTTP results
+        if (input.http_result_1) {
+          results.push("Website 1 fetched: " + (input.http_result_1.body ? input.http_result_1.body.length + " characters" : "no content"));
+        }
+        if (input.http_result_2) {
+          results.push("Website 2 fetched: " + (input.http_result_2.body ? input.http_result_2.body.length + " characters" : "no content"));
+        }
+        
+        // Check for email results
+        if (input.email_result) {
+          results.push("Email sent: " + (input.email_result.status === "sent" ? "successfully" : "failed"));
+        }
+        
+        var combinedResult = "Agent parallel tool execution completed:\n" + results.join("\n");
+        
+        // Create tool response message
+        var toolResponseMsg = {
+          role: "tool",
+          name: "parallel_execution",
+          content: combinedResult
+        };
+        
+        // Add to conversation history
+        shared.agent_conversation_history.push({
+          role: "assistant",
+          content: "I'll execute multiple tools in parallel for you."
+        });
+        shared.agent_conversation_history.push(toolResponseMsg);
+        
+        return {
+          tool_response: toolResponseMsg,
+          conversation_history: shared.agent_conversation_history,
+          prompt: "Please provide a final summary of all parallel tasks completed.",
+          _continue_conversation: true
+        };
+    next:
+      default: continue_agent
+
+  continue_agent:
+    type: transform
+    params:
+      script: |
+        return {
+          prompt: input.prompt || "Please provide final summary.",
+          conversation_history: shared.agent_conversation_history || [],
+          _original_prompt: input._original_prompt || input.prompt
+        };
+    next:
+      default: agent_node
+
+  end:
+    type: transform
+    params:
+      script: |
+        return {
+          final_response: input.response || input.content || "Agent parallel tasks completed",
+          conversation_history: shared.agent_conversation_history || [],
+          execution_summary: {
+            completed_successfully: !input.error,
+            conversation_turns: (shared.agent_conversation_history || []).length,
+            final_status: input.error ? "failed" : "completed",
+            execution_type: "parallel",
+            node_type: "agent"
+          }
+        };

@@ -602,8 +602,8 @@ func (sm *StoreManager) Append(key string, value interface{}) error {
 	return nil
 }
 
-// NewEnhancedStoreNodeWrapper creates a new enhanced store node wrapper
-func NewEnhancedStoreNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
+// NewStoreNodeWrapper creates a new store node wrapper with enhanced features
+func NewStoreNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 	// Create the base node
 	baseNode := flowlib.NewNode(1, 0)
 

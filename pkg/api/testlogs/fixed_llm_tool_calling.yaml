@@ -1,0 +1,310 @@
+metadata:
+  name: "LLM Tool Calling with Router Architecture"
+  description: "Modern LLM flow using router and format nodes for tool execution"
+  version: "1.0.0"
+
+nodes:
+  # Start node - sets up the initial question
+  start:
+    type: transform
+    params:
+      script: |
+        return {
+          question: input.question || "Visit https://gemmit.org, summarize the site, and send an email to test@example.com with the summary.",
+          context: "fixed-tool-calling-test"
+        };
+    next:
+      default: llm_agent
+
+  # LLM node with tool calling capabilities
+  llm_agent:
+    type: llm
+    params:
+      provider: openai
+      api_key: ${secrets.OPENAI_API_KEY}
+      model: gpt-4.1-mini
+      temperature: 0.4
+      max_tokens: 400
+      messages:
+        - role: system
+          content: |
+            You are an autonomous agent with access to tools. You MUST use tools to complete tasks.
+            Available tools:
+            - get_website: Fetch content from a website URL
+            - send_email: Send an email with subject and body
+            
+            When asked to visit a website and send an email:
+            1. First call get_website with the URL
+            2. Then call send_email with the summary
+            3. Only after tools complete, provide a brief confirmation
+        - role: user
+          content: ${input.question}
+      tools:
+        - type: function
+          function:
+            name: get_website
+            description: Fetch content from a website URL
+            parameters:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: The URL to fetch
+              required: ["url"]
+        - type: function
+          function:
+            name: send_email
+            description: Send an email with subject and body
+            parameters:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  description: Email subject line
+                body:
+                  type: string
+                  description: Email body content
+                recipient:
+                  type: string
+                  description: Email recipient address
+              required: ["subject", "body", "recipient"]
+    next:
+      default: tool_router
+
+  # Enhanced router that detects tool calls and routes appropriately
+  tool_router:
+    type: router
+    params:
+      # Fallback condition script for non-tool routing
+      condition_script: |
+        console.log("ROUTER: Checking input for completion");
+        
+        // Check if LLM provided a final response without tool calls
+        if (input && input.content && typeof input.content === 'string') {
+          var content = input.content.toLowerCase();
+          if (content.includes('done') || content.includes('completed') || content.includes('sent')) {
+            console.log("ROUTER: Detected completion, routing to finish");
+            return 'finish';
+          }
+        }
+        
+        console.log("ROUTER: No clear completion signal, routing to output");
+        return 'output';
+    next:
+      http_tool: http_request
+      email_tool: email_send
+      search_tool: http_request  # Web search uses HTTP request
+      finish: end
+      output: end
+      error: error_handler
+
+  # HTTP request node for website fetching and web search
+  http_request:
+    type: http.request
+    params:
+      # Parameters will be dynamically set by the tool router
+      url: ${input.tool_params.url}
+      method: ${input.tool_params.method || "GET"}
+      headers: ${input.tool_params.headers || {}}
+      timeout: ${input.tool_params.timeout || 30}
+    next:
+      default: format_http_response
+      success: format_http_response
+      client_error: format_http_response
+      server_error: format_http_response
+
+  # Format HTTP response for LLM consumption
+  format_http_response:
+    type: format
+    params:
+      script: |
+        // Initialize conversation history in shared context
+        if (!shared.conversation_history) {
+          shared.conversation_history = [];
+          
+          // Add system message
+          shared.conversation_history.push({
+            role: "system",
+            content: "You are an autonomous agent with access to tools. You MUST use tools to complete tasks."
+          });
+          
+          // Add original user question
+          if (input._original_question || input.question) {
+            shared.conversation_history.push({
+              role: "user", 
+              content: input._original_question || input.question
+            });
+          }
+        }
+        
+        // Extract tool call from router output
+        var toolCall = input.tool_call || (input.original_input && input.original_input.tool_call);
+        if (!toolCall) {
+          console.log("ERROR: No tool call found in input");
+          return { error: "No tool call information found" };
+        }
+        
+        // Format HTTP result for the tool
+        var toolResult = "No result";
+        var toolError = null;
+        
+        if (input.error) {
+          toolError = input.error;
+          toolResult = "HTTP request failed: " + input.error;
+        } else if (input.body) {
+          var bodyLength = input.body.length;
+          var preview = input.body.substring(0, 500);
+          toolResult = "Successfully fetched website content (" + bodyLength + " characters):\n\n" + preview;
+          if (bodyLength > 500) {
+            toolResult += "\n\n[Content truncated for brevity]";
+          }
+        }
+        
+        // Create tool response message
+        var toolResponseMsg = {
+          role: "tool",
+          name: toolCall.function ? toolCall.function.name : toolCall.Function.Name,
+          content: toolResult,
+          tool_call_id: toolCall.id
+        };
+        
+        // Add assistant's tool call to history (if not already added)
+        var lastMsg = shared.conversation_history[shared.conversation_history.length - 1];
+        if (!lastMsg || lastMsg.role !== "assistant" || !lastMsg.tool_calls) {
+          shared.conversation_history.push({
+            role: "assistant",
+            content: "I'll fetch the website content for you.",
+            tool_calls: [toolCall]
+          });
+        }
+        
+        // Add tool response to conversation
+        shared.conversation_history.push(toolResponseMsg);
+        
+        console.log("HTTP RESPONSE: Added tool result to conversation history");
+        
+        return {
+          tool_response: toolResponseMsg,
+          conversation_history: shared.conversation_history,
+          question: "Please continue with the next step based on the website content.",
+          _continue_conversation: true
+        };
+    next:
+      default: continue_llm
+
+  # Email sending node
+  email_send:
+    type: email.send
+    params:
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      imap_host: "imap.gmail.com"
+      imap_port: 993
+      username: ${secrets.GMAIL_USERNAME}
+      password: ${secrets.GMAIL_PASSWORD}
+      from: ${secrets.GMAIL_USERNAME}
+      to: ${input.tool_params.to || input.tool_params.recipient}
+      subject: ${input.tool_params.subject}
+      body: ${input.tool_params.body}
+      tls: true
+    next:
+      default: format_email_response
+
+  # Format email response for LLM consumption
+  format_email_response:
+    type: format
+    params:
+      script: |
+        // Extract tool call from router output
+        var toolCall = input.tool_call || (input.original_input && input.original_input.tool_call);
+        if (!toolCall) {
+          console.log("ERROR: No tool call found in email response");
+          return { error: "No tool call information found" };
+        }
+        
+        // Format email result
+        var toolResult = "Email operation failed";
+        if (input.error) {
+          toolResult = "Failed to send email: " + input.error;
+        } else if (input.status === "sent") {
+          toolResult = "Email sent successfully to " + (input.to || "recipient") + 
+                      " with subject '" + (input.subject || "No subject") + "'";
+        }
+        
+        // Create tool response message
+        var toolResponseMsg = {
+          role: "tool",
+          name: toolCall.function ? toolCall.function.name : toolCall.Function.Name,
+          content: toolResult,
+          tool_call_id: toolCall.id
+        };
+        
+        // Add tool response to conversation history
+        if (!shared.conversation_history) {
+          shared.conversation_history = [];
+        }
+        
+        // Add assistant's tool call to history (if not already added)
+        var lastMsg = shared.conversation_history[shared.conversation_history.length - 1];
+        if (!lastMsg || lastMsg.role !== "assistant" || !lastMsg.tool_calls) {
+          shared.conversation_history.push({
+            role: "assistant",
+            content: "I'll send the email for you.",
+            tool_calls: [toolCall]
+          });
+        }
+        
+        shared.conversation_history.push(toolResponseMsg);
+        
+        console.log("EMAIL RESPONSE: Added tool result to conversation history");
+        
+        return {
+          tool_response: toolResponseMsg,
+          conversation_history: shared.conversation_history,
+          question: "Please provide a final confirmation that both tasks are complete.",
+          _continue_conversation: true
+        };
+    next:
+      default: continue_llm
+
+  # Continue LLM conversation with tool results
+  continue_llm:
+    type: transform
+    params:
+      script: |
+        // Prepare input for LLM continuation
+        return {
+          question: input.question || "Please continue based on the tool results.",
+          conversation_history: shared.conversation_history || [],
+          _original_question: input._original_question || input.question
+        };
+    next:
+      default: llm_agent
+
+  # Error handler
+  error_handler:
+    type: transform
+    params:
+      script: |
+        console.log("ERROR: Tool execution failed: " + (input.error || "Unknown error"));
+        return {
+          error: input.error || "Unknown error occurred",
+          final_response: "I encountered an error while trying to complete the task: " + (input.error || "Unknown error")
+        };
+    next:
+      default: end
+
+  # Final output node
+  end:
+    type: transform
+    params:
+      script: |
+        return {
+          final_response: input.content || input.final_response || "Task completed",
+          conversation_history: shared.conversation_history || [],
+          execution_summary: {
+            completed_successfully: !input.error,
+            conversation_turns: (shared.conversation_history || []).length,
+            final_status: input.error ? "failed" : "completed"
+          }
+        };

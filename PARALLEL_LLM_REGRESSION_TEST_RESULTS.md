@@ -1,7 +1,7 @@
 # Parallel LLM Flow Regression Test Results
 
 ## Overview
-This document summarizes the comprehensive regression testing of the enhanced NodeWrapper architecture and dynamic input capabilities, specifically focusing on complex parallel execution workflows.
+This document summarizes the comprehensive regression testing of the updated NodeWrapper architecture and dynamic input capabilities, specifically focusing on complex parallel execution workflows.
 
 ## Test Scenarios
 
@@ -153,7 +153,7 @@ wg.Wait()
 
 ## Conclusion
 
-The enhanced NodeWrapper architecture and dynamic input capabilities have been thoroughly tested and validated through comprehensive regression testing. The implementation successfully achieves:
+The updated NodeWrapper architecture and dynamic input capabilities have been thoroughly tested and validated through comprehensive regression testing. The implementation successfully achieves:
 
 1. **Dynamic Input Capability**: LLM nodes can receive prompts dynamically through flow execution
 2. **Performance Improvements**: Parallel execution provides measurable speedup
@@ -161,4 +161,4 @@ The enhanced NodeWrapper architecture and dynamic input capabilities have been t
 4. **Robust Error Handling**: Comprehensive error detection and recovery
 5. **Universal Node Support**: All node types support the new input format
 
-The regression tests demonstrate that the system is ready for production use with enhanced capabilities while maintaining stability and compatibility.
+The regression tests demonstrate that the system is ready for production use with updated capabilities while maintaining stability and compatibility.

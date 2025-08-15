@@ -1,6 +1,6 @@
 metadata:
-  name: "E2E LLM Parallel"
-  description: "LLM with Split/Join executing HTTP + two emails in parallel, looping back to LLM"
+  name: "E2E LLM Tool Calling (Legacy)"
+  description: "Legacy example: LLM with Split/Join executing HTTP + two emails in parallel, looping back to LLM"
   version: "1.0.0"
 
 nodes:
