@@ -1,10 +1,41 @@
 metadata:
-  name: "Agent Serial Tool Execution Test"
-  description: "Test Agent node with serial tool execution: search website then send email summary"
-  version: "1.0.0"
+  name: "Agent Serial Tool Execution Flow"
+  description: "A flow where an agent node uses tools in sequence"
+
+tools:
+  get_website: &get_website
+    type: function
+    function:
+      name: get_website
+      description: "Fetch content from a website URL"
+      params:
+        type: object
+        properties:
+          url:
+            type: string
+            description: "The URL to fetch content from"
+        required: [url]
+  send_email: &send_email
+    type: function
+    function:
+      name: send_email
+      description: "Send an email with subject and body"
+      params:
+        type: object
+        properties:
+          subject:
+            type: string
+            description: "Email subject line"
+          body:
+            type: string
+            description: "Email body content"
+          recipient:
+            type: string
+            description: "Email recipient address"
+        required: [subject, body, recipient]
 
 nodes:
-  start:
+  create_input:
     type: transform
     params:
       script: |
@@ -13,202 +44,127 @@ nodes:
           context: "agent-serial-tool-test"
         };
     next:
-      default: agent_node
+      default: agent
 
-  agent_node:
+  agent:
     type: agent
     params:
-      provider: openai
-      api_key: ${secrets.OPENAI_API_KEY}
       model: gpt-4o-mini
-      temperature: 0.3
-      max_tokens: 500
-      prompt: "Search for information at https://httpbin.org/json and then send an email summary to beatsbybuddha@gmail.com"
+      api_key: "{{ .secrets.OPENAI_API_KEY }}"
+      prompt: "{{ .shared.result.prompt }}"
+      conversation_history: "{{ .shared.result.conversation_history }}"
       tools:
-        - type: function
-          function:
-            name: get_website
-            description: Fetch content from a website URL
-            parameters:
-              type: object
-              properties:
-                url:
-                  type: string
-                  description: The URL to fetch content from
-              required: ["url"]
-        - type: function
-          function:
-            name: send_email
-            description: Send an email with subject and body
-            parameters:
-              type: object
-              properties:
-                subject:
-                  type: string
-                  description: Email subject line
-                body:
-                  type: string
-                  description: Email body content
-                recipient:
-                  type: string
-                  description: Email recipient address
-              required: ["subject", "body", "recipient"]
+        - *get_website
+        - *send_email
     next:
-      default: router
+      default: tool_router
 
-  router:
+  tool_router:
     type: router
     params:
-      condition_script: |
-        console.log("AGENT ROUTER: Checking for tool calls");
-        
-        // Check for completion
-        if (input && input.content && typeof input.content === 'string') {
-          var content = input.content.toLowerCase();
-          if (content.includes('sent') || content.includes('complete')) {
-            console.log("AGENT ROUTER: Task completed, routing to finish");
-            return 'finish';
-          }
-        }
-        
-        console.log("AGENT ROUTER: Continuing with default routing");
-        return 'output';
+      input: "{{ .shared.result }}"
+      tool_definitions:
+        - *get_website
+        - *send_email
     next:
-      http_tool: http_request
-      email_tool: email_send
-      finish: end
-      output: end
+      get_website: http_tool
+      send_email: email_tool
+      no_match: format_final_response
 
-  http_request:
+  http_tool:
     type: http.request
     params:
-      url: ${input.tool_params.url}
-      method: GET
-      headers:
-        User-Agent: "FlowRunner-Agent-Test/1.0"
-      timeout: 30
+      method: "{{ .shared.result.tool_params.method | default: 'GET' }}"
+      url: "{{ .shared.result.tool_params.url }}"
+      headers: "{{ .shared.result.tool_params.headers }}"
+      body: "{{ .shared.result.tool_params.body }}"
     next:
-      default: format_http_response
+      success: format_tool_response
+      client_error: format_error_response
+      server_error: format_error_response
 
-  format_http_response:
-    type: format
-    params:
-      script: |
-        // Initialize conversation history for agent
-        if (!shared.agent_conversation_history) {
-          shared.agent_conversation_history = [
-            {
-              role: "system",
-              content: "You are an AI agent with access to tools. Execute tools in sequence."
-            },
-            {
-              role: "user", 
-              content: input._original_prompt || input.prompt || "Search website and send email"
-            }
-          ];
-        }
-        
-        // Format HTTP result
-        var toolResult = "No content retrieved";
-        if (input.body) {
-          var preview = input.body.substring(0, 1000);
-          toolResult = "Successfully retrieved website content (" + input.body.length + " characters):\n\n" + preview;
-          if (input.body.length > 1000) {
-            toolResult += "\n\n[Content truncated for brevity]";
-          }
-        }
-        
-        // Create tool response message
-        var toolResponseMsg = {
-          role: "tool",
-          name: "get_website",
-          content: toolResult,
-          tool_call_id: input.tool_call ? input.tool_call.id : "unknown"
-        };
-        
-        // Add to conversation history
-        shared.agent_conversation_history.push({
-          role: "assistant",
-          content: "I'll fetch the website content for you.",
-          tool_calls: input.tool_call ? [input.tool_call] : []
-        });
-        shared.agent_conversation_history.push(toolResponseMsg);
-        
-        return {
-          tool_response: toolResponseMsg,
-          conversation_history: shared.agent_conversation_history,
-          prompt: "Now please send an email summary based on the website content.",
-          _continue_conversation: true
-        };
-    next:
-      default: continue_agent
-
-  email_send:
+  email_tool:
     type: email.send
     params:
-      smtp_host: "smtp.gmail.com"
+      smtp_host: "{{ .secrets.SMTP_HOST }}"
       smtp_port: 587
-      username: ${secrets.GMAIL_USERNAME}
-      password: ${secrets.GMAIL_PASSWORD}
-      from: ${secrets.GMAIL_USERNAME}
-      to: ${input.tool_params.recipient}
-      subject: ${input.tool_params.subject}
-      body: ${input.tool_params.body}
-      tls: true
+      username: "{{ .secrets.SMTP_USERNAME }}"
+      password: "{{ .secrets.SMTP_PASSWORD }}"
+      from: "{{ .secrets.SMTP_USERNAME }}"
+      to: "{{ .shared.result.tool_params.recipient }}"
+      subject: "{{ .shared.result.tool_params.subject }}"
+      body: "{{ .shared.result.tool_params.body }}"
     next:
-      default: format_email_response
+      default: format_tool_response
 
-  format_email_response:
-    type: format
-    params:
-      script: |
-        // Format email result
-        var toolResult = input.error 
-          ? "Failed to send email: " + input.error
-          : "Email sent successfully to " + (input.to || "recipient") + " with subject '" + (input.subject || "No subject") + "'";
-        
-        // Create tool response message
-        var toolResponseMsg = {
-          role: "tool",
-          name: "send_email",
-          content: toolResult,
-          tool_call_id: input.tool_call ? input.tool_call.id : "unknown"
-        };
-        
-        // Add to conversation history
-        if (!shared.agent_conversation_history) {
-          shared.agent_conversation_history = [];
-        }
-        
-        shared.agent_conversation_history.push({
-          role: "assistant",
-          content: "I'll send the email for you.",
-          tool_calls: input.tool_call ? [input.tool_call] : []
-        });
-        shared.agent_conversation_history.push(toolResponseMsg);
-        
-        return {
-          tool_response: toolResponseMsg,
-          conversation_history: shared.agent_conversation_history,
-          prompt: "Please provide a final confirmation that both tasks are complete.",
-          _continue_conversation: true
-        };
-    next:
-      default: continue_agent
-
-  continue_agent:
+  format_tool_response:
     type: transform
     params:
       script: |
+        var history = (shared.conversation_history || []).slice();
+        if (history.length === 0) {
+          history.push({
+            role: "system",
+            content: "You are an AI assistant with access to tools. Execute tools in sequence."
+          });
+          history.push({
+            role: "user",
+            content: shared.result_result.prompt || "Search website and send email"
+          });
+        }
+        var toolResult = "No content retrieved";
+        if (input.raw_body) {
+          var preview = String(input.raw_body).substring(0, 1000);
+          toolResult = "Successfully retrieved website content (" + String(input.raw_body).length + " characters):\n\n" + preview;
+        } else if (input.status === 'sent') {
+          toolResult = "Email sent successfully to " + input.to;
+        }
+        history.push({
+          role: "assistant",
+          content: null,
+          tool_calls: shared.llm_result.tool_calls
+        });
+        history.push({
+          role: "tool",
+          name: shared.active_tool_call.function.name,
+          content: toolResult,
+          tool_call_id: shared.active_tool_call.id
+        });
         return {
-          prompt: input.prompt || "Please continue based on the tool results.",
-          conversation_history: shared.agent_conversation_history || [],
-          _original_prompt: input._original_prompt || input.prompt
+          conversation_history: history,
+          question: "Now, what is the next step?",
+          _continue_conversation: true
         };
     next:
-      default: agent_node
+      default: agent
 
-  end:
+  format_error_response:
+    type: transform
+    params:
+      script: |
+        var history = (shared.conversation_history || []).slice();
+        var toolName = shared.active_tool_call ? shared.active_tool_call.function.name : "unknown_tool";
+        var errorContent = "Tool " + toolName + " failed with status: " + input.status_code + ". Response: " + String(input.raw_body).substring(0, 500);
+        history.push({
+          role: "assistant",
+          content: null,
+          tool_calls: shared.llm_result.tool_calls
+        });
+        history.push({
+          role: "tool",
+          name: toolName,
+          content: errorContent,
+          tool_call_id: shared.active_tool_call.id
+        });
+        return {
+          conversation_history: history,
+          question: "The tool failed. Please try a different approach or inform the user.",
+          _continue_conversation: true
+        };
+    next:
+      default: agent
+
+  format_final_response:
     type: transform
     params:
       script: |
@@ -222,3 +178,5 @@ nodes:
             node_type: "agent"
           }
         };
+    next:
+      default: END

@@ -81,15 +81,19 @@ func NewAgentNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
 			}
 
-			// Handle prompt parameter for backwards compatibility
-			if prompt, ok := nodeParams["prompt"].(string); ok && prompt != "" {
-				// If there's a prompt parameter, add it as a user message to flow input
-				if flowInput == nil {
-					flowInput = make(map[string]interface{})
-				}
-				flowInput["question"] = prompt
+			// Overwrite llmParams with the resolved params from the current execution.
+			// This ensures that secrets and template variables are correctly processed.
+			for k, v := range nodeParams {
+				llmParams[k] = v
 			}
-			
+
+			// Map the agent's 'prompt' parameter to the underlying LLM's 'question' parameter
+			// for clear and direct delegation. This is more robust than relying on fallback logic.
+			if prompt, ok := llmParams["prompt"].(string); ok && prompt != "" {
+				llmParams["question"] = prompt
+				delete(llmParams, "prompt") // Avoid passing both 'question' and 'prompt'
+			}
+
 			// Prepare input for the LLM node
 			llmInput := map[string]interface{}{
 				"params": llmParams,

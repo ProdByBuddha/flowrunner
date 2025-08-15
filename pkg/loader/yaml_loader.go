@@ -2,6 +2,7 @@ package loader
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/tcmartin/flowlib"
 	"github.com/tcmartin/flowrunner/pkg/plugins"
@@ -64,8 +65,13 @@ func (l *DefaultYAMLLoader) Parse(yamlContent string) (*flowlib.Flow, error) {
 
 	// Connect the nodes
 	for nodeName, nodeDef := range flowDef.Nodes {
+		log.Printf("Connecting node: %s", nodeName)
 		node := nodes[nodeName]
 		for action, nextNodeName := range nodeDef.Next {
+			log.Printf("  Action: %s -> %s", action, nextNodeName)
+			if nextNodeName == "END" {
+				continue
+			}
 			nextNode, exists := nodes[nextNodeName]
 			if !exists {
 				return nil, fmt.Errorf("node '%s' references non-existent node '%s' for action '%s'", nodeName, nextNodeName, action)
@@ -112,6 +118,9 @@ func (l *DefaultYAMLLoader) Validate(yamlContent string) error {
 	// Validate node references
 	for nodeName, nodeDef := range flowDef.Nodes {
 		for action, nextNode := range nodeDef.Next {
+			if nextNode == "END" {
+				continue
+			}
 			if _, exists := flowDef.Nodes[nextNode]; !exists {
 				return fmt.Errorf("node '%s' references non-existent node '%s' for action '%s'", nodeName, nextNode, action)
 			}
@@ -125,6 +134,9 @@ func findStartNode(flowDef FlowDefinition, nodes map[string]flowlib.Node) (flowl
 	referencedNodes := make(map[string]bool)
 	for _, nodeDef := range flowDef.Nodes {
 		for _, nextNodeName := range nodeDef.Next {
+            if nextNodeName == "END" {
+                continue
+            }
 			referencedNodes[nextNodeName] = true
 		}
 	}

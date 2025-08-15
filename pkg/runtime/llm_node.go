@@ -164,14 +164,14 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			var messages []utils.Message
 
 			// Priority order:
-			// 1. If flow input contains "conversation_history", use it for multi-turn conversation
-			// 2. If flow input contains "question", use it to override the prompt
-			// 3. Otherwise use static parameters (templates, messages, prompt)
-			
-			if flowInput != nil {
-				// Check for conversation history first (for multi-turn conversations)
-				if convHistory, ok := flowInput["conversation_history"].([]interface{}); ok && len(convHistory) > 0 {
-					logToExecution("info", "Using conversation history from flow input", map[string]interface{}{
+			// 1. Check for "conversation_history" in the evaluated parameters.
+			// 2. Check for "question" in the evaluated parameters.
+			// 3. Fallback to other static parameters like "prompt", "messages", or "templates".
+
+			// Check for conversation history first (for multi-turn conversations)
+			if convHistoryParam, ok := paramsAny["conversation_history"]; ok {
+				if convHistory, ok := convHistoryParam.([]interface{}); ok && len(convHistory) > 0 {
+					logToExecution("info", "Using 'conversation_history' parameter", map[string]interface{}{
 						"history_length": len(convHistory),
 					})
 					
@@ -219,16 +219,21 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 						}
 					}
 					
-					// Add new user message if provided
-					if question, ok := flowInput["question"].(string); ok && question != "" {
+					// Add new user message if 'question' is also provided
+					if question, ok := paramsAny["question"].(string); ok && question != "" {
 						messages = append(messages, utils.Message{
 							Role:    "user",
 							Content: question,
 						})
 					}
-				} else if question, ok := flowInput["question"].(string); ok && question != "" {
-					// Use dynamic question from flow input
-					logToExecution("info", "Using dynamic input from flow", map[string]interface{}{
+				}
+			}
+			
+			// If no conversation history, check for a standalone question
+			if len(messages) == 0 {
+				if question, ok := paramsAny["question"].(string); ok && question != "" {
+					// Use dynamic question from the 'question' parameter
+					logToExecution("info", "Using 'question' parameter", map[string]interface{}{
 						"question_length": len(question),
 						"question_preview": truncateString(question, 100),
 					})
@@ -242,14 +247,10 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 							Content: question,
 						},
 					}
-				} else {
-					logToExecution("info", "Flow input present but no 'question' or 'conversation_history' field found, using static parameters", nil)
 				}
-			} else {
-				logToExecution("info", "No flow input available, using static parameters", nil)
 			}
 
-			// If no dynamic content was used, fall back to static parameters
+			// If no dynamic content was used from 'question' or 'conversation_history', fall back to other static parameters
 			if len(messages) == 0 {
 
 			// Check if we're using templates
