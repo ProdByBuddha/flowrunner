@@ -164,11 +164,69 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 			var messages []utils.Message
 
 			// Priority order:
-			// 1. If flow input contains "question", use it to override the prompt
-			// 2. Otherwise use static parameters (templates, messages, prompt)
+			// 1. If flow input contains "conversation_history", use it for multi-turn conversation
+			// 2. If flow input contains "question", use it to override the prompt
+			// 3. Otherwise use static parameters (templates, messages, prompt)
 			
 			if flowInput != nil {
-				if question, ok := flowInput["question"].(string); ok && question != "" {
+				// Check for conversation history first (for multi-turn conversations)
+				if convHistory, ok := flowInput["conversation_history"].([]interface{}); ok && len(convHistory) > 0 {
+					logToExecution("info", "Using conversation history from flow input", map[string]interface{}{
+						"history_length": len(convHistory),
+					})
+					
+					// Convert conversation history to messages
+					for _, msgInterface := range convHistory {
+						if msgMap, ok := msgInterface.(map[string]interface{}); ok {
+							role, _ := msgMap["role"].(string)
+							content, _ := msgMap["content"].(string)
+							
+							msg := utils.Message{
+								Role:    role,
+								Content: content,
+							}
+							
+							// Handle tool calls if present
+							if toolCalls, ok := msgMap["tool_calls"].([]interface{}); ok {
+								for _, tcInterface := range toolCalls {
+									if tcMap, ok := tcInterface.(map[string]interface{}); ok {
+										var toolCall utils.ToolCall
+										if id, ok := tcMap["id"].(string); ok {
+											toolCall.ID = id
+										}
+										if tcType, ok := tcMap["type"].(string); ok {
+											toolCall.Type = tcType
+										}
+										if function, ok := tcMap["function"].(map[string]interface{}); ok {
+											if name, ok := function["name"].(string); ok {
+												toolCall.Function.Name = name
+											}
+											if args, ok := function["arguments"].(string); ok {
+												toolCall.Function.Arguments = args
+											}
+										}
+										msg.ToolCalls = append(msg.ToolCalls, toolCall)
+									}
+								}
+							}
+							
+							// Handle tool call ID for tool messages
+							if toolCallID, ok := msgMap["tool_call_id"].(string); ok {
+								msg.ToolCallID = toolCallID
+							}
+							
+							messages = append(messages, msg)
+						}
+					}
+					
+					// Add new user message if provided
+					if question, ok := flowInput["question"].(string); ok && question != "" {
+						messages = append(messages, utils.Message{
+							Role:    "user",
+							Content: question,
+						})
+					}
+				} else if question, ok := flowInput["question"].(string); ok && question != "" {
 					// Use dynamic question from flow input
 					logToExecution("info", "Using dynamic input from flow", map[string]interface{}{
 						"question_length": len(question),
@@ -185,7 +243,7 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 						},
 					}
 				} else {
-					logToExecution("info", "Flow input present but no 'question' field found, using static parameters", nil)
+					logToExecution("info", "Flow input present but no 'question' or 'conversation_history' field found, using static parameters", nil)
 				}
 			} else {
 				logToExecution("info", "No flow input available, using static parameters", nil)
@@ -501,7 +559,7 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 				}
 			}
 
-			// Return response
+			// Return response with consistent structure for tool calls
 			result := map[string]any{
 				"id":            resp.ID,
 				"model":         resp.Model,
@@ -512,6 +570,8 @@ func NewLLMNodeWrapper(params map[string]any) (flowlib.Node, error) {
 				"raw_response":  resp.RawResponse,
 				"has_tool_calls": hasToolCalls,
 				"tool_calls":    toolCalls,
+				// Add message for compatibility with router logic
+				"message": resp.Choices[0].Message,
 			}
 
 			// Add structured output if available

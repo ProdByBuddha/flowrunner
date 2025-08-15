@@ -1,0 +1,42 @@
+metadata:
+  name: "Direct API Key Test"
+  description: "Test with direct API key (no template)"
+  version: "1.0.0"
+
+nodes:
+  start:
+    type: llm
+    params:
+      provider: openai
+      api_key: "PLACEHOLDER_API_KEY"
+      model: gpt-4o-mini
+      temperature: 0.3
+      max_tokens: 500
+      messages:
+        - role: system
+          content: "You are an AI assistant with access to tools."
+        - role: user
+          content: "Please use the get_website tool to fetch content from https://httpbin.org/json"
+      tools:
+        - type: function
+          function:
+            name: get_website
+            description: Fetch content from a website URL
+            parameters:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: The URL to fetch content from
+              required: ["url"]
+    next:
+      default: end
+
+  end:
+    type: transform
+    params:
+      script: |
+        return {
+          final_response: input.content || input.message || "LLM execution completed",
+          llm_result: input
+        };

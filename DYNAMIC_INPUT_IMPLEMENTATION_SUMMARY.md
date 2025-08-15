@@ -1,7 +1,7 @@
 # Dynamic Input Implementation Summary
 
 ## Overview
-Successfully implemented dynamic input capability for LLM nodes and enhanced the NodeWrapper architecture to support dynamic flow execution input across all node types.
+Successfully implemented dynamic input capability for LLM nodes and updated the NodeWrapper architecture to support dynamic flow execution input across all node types.
 
 ## Key Changes
 
@@ -23,7 +23,7 @@ Updated ALL node implementations to handle the new combined input format:
 #### ✅ Already Updated (Before this task):
 - **HTTP Request Node** (`node_wrappers.go`)
 - **Store Node** (`node_wrappers.go`) 
-- **Enhanced Store Node** (`store_node.go`)
+- **Store Node** (`store_node.go`)
 - **Delay Node** (`node_wrappers.go`)
 - **LLM Node** (`llm_node.go`)
 - **SMTP Node** (`core_nodes.go`)

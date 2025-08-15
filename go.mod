@@ -2,7 +2,7 @@ module github.com/tcmartin/flowrunner
 
 go 1.23.0
 
-toolchain go1.23.1
+toolchain go1.24.3
 
 require (
 	github.com/alicebob/miniredis/v2 v2.35.0

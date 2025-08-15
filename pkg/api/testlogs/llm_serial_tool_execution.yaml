@@ -1,0 +1,213 @@
+metadata:
+  name: "LLM Serial Tool Execution Test"
+  description: "Test LLM node with serial tool execution: search website then send email summary"
+  version: "1.0.0"
+
+nodes:
+  start:
+    type: transform
+    params:
+      script: |
+        return {
+          question: "Search for information at https://httpbin.org/json and then send an email summary to beatsbybuddha@gmail.com",
+          context: "llm-serial-tool-test"
+        };
+    next:
+      default: llm_node
+
+  llm_node:
+    type: llm
+    params:
+      provider: openai
+      api_key: ${secrets.OPENAI_API_KEY}
+      model: gpt-4o-mini
+      temperature: 0.3
+      max_tokens: 500
+      prompt: "Search for information at https://httpbin.org/json and then send an email summary to beatsbybuddha@gmail.com"
+      tools:
+        - type: function
+          function:
+            name: get_website
+            description: Fetch content from a website URL
+            parameters:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: The URL to fetch content from
+              required: ["url"]
+        - type: function
+          function:
+            name: send_email
+            description: Send an email with subject and body
+            parameters:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  description: Email subject line
+                body:
+                  type: string
+                  description: Email body content
+                recipient:
+                  type: string
+                  description: Email recipient address
+              required: ["subject", "body", "recipient"]
+    next:
+      default: router
+
+  router:
+    type: router
+    params:
+      input: ${shared.llm_result}
+    next:
+      get_website: http_tool
+      send_email: email_tool
+      default: end
+
+  http_tool:
+    type: http.request
+    params:
+      url: ${shared.result.tool_params.url}
+      method: GET
+      headers:
+        User-Agent: "Mozilla/5.0 (compatible; FlowRunner-Agent/1.0)"
+      timeout: 30
+    next:
+      success: format_http_response
+      default: format_http_response
+      client_error: format_http_response
+      server_error: format_http_response
+
+  format_http_response:
+    type: transform
+    params:
+      script: |
+        // Initialize conversation history
+        if (!shared.conversation_history) {
+          shared.conversation_history = [
+            {
+              role: "system",
+              content: "You are an AI assistant with access to tools. Execute tools in sequence."
+            },
+            {
+              role: "user", 
+              content: input._original_question || input.question || "Search website and send email"
+            }
+          ];
+        }
+
+        // Format HTTP result
+        var toolResult = "No content retrieved";
+        if (input.body) {
+          var bodyStr = JSON.stringify(input.body, null, 2);
+          var preview = bodyStr.substring(0, 1000);
+          toolResult = "Successfully retrieved website content (" + bodyStr.length + " characters):\n\n" + preview;
+          if (bodyStr.length > 1000) {
+            toolResult += "\n\n[Content truncated for brevity]";
+          }
+        }
+
+        // Create tool response message
+        var toolResponseMsg = {
+          role: "tool",
+          name: "get_website",
+          content: toolResult,
+          tool_call_id: shared.active_tool_call ? shared.active_tool_call.id : "unknown"
+        };
+        
+        // Add to conversation history
+        shared.conversation_history.push({
+          role: "assistant",
+          content: "I'll fetch the website content for you.",
+          tool_calls: shared.active_tool_call ? [shared.active_tool_call] : []
+        });
+        shared.conversation_history.push(toolResponseMsg);
+        
+        return {
+          tool_response: toolResponseMsg,
+          conversation_history: shared.conversation_history,
+          question: "Now please send an email summary based on the website content.",
+          _continue_conversation: true
+        };
+    next:
+      default: continue_llm
+
+  email_tool:
+    type: email.send
+    params:
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      username: ${secrets.GMAIL_USERNAME}
+      password: ${secrets.GMAIL_PASSWORD}
+      from: ${secrets.GMAIL_USERNAME}
+      to: ${input.tool_params.recipient}
+      subject: ${input.tool_params.subject}
+      body: ${input.tool_params.body}
+      tls: true
+    next:
+      default: format_email_response
+
+  format_email_response:
+    type: transform
+    params:
+      script: |
+        // Format email result
+        var toolResult = input.error 
+          ? "Failed to send email: " + input.error
+          : "Email sent successfully to " + (input.to || "recipient") + " with subject '" + (input.subject || "No subject") + "'";
+        
+        // Create tool response message
+        var toolResponseMsg = {
+          role: "tool",
+          name: "send_email",
+          content: toolResult,
+          tool_call_id: shared.active_tool_call ? shared.active_tool_call.id : "unknown"
+        };
+        
+        // Add to conversation history
+        if (!shared.conversation_history) {
+          shared.conversation_history = [];
+        }
+        
+        shared.conversation_history.push({
+          role: "assistant",
+          content: "I'll send the email for you.",
+          tool_calls: shared.active_tool_call ? [shared.active_tool_call] : []
+        });
+        shared.conversation_history.push(toolResponseMsg);
+        
+        return {
+          tool_response: toolResponseMsg,
+          conversation_history: shared.conversation_history,
+          question: "Please provide a final confirmation that both tasks are complete.",
+          _continue_conversation: true
+        };
+    next:
+      default: continue_llm
+
+  continue_llm:
+    type: transform
+    params:
+      script: |
+        return {
+          question: input.question || "Please continue based on the tool results.",
+          conversation_history: shared.conversation_history || [],
+          _original_question: input._original_question || input.question
+        };
+    next:
+      default: llm_node
+
+  end:
+    type: transform
+    params:
+      script: |
+        return {
+          final_response: input.content || input.final_response || "Task completed",
+          conversation_history: shared.conversation_history || [],
+          execution_summary: {
+            completed_successfully: !input.error,
+            conversation_turns: (shared.conversation_history || []).length,
+            final_status: input.error ? "failed" : "completed"
+          }
+        };

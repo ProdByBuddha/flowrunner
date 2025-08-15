@@ -53,68 +53,7 @@ func TestHTTPRequestNode(t *testing.T) {
 	}
 }
 
-func TestStoreNode(t *testing.T) {
-	// Create the node
-	node, err := NewStoreNodeWrapper(map[string]interface{}{})
-	if err != nil {
-		t.Fatalf("Failed to create store node: %v", err)
-	}
-
-	// Test set operation
-	node.SetParams(map[string]interface{}{
-		"operation": "set",
-		"key":       "test-key",
-		"value":     "test-value",
-	})
-
-	_, err = node.Run(nil)
-	if err != nil {
-		t.Fatalf("Failed to execute set operation: %v", err)
-	}
-
-	// Test get operation
-	node.SetParams(map[string]interface{}{
-		"operation": "get",
-		"key":       "test-key",
-	})
-
-	_, err = node.Run(nil)
-	if err != nil {
-		t.Fatalf("Failed to execute get operation: %v", err)
-	}
-
-	// Test list operation
-	node.SetParams(map[string]interface{}{
-		"operation": "list",
-	})
-
-	_, err = node.Run(nil)
-	if err != nil {
-		t.Fatalf("Failed to execute list operation: %v", err)
-	}
-
-	// Test delete operation
-	node.SetParams(map[string]interface{}{
-		"operation": "delete",
-		"key":       "test-key",
-	})
-
-	_, err = node.Run(nil)
-	if err != nil {
-		t.Fatalf("Failed to execute delete operation: %v", err)
-	}
-
-	// Test get after delete (should fail)
-	node.SetParams(map[string]interface{}{
-		"operation": "get",
-		"key":       "test-key",
-	})
-
-	_, err = node.Run(nil)
-	if err == nil {
-		t.Error("Expected error when getting deleted key, got nil")
-	}
-}
+// Store node test moved to store_node_test.go for more comprehensive testing
 
 func TestDelayNode(t *testing.T) {
 	// Create the node with a short delay

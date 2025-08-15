@@ -1,0 +1,38 @@
+metadata:
+  name: "Simple LLM Tool Test"
+  description: "Simple test of LLM node with tool calling"
+  version: "1.0.0"
+
+nodes:
+  start:
+    type: llm
+    params:
+      provider: openai
+      api_key: ${secrets.OPENAI_API_KEY}
+      model: gpt-4o-mini
+      temperature: 0.3
+      max_tokens: 500
+      prompt: "Please fetch the content from https://httpbin.org/json and tell me what you found."
+      tools:
+        - type: function
+          function:
+            name: get_website
+            description: Fetch content from a website URL
+            parameters:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: The URL to fetch content from
+              required: ["url"]
+    next:
+      default: end
+
+  end:
+    type: transform
+    params:
+      script: |
+        return {
+          final_response: input.content || input.message || "LLM execution completed",
+          llm_result: input
+        };

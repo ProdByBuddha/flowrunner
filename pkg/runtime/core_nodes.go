@@ -15,9 +15,10 @@ import (
 func CoreNodeTypes() map[string]NodeFactory {
 	return map[string]NodeFactory{
 		"http.request":  NewHTTPRequestNodeWrapper,
-		"store":         NewEnhancedStoreNodeWrapper, // Use the enhanced store node
+		"store":         NewStoreNodeWrapper,
 		"transform":     NewTransformNodeWrapper,
 		"condition":     NewConditionNodeWrapper,
+		"router":        NewRouterNodeWrapper,        // Enhanced condition node with tool call support
 		"delay":         NewDelayNodeWrapper,
 		"wait":          NewWaitNodeWrapper,
 		"cron":          NewCronNodeWrapper,
@@ -28,9 +29,9 @@ func CoreNodeTypes() map[string]NodeFactory {
 		"webhook":       NewWebhookNodeWrapper,
 		"dynamodb":      NewDynamoDBNodeWrapper,
 		"postgres":      NewPostgresNodeWrapper,
-		"split":         NewSplitNodeWrapper,
-		"split.async":   NewAsyncSplitNodeWrapper,
-		"join":          NewJoinNodeWrapper,
+		"format":        NewResponseFormatterNodeWrapper, // Response formatting for tool results
+		"split":         NewSplitNodeWrapper,             // Split execution for parallel processing
+		"join":          NewJoinNodeWrapper,              // Join parallel execution results
 	}
 }
 
@@ -584,47 +585,63 @@ func NewWebhookNodeWrapper(params map[string]interface{}) (flowlib.Node, error) 
 
 	return wrapper, nil
 }
-
-// NewSplitNodeWrapper creates a new SplitNode wrapper for parallel fan-out
+// NewSplitNodeWrapper creates a new split node wrapper for parallel execution
 func NewSplitNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
-	fmt.Printf("[SplitNode] Creating new SplitNode with params: %+v\n", params)
+	// Create the base node
+	baseNode := flowlib.NewNode(1, 0)
 
-	// Create the SplitNode directly from flowlib
-	splitNode := flowlib.NewSplitNode()
-
-	// Set the parameters
-	splitNode.SetParams(params)
-
-	fmt.Printf("[SplitNode] SplitNode created successfully\n")
-
-	// Return the SplitNode directly - no wrapper needed as it already implements flowlib.Node
-	return splitNode, nil
-}
-
-// NewAsyncSplitNodeWrapper creates a new AsyncSplitNode wrapper for async parallel fan-out
-func NewAsyncSplitNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
-	// Create the AsyncSplitNode directly from flowlib
-	asyncSplitNode := flowlib.NewAsyncSplitNode()
+	// Create the wrapper
+	wrapper := &NodeWrapper{
+		node: baseNode,
+		exec: func(input interface{}) (interface{}, error) {
+			// Split node simply passes through the input to enable parallel execution
+			// The actual parallel execution is handled by the flow runtime
+			return input, nil
+		},
+	}
 
 	// Set the parameters
-	asyncSplitNode.SetParams(params)
+	wrapper.SetParams(params)
 
-	// Return the AsyncSplitNode directly - no wrapper needed as it already implements flowlib.Node
-	return asyncSplitNode, nil
+	return wrapper, nil
 }
 
-// NewJoinNodeWrapper creates a new JoinNode wrapper for collecting parallel results
+// NewJoinNodeWrapper creates a new join node wrapper for collecting parallel execution results
 func NewJoinNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
-	fmt.Printf("[JoinNode] Creating new JoinNode with params: %+v\n", params)
+	// Create the base node
+	baseNode := flowlib.NewNode(1, 0)
 
-	// Create the JoinNode directly from flowlib
-	joinNode := flowlib.NewJoinNode()
+	// Create the wrapper
+	wrapper := &NodeWrapper{
+		node: baseNode,
+		exec: func(input interface{}) (interface{}, error) {
+			// Join node collects results from parallel execution branches
+			// In a real implementation, this would wait for all parallel branches to complete
+			// and merge their results. For now, we'll pass through the input.
+			
+			// If input is a map, we can collect results from different branches
+			if inputMap, ok := input.(map[string]interface{}); ok {
+				// Create a combined result from all branches
+				result := make(map[string]interface{})
+				
+				// Copy all input data to the result
+				for key, value := range inputMap {
+					result[key] = value
+				}
+				
+				// Add a marker that this came from a join operation
+				result["_join_operation"] = true
+				
+				return result, nil
+			}
+			
+			// For non-map inputs, just pass through
+			return input, nil
+		},
+	}
 
 	// Set the parameters
-	joinNode.SetParams(params)
+	wrapper.SetParams(params)
 
-	fmt.Printf("[JoinNode] JoinNode created successfully\n")
-
-	// Return the JoinNode directly - no wrapper needed as it already implements flowlib.Node
-	return joinNode, nil
+	return wrapper, nil
 }

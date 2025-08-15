@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEnhancedStoreNode(t *testing.T) {
+func TestStoreNode(t *testing.T) {
 	// Use a test-specific file path
 	testFilePath := "test_store.json"
 
@@ -16,7 +16,7 @@ func TestEnhancedStoreNode(t *testing.T) {
 	defer os.Remove(testFilePath)
 
 	// Create the node
-	node, err := NewEnhancedStoreNodeWrapper(map[string]interface{}{
+	node, err := NewStoreNodeWrapper(map[string]interface{}{
 		"file_path": testFilePath,
 		"auto_save": true,
 	})
@@ -274,7 +274,7 @@ func TestEnhancedStoreNode(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Create a new node with the same file path
-		newNode, err := NewEnhancedStoreNodeWrapper(map[string]interface{}{
+		newNode, err := NewStoreNodeWrapper(map[string]interface{}{
 			"file_path": testFilePath,
 		})
 		assert.NoError(t, err)

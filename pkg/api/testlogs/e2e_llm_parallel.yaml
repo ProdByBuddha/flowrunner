@@ -1,0 +1,206 @@
+metadata:
+  name: "E2E LLM Tool Calling (Legacy)"
+  description: "Legacy example: LLM with Split/Join executing HTTP + two emails in parallel, looping back to LLM"
+  version: "1.0.0"
+
+nodes:
+  start:
+    type: transform
+    params:
+      script: |
+        return {
+          question: "Visit https://gemmit.org, summarize the site in 6-8 sentences, and send TWO distinct emails to ${secrets.EMAIL_RECIPIENT} with clear subjects and bodies. Then return a final short confirmation.",
+          context: "e2e-llm-agent-test"
+        };
+    next:
+      default: llm_agent
+
+  llm_agent:
+    type: llm
+    params:
+      provider: openai
+      api_key: ${secrets.OPENAI_API_KEY}
+      model: gpt-4.1-mini
+      temperature: 0.4
+      max_tokens: 400
+      messages:
+        - role: system
+          content: |
+            You are an autonomous agent with access to tools. You MUST:
+            - Call the get_website tool to fetch https://gemmit.org
+            - Call the send_email tool TWICE to send two distinct emails to the recipient
+            - Use clear, short subjects
+            - Keep bodies concise (5-8 sentences)
+            Important rules:
+            - Do not answer directly until tools are completed
+            - Prefer using tools and return tool calls as needed
+            - After both emails have been sent, reply with a final one-line confirmation: DONE
+        - role: user
+          content: ${input.question}
+      tools:
+        - type: function
+          function:
+            name: get_website
+            description: Fetch the gemmit.org homepage HTML
+            parameters:
+              type: object
+              properties: {}
+        - type: function
+          function:
+            name: send_email
+            description: Send an email to the recipient with subject and body
+            parameters:
+              type: object
+              properties:
+                subject:
+                  type: string
+                body:
+                  type: string
+              required: ["subject", "body"]
+    next:
+      default: router
+
+  router:
+    type: condition
+    params:
+      condition_script: |
+        // Track attempts robustly
+        if (typeof shared.__attempts !== 'number') { shared.__attempts = 0; }
+
+        // If the assistant declared completion with DONE, finish
+        if (input && typeof input.content === 'string' && input.content.trim() === 'DONE') {
+          return 'finish';
+        }
+
+        // Detect tool calls from various possible shapes
+        const fromInput = !!(input && (input.has_tool_calls || (Array.isArray(input.tool_calls) && input.tool_calls.length > 0)));
+        const fromInputChoices = !!(input && input.choices && input.choices[0] && input.choices[0].message && Array.isArray(input.choices[0].message.tool_calls) && input.choices[0].message.tool_calls.length > 0);
+        const fromResult = !!(shared && shared.result && (shared.result.has_tool_calls || (Array.isArray(shared.result.tool_calls) && shared.result.tool_calls.length > 0)));
+        const fromLLMResult = !!(shared && shared.llm_result && (shared.llm_result.has_tool_calls || (Array.isArray(shared.llm_result.tool_calls) && shared.llm_result.tool_calls.length > 0)));
+        const hasTools = fromInput || fromInputChoices || fromResult || fromLLMResult;
+
+        if (hasTools) {
+          return 'tools';
+        }
+
+        // Otherwise, nudge the LLM again up to 2 attempts; then force tools
+        shared.__attempts = (Number(shared.__attempts) || 0) + 1;
+        if (shared.__attempts <= 2) {
+          return 'reprompt';
+        }
+        return 'tools';
+    next:
+      tools: tool_http
+      reprompt: reprompt_llm
+      finish: end
+
+  reprompt_llm:
+    type: transform
+    params:
+      script: |
+        // Ask the LLM to use the tools explicitly
+        return {
+          question: "Please use the tools now. First call get_website, then call send_email twice. Only after both emails are sent, reply DONE."
+        };
+    next:
+      default: llm_agent
+
+  
+
+  tool_http:
+    type: http.request
+    params:
+      url: "https://gemmit.org"
+      method: "GET"
+      headers:
+        User-Agent: "flowrunner-e2e-test"
+    next:
+      success: split_send
+      default: split_send
+
+  email_first:
+    type: email.send
+    params:
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      imap_host: "imap.gmail.com"
+      imap_port: 993
+      username: ${secrets.GMAIL_USERNAME}
+      password: ${secrets.GMAIL_PASSWORD}
+      from: ${secrets.GMAIL_USERNAME}
+      to: ${secrets.EMAIL_RECIPIENT}
+      subject: ${(() => { try { var html = (shared.http_result && (shared.http_result.body || shared.http_result.raw_body)) || ""; var openT = '<title>'; var closeT = '</title>'; var i = html.indexOf(openT); if (i >= 0) { var j = html.indexOf(closeT, i + openT.length); if (j > i) { var title = html.slice(i + openT.length, j).trim(); if (title) { return title + ' — Summary'; } } } var key = '<meta name="description" content="'; var idx = html.indexOf(key); if (idx >= 0) { var start = idx + key.length; var end = html.indexOf('"', start); if (end > start) { var desc = html.slice(start, Math.min(end, start + 70)).trim(); if (desc) { return 'Summary — ' + desc; } } } var url = (shared.http_result && shared.http_result.metadata && shared.http_result.metadata.request_url) || 'Website'; try { var host = (new URL(url)).host || url; return host + ' — Summary'; } catch(_) { return 'Website — Summary'; } } catch(e) { return 'Website — Summary'; } })()}
+      body: ${(() => { try { var html = (shared.http_result && (shared.http_result.body || shared.http_result.raw_body)) || ""; var text = html; try { text = text.replace(new RegExp('<[^>]+>','g'), ' '); } catch(_) {} text = text.replace(new RegExp('\\s+','g'),' ').trim(); return 'Website summary - ' + text.slice(0,400); } catch(e){} return 'Website summary unavailable.'; })()}
+    next:
+      default: join_tools
+
+  email_second:
+    type: email.send
+    params:
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      imap_host: "imap.gmail.com"
+      imap_port: 993
+      username: ${secrets.GMAIL_USERNAME}
+      password: ${secrets.GMAIL_PASSWORD}
+      from: ${secrets.GMAIL_USERNAME}
+      to: ${secrets.EMAIL_RECIPIENT}
+      subject: ${(() => { try { var html = (shared.http_result && (shared.http_result.body || shared.http_result.raw_body)) || ""; var s = 'gemmit.org — Key Points'; var open = '<title>'; var close = '</title>'; var i = html.indexOf(open); if (i >= 0) { var j = html.indexOf(close, i+open.length); if (j > i) { var title = html.slice(i+open.length, j); s = title + ' — Key Points'; } } return s; } catch(e){} return 'gemmit.org — Key Points'; })()}
+      body: ${(() => { try { var html = (shared.http_result && (shared.http_result.body || shared.http_result.raw_body)) || ""; var text = html; try { text = text.replace(new RegExp('<script[\\s\\S]*?<\\/script>','gi'), ' '); text = text.replace(new RegExp('<style[\\s\\S]*?<\\/style>','gi'), ' '); } catch(_) {} text = text.replace(new RegExp('<[^>]+>','g'), ' '); text = text.replace(new RegExp('\\s+','g'),' ').trim(); return 'Highlights - ' + text.slice(0,400); } catch(e){} return 'Highlights unavailable.'; })()}
+    next:
+      default: join_tools
+
+  join_tools:
+    type: join
+    next:
+      default: verify_email
+
+  split_send:
+    type: split
+    next:
+      email1: email_first
+      email2: email_second
+      default: verify_email
+
+  verify_email:
+    type: email.receive
+    params:
+      imap_host: "imap.gmail.com"
+      imap_port: 993
+      username: ${secrets.GMAIL_USERNAME}
+      password: ${secrets.GMAIL_PASSWORD}
+      folder: "INBOX"
+      unseen: false
+      with_body: true
+      subject: ""
+      limit: 5
+      script: |
+        // Basic verification: ensure at least two recent emails to recipient exist
+        var emails = Array.isArray(input) ? input : [];
+        var cnt = 0;
+        for (var i=0;i<emails.length;i++) {
+          var e = emails[i];
+          if ((e.to||[]).join(", ").includes(secrets.EMAIL_RECIPIENT)) { cnt++; }
+        }
+        return { email_verification: { matched: cnt, ok: cnt >= 2 } };
+    next:
+      default: prepare_next_llm
+
+  prepare_next_llm:
+    type: transform
+    params:
+      script: |
+        // Finalization prompt (avoid using shared context in runtime)
+        return { question: "Tools completed. Reply exactly: DONE. Do NOT call any tools." };
+    next:
+      default: llm_agent
+
+  end:
+    type: transform
+    params:
+      script: |
+        return {
+          final_content: input.content || "No final response",
+          finish_reason: input.finish_reason || "",
+          model: input.model || ""
+        };
