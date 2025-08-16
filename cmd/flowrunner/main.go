@@ -22,6 +22,7 @@ import (
 	"github.com/tcmartin/flowrunner/pkg/loader"
 	"github.com/tcmartin/flowrunner/pkg/plugins"
 	"github.com/tcmartin/flowrunner/pkg/registry"
+	"github.com/tcmartin/flowrunner/pkg/runtime"
 	"github.com/tcmartin/flowrunner/pkg/services"
 	"github.com/tcmartin/flowrunner/pkg/storage"
 )
@@ -301,7 +302,21 @@ func NewApp(cfg *config.Config) (*App, error) {
 		log.Fatalf("Failed to register mcp plugin: %v", err)
 	}
 
+	// Create an adapter for the runtime node factories
+	type RuntimeNodeFactoryAdapter struct {
+		factory runtime.NodeFactory
+	}
+
+	func (a *RuntimeNodeFactoryAdapter) CreateNode(nodeDef plugins.NodeDefinition) (flowlib.Node, error) {
+		return a.factory(nodeDef.Params)
+	}
+
+	// Register core node types
 	nodeFactories := make(map[string]plugins.NodeFactory)
+	for nodeType, factory := range runtime.CoreNodeTypes() {
+		nodeFactories[nodeType] = &RuntimeNodeFactoryAdapter{factory: factory}
+	}
+
 	yamlLoader := loader.NewYAMLLoader(nodeFactories, pluginRegistry)
 
 	// Create flow registry

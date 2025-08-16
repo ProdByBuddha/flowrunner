@@ -206,17 +206,30 @@ func NewRouterNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 			}, nil
 		},
 		post: func(shared, params, result interface{}) (flowlib.Action, error) {
-			// Extract the tool name from the result and return it as the action
-			// This allows the flow to use its YAML-defined routing (e.g., get_website: http_tool)
 			if resultMap, ok := result.(map[string]interface{}); ok {
+				// Store the active tool call in the shared context for the next node
+				if toolCall, exists := resultMap["tool_call"]; exists {
+					if sharedMap, ok := shared.(map[string]interface{}); ok {
+						sharedMap["active_tool_call"] = toolCall
+						log.Printf("[Router] Stored active_tool_call in shared context")
+					}
+				}
+
+				// The action should be the tool's name, which the YAML `next` block maps to a node.
 				if toolName, ok := resultMap["tool_name"].(string); ok {
-					log.Printf("[Router] Returning action: %s", toolName)
+					log.Printf("[Router] Returning action from 'tool_name' field: %s", toolName)
 					return flowlib.Action(toolName), nil
+				}
+
+				// If coming from a condition script, the route is in the 'route' field.
+				if route, ok := resultMap["route"].(string); ok && route != "" {
+					log.Printf("[Router] Returning action from 'route' field: %s", route)
+					return flowlib.Action(route), nil
 				}
 			}
 			
-			// Fallback to default action if no tool name found
-			log.Printf("[Router] No tool name found in result, using default action")
+			// Fallback to default action if no route or tool name is found.
+			log.Printf("[Router] No route or tool name found in result, using default action")
 			return flowlib.DefaultAction, nil
 		},
 	}
@@ -340,5 +353,3 @@ func executeConditionScript(script string, input map[string]interface{}) (interf
 	// Otherwise return the raw result
 	return goValue, nil
 }
-
-
