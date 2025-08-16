@@ -37,8 +37,8 @@ func (l *DefaultYAMLLoader) Parse(yamlContent string) (*flowlib.Flow, error) {
 
 	// Create all the nodes
 	nodes := make(map[string]flowlib.Node)
-	for nodeName, nodeDef := range flowDef.Nodes {
-		factory, exists := l.nodeFactories[nodeDef.Type]
+    for nodeName, nodeDef := range flowDef.Nodes {
+        factory, exists := l.nodeFactories[nodeDef.Type]
 		if !exists {
 			// If the node type is not in the built-in factories, try the plugin registry
 			plugin, err := l.pluginRegistry.Get(nodeDef.Type)
@@ -53,13 +53,31 @@ func (l *DefaultYAMLLoader) Parse(yamlContent string) (*flowlib.Flow, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to create node '%s' from plugin: %w", nodeName, err)
 			}
-			nodes[nodeName] = node
+            // Inject metadata into node params
+            params := node.Params()
+            merged := make(map[string]interface{})
+            for k, v := range params {
+                merged[k] = v
+            }
+            merged["node_id"] = nodeName
+            merged["node_type"] = nodeDef.Type
+            node.SetParams(merged)
+            nodes[nodeName] = node
 		} else {
-			node, err := factory.CreateNode(nodeDef)
+            node, err := factory.CreateNode(nodeDef)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create node '%s': %w", nodeName, err)
 			}
-			nodes[nodeName] = node
+            // Inject metadata into node params
+            params := node.Params()
+            merged := make(map[string]interface{})
+            for k, v := range params {
+                merged[k] = v
+            }
+            merged["node_id"] = nodeName
+            merged["node_type"] = nodeDef.Type
+            node.SetParams(merged)
+            nodes[nodeName] = node
 		}
 	}
 

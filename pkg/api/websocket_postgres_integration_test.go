@@ -873,8 +873,11 @@ nodes:
 
 	// Test the flow execution with WebSocket monitoring
 	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http") + "/api/v1/ws"
-	header := make(http.Header)
-	header.Set("Authorization", "Basic c2ltcGxlX3Rlc3RfdXNlcjp0ZXN0X3Bhc3N3b3Jk") // simple_test_user:test_password
+    header := make(http.Header)
+    // Use the dynamic test username created above for Basic auth
+    authString := testUsername + ":" + "test_password"
+    encodedAuth := base64.StdEncoding.EncodeToString([]byte(authString))
+    header.Set("Authorization", "Basic "+encodedAuth)
 
 	ws, resp, err := websocket.DefaultDialer.Dial(wsURL, header)
 	require.NoError(t, err, "WebSocket connection failed")
@@ -967,7 +970,7 @@ nodes:
 	statusURL := testServer.URL + "/api/v1/executions/" + executionID
 	statusReq, err := http.NewRequest("GET", statusURL, nil)
 	require.NoError(t, err)
-	statusReq.SetBasicAuth("simple_test_user", "test_password")
+    statusReq.SetBasicAuth(testUsername, "test_password")
 
 	statusResp, err := client.Do(statusReq)
 	require.NoError(t, err)
