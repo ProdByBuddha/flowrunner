@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/tcmartin/flowlib"
 	"github.com/tcmartin/flowrunner/pkg/api"
 	"github.com/tcmartin/flowrunner/pkg/auth"
 	"github.com/tcmartin/flowrunner/pkg/config"
@@ -234,6 +235,15 @@ type App struct {
 	storageProvider storage.StorageProvider
 }
 
+// Create an adapter for the runtime node factories
+type RuntimeNodeFactoryAdapter struct {
+	factory runtime.NodeFactory
+}
+
+func (a *RuntimeNodeFactoryAdapter) CreateNode(nodeDef plugins.NodeDefinition) (flowlib.Node, error) {
+	return a.factory(nodeDef.Params)
+}
+
 // NewApp creates a new application instance
 func NewApp(cfg *config.Config) (*App, error) {
 	// Initialize storage provider
@@ -300,15 +310,6 @@ func NewApp(cfg *config.Config) (*App, error) {
 	// Register the mcp plugin
 	if err := pluginRegistry.Register("mcp", &plugins.MCPPlugin{}); err != nil {
 		log.Fatalf("Failed to register mcp plugin: %v", err)
-	}
-
-	// Create an adapter for the runtime node factories
-	type RuntimeNodeFactoryAdapter struct {
-		factory runtime.NodeFactory
-	}
-
-	func (a *RuntimeNodeFactoryAdapter) CreateNode(nodeDef plugins.NodeDefinition) (flowlib.Node, error) {
-		return a.factory(nodeDef.Params)
 	}
 
 	// Register core node types

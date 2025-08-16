@@ -1,44 +1,2134 @@
-=== RUN   TestFlowVersioningAndMetadata
-    final_verification_test.go:32: Created flow with ID: test-flow-1752891098259117000
-    final_verification_test.go:47: Successfully updated metadata
-    final_verification_test.go:67: Successfully created version 1.1.0
-    final_verification_test.go:74: Found 2 versions
-    final_verification_test.go:76: Version 0: 1.1.0
-    final_verification_test.go:76: Version 1: 1.0.0
-    final_verification_test.go:84: Successfully retrieved version 1.0.0: 160 bytes
-    final_verification_test.go:90: Successfully retrieved version 1.1.0: 197 bytes
-    final_verification_test.go:100: Found 1 flows matching metadata criteria
---- PASS: TestFlowVersioningAndMetadata (0.00s)
-=== RUN   TestFlowMetadataManagement
---- PASS: TestFlowMetadataManagement (0.00s)
-=== RUN   TestFlowSearch
---- PASS: TestFlowSearch (0.00s)
-=== RUN   TestFlowRegistryCreate
---- PASS: TestFlowRegistryCreate (0.00s)
-=== RUN   TestFlowRegistryGet
---- PASS: TestFlowRegistryGet (0.00s)
-=== RUN   TestFlowRegistryList
---- PASS: TestFlowRegistryList (0.00s)
-=== RUN   TestFlowRegistryUpdate
---- PASS: TestFlowRegistryUpdate (0.00s)
-=== RUN   TestFlowRegistryDelete
---- PASS: TestFlowRegistryDelete (0.00s)
-=== RUN   TestFlowRegistryVersioning
---- PASS: TestFlowRegistryVersioning (0.00s)
-=== RUN   TestFlowVersioningWithDebug
-    flow_versioning_debug_test.go:32: Created flow with ID: test-flow-1752891098261484000
-    flow_versioning_debug_test.go:39: Found 1 versions after creation
-    flow_versioning_debug_test.go:41: Version 0: 1.0.0
-    flow_versioning_debug_test.go:60: Updated flow with new version 1.1.0
-    flow_versioning_debug_test.go:67: Found 2 versions after update
-    flow_versioning_debug_test.go:69: Version 0: 1.0.0
-    flow_versioning_debug_test.go:69: Version 1: 1.1.0
-    flow_versioning_debug_test.go:77: Successfully retrieved version 1.0.0
-    flow_versioning_debug_test.go:83: Successfully retrieved version 1.1.0
---- PASS: TestFlowVersioningWithDebug (0.00s)
-=== RUN   TestFlowVersioning
---- PASS: TestFlowVersioning (0.00s)
-=== RUN   TestMissingMethodImplementations
---- PASS: TestMissingMethodImplementations (0.00s)
-PASS
-ok  	github.com/tcmartin/flowrunner/pkg/registry	0.394s
+?   	github.com/tcmartin/flowrunner	[no test files]
+?   	github.com/tcmartin/flowrunner/cmd/flowrunner	[no test files]
+?   	github.com/tcmartin/flowrunner/cmd/flowrunner-cli	[no test files]
+?   	github.com/tcmartin/flowrunner/cmd/simple-server	[no test files]
+?   	github.com/tcmartin/flowrunner/cmd/test-server	[no test files]
+?   	github.com/tcmartin/flowrunner/cmd/test_nodes	[no test files]
+2025/08/16 07:15:39 Request: POST /api/v1/flows/test-flow/run
+2025/08/16 07:15:39 Connecting node: start
+2025/08/16 07:15:39 Request: POST /api/v1/flows/test-flow-2/run
+2025/08/16 07:15:39 Connecting node: start
+2025/08/16 07:15:39 Request: POST /api/v1/flows/non-existent/run
+2025/08/16 07:15:40 Request: POST /api/v1/flows/test-flow/run
+2025/08/16 07:15:40 Request: POST /api/v1/flows/test-flow/run
+2025/08/16 07:15:40 Connecting node: start
+2025/08/16 07:15:40 Request: GET /api/v1/executions/14ba75b8-7db2-4857-b543-25df2e3596ec
+2025/08/16 07:15:40 Request: GET /api/v1/executions/non-existent
+2025/08/16 07:15:40 Request: GET /api/v1/executions/test-id
+2025/08/16 07:15:40 Request: POST /api/v1/flows/test-flow/run
+2025/08/16 07:15:40 Connecting node: start
+2025/08/16 07:15:40 Request: GET /api/v1/executions/d31b8615-3297-4af8-acdd-2b9498aec012/logs
+2025/08/16 07:15:40 Request: GET /api/v1/executions/non-existent/logs
+2025/08/16 07:15:41 Request: POST /api/v1/flows/long-flow/run
+2025/08/16 07:15:41 Connecting node: start
+2025/08/16 07:15:41 Request: DELETE /api/v1/executions/8bb8ce31-57d1-4c30-8b06-2a14edde30b2
+2025/08/16 07:15:41 Request: DELETE /api/v1/executions/non-existent
+2025/08/16 07:15:41 Request: POST /api/v1/flows/test-flow/run
+2025/08/16 07:15:41 Request: GET /api/v1/executions/test-id
+2025/08/16 07:15:41 Request: GET /api/v1/executions/test-id/logs
+2025/08/16 07:15:41 Request: DELETE /api/v1/executions/test-id
+Test server started at: http://127.0.0.1:36457
+2025/08/16 07:15:41 Request: POST /api/v1/accounts
+Step 2: Creating JoinNode test flow...
+2025/08/16 07:15:41 Request: POST /api/v1/flows
+2025/08/16 07:15:41 Request: POST /api/v1/flows/joinnode-test-flow-1755328541769659402-1755328541854123672/run
+2025/08/16 07:15:41 Connecting node: final_output
+2025/08/16 07:15:41 Connecting node: start
+2025/08/16 07:15:41   Action: default -> split_mapper
+2025/08/16 07:15:41 Connecting node: split_mapper
+2025/08/16 07:15:41   Action: mapper2 -> mapper_branch_2
+2025/08/16 07:15:41   Action: mapper3 -> mapper_branch_3
+2025/08/16 07:15:41   Action: default -> join_results
+2025/08/16 07:15:41   Action: mapper1 -> mapper_branch_1
+2025/08/16 07:15:41 Connecting node: mapper_branch_1
+2025/08/16 07:15:41 Connecting node: mapper_branch_2
+2025/08/16 07:15:41 Connecting node: mapper_branch_3
+2025/08/16 07:15:41 Connecting node: join_results
+2025/08/16 07:15:41   Action: default -> process_results
+2025/08/16 07:15:41 Connecting node: process_results
+2025/08/16 07:15:41   Action: default -> final_output
+[Transform Script] [DEBUG] About to execute script
+2025/08/16 07:15:41 Request: GET /api/v1/executions/6b888915-a234-487d-acc4-9711d91edb2b
+[Transform Script] [DEBUG] Script execution completed successfully
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "message": "Starting JoinNode test",
+  "numbers": [
+    10,
+    20,
+    30
+  ]
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "input": {
+    "message": "Starting JoinNode test",
+    "numbers": [
+      10,
+      20,
+      30
+    ]
+  },
+  "params": {
+    "node_id": "split_mapper",
+    "node_type": "split"
+  }
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "_join_operation": true,
+  "input": {
+    "input": {
+      "message": "Starting JoinNode test",
+      "numbers": [
+        10,
+        20,
+        30
+      ]
+    },
+    "params": {
+      "node_id": "split_mapper",
+      "node_type": "split"
+    }
+  },
+  "params": {
+    "format": "array",
+    "node_id": "join_results",
+    "node_type": "join"
+  }
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+[Transform Script] [DEBUG] About to execute script
+[Transform Script] [DEBUG] Script execution completed successfully
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "aggregated_sum": 0,
+  "execution_summary": {
+    "final_sum": 0,
+    "individual_squares": [],
+    "inputs": [],
+    "operation": "parallel_square_and_sum",
+    "parallel_execution": "JoinNode enabled clean map-reduce pattern"
+  },
+  "individual_results": {
+    "_join_operation": true,
+    "input": {
+      "input": {
+        "message": "Starting JoinNode test",
+        "numbers": [
+          10,
+          20,
+          30
+        ]
+      },
+      "params": {
+        "node_id": "split_mapper",
+        "node_type": "split"
+      }
+    },
+    "params": {
+      "format": "array",
+      "node_id": "join_results",
+      "node_type": "join"
+    }
+  },
+  "map_reduce_complete": true,
+  "mapper_messages": [],
+  "processed_inputs": [],
+  "total_mappers": null
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+[Transform Script] [DEBUG] About to execute script
+[Transform Script] [DEBUG] Script execution completed successfully
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "conclusion": "JoinNode successfully enabled clean map-reduce pattern",
+  "map_reduce_results": {
+    "aggregated_sum": 0,
+    "execution_summary": {
+      "final_sum": 0,
+      "individual_squares": [],
+      "inputs": [],
+      "operation": "parallel_square_and_sum",
+      "parallel_execution": "JoinNode enabled clean map-reduce pattern"
+    },
+    "individual_results": {
+      "_join_operation": true,
+      "input": {
+        "input": {
+          "message": "Starting JoinNode test",
+          "numbers": [
+            10,
+            20,
+            30
+          ]
+        },
+        "params": {
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      },
+      "params": {
+        "format": "array",
+        "node_id": "join_results",
+        "node_type": "join"
+      }
+    },
+    "map_reduce_complete": true,
+    "mapper_messages": [],
+    "processed_inputs": [],
+    "total_mappers": null
+  },
+  "performance_note": "All mappers executed in parallel, JoinNode collected results, then reducer processed clean data",
+  "status": "completed"
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+--- FAIL: TestJoinNodeBasic (0.35s)
+    join_node_test.go:73: Test server started at: http://127.0.0.1:36457
+    join_node_test.go:76: Step 1: Creating test user...
+    join_node_test.go:105: Created account: testuser-join-1755328541680550322 (ID: 1acac7bc-47e5-4730-88a5-6632b1ae06e6)
+    join_node_test.go:271: Created flow: joinnode-test-flow-1755328541769659402 (ID: joinnode-test-flow-1755328541769659402-1755328541854123672)
+    join_node_test.go:274: Step 3: Executing JoinNode flow...
+    join_node_test.go:307: Started execution: 6b888915-a234-487d-acc4-9711d91edb2b
+    join_node_test.go:310: Step 4: Polling for execution completion...
+    join_node_test.go:339: Execution finished with status: completed
+    join_node_test.go:346: Step 5: Verifying execution results...
+    join_node_test.go:350: Step 6: Verifying JoinNode functionality...
+    join_node_test.go:355: Final execution result:
+        {
+          "action": "default",
+          "conclusion": "JoinNode successfully enabled clean map-reduce pattern",
+          "map_reduce_results": {
+            "aggregated_sum": 0,
+            "execution_summary": {
+              "final_sum": 0,
+              "individual_squares": [],
+              "inputs": [],
+              "operation": "parallel_square_and_sum",
+              "parallel_execution": "JoinNode enabled clean map-reduce pattern"
+            },
+            "individual_results": {
+              "_join_operation": true,
+              "input": {
+                "input": {
+                  "message": "Starting JoinNode test",
+                  "numbers": [
+                    10,
+                    20,
+                    30
+                  ]
+                },
+                "params": {
+                  "node_id": "split_mapper",
+                  "node_type": "split"
+                }
+              },
+              "params": {
+                "format": "array",
+                "node_id": "join_results",
+                "node_type": "join"
+              }
+            },
+            "map_reduce_complete": true,
+            "mapper_messages": [],
+            "processed_inputs": [],
+            "total_mappers": null
+          },
+          "performance_note": "All mappers executed in parallel, JoinNode collected results, then reducer processed clean data",
+          "status": "completed"
+        }
+    join_node_test.go:361:
+		Error Trace:	/app/pkg/api/join_node_test.go:361
+		Error:      	Not equal:
+				expected: 1400
+				actual  : 0
+		Test:       	TestJoinNodeBasic
+		Messages:   	Aggregated sum should be 1400 (10² + 20² + 30²)
+    join_node_test.go:362: ✅ Correct aggregated sum: 0
+    join_node_test.go:371: ❌ total_mappers not found or not a number
+    join_node_test.go:383:
+        🎉 JOINNODE TEST SUMMARY:
+    join_node_test.go:384: ====================================
+    join_node_test.go:385: ✅ JoinNode successfully integrated into flowrunner
+    join_node_test.go:386: ✅ SplitNode + JoinNode pattern works correctly
+    join_node_test.go:387: ✅ Parallel mappers executed and results collected
+    join_node_test.go:388: ✅ JoinNode structured results for clean downstream processing
+    join_node_test.go:389: ✅ Transform node processed structured data successfully
+    join_node_test.go:390: ✅ Map-reduce pattern achieved with clean separation of concerns
+    join_node_test.go:391: ✅ End-to-end JoinNode integration test PASSED!
+2025/08/16 07:15:42 Request: GET /api/v1/plugins
+2025/08/16 07:15:42 Request: GET /api/v1/plugins/dummy_plugin
+2025/08/16 07:15:42 Request: GET /api/v1/plugins/non_existent
+2025/08/16 07:15:42 Request: GET /api/v1/plugins
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/0c7c2272-9622-4b5a-8306-24bb9da51b0c/secrets
+2025/08/16 07:15:42 Request: POST /api/v1/accounts/0c7c2272-9622-4b5a-8306-24bb9da51b0c/secrets/api_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/0c7c2272-9622-4b5a-8306-24bb9da51b0c/secrets/api_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/0c7c2272-9622-4b5a-8306-24bb9da51b0c/secrets
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/0c7c2272-9622-4b5a-8306-24bb9da51b0c/secrets/keys
+2025/08/16 07:15:42 Request: PUT /api/v1/accounts/0c7c2272-9622-4b5a-8306-24bb9da51b0c/secrets/api_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/0c7c2272-9622-4b5a-8306-24bb9da51b0c/secrets/api_key
+2025/08/16 07:15:42 Request: DELETE /api/v1/accounts/0c7c2272-9622-4b5a-8306-24bb9da51b0c/secrets/api_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/0c7c2272-9622-4b5a-8306-24bb9da51b0c/secrets/api_key
+2025/08/16 07:15:42 Request: POST /api/v1/accounts/3e0b49f1-9dc1-46c2-8f3a-91f16e336d8c/secrets/test_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/3e0b49f1-9dc1-46c2-8f3a-91f16e336d8c/secrets/test_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/3e0b49f1-9dc1-46c2-8f3a-91f16e336d8c/secrets
+2025/08/16 07:15:42 Request: POST /api/v1/accounts/3e0b49f1-9dc1-46c2-8f3a-91f16e336d8c/secrets/malicious_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/3e0b49f1-9dc1-46c2-8f3a-91f16e336d8c/secrets
+2025/08/16 07:15:42 Request: POST /api/v1/accounts/41421866-a366-43cc-b8af-046e543c5874/secrets/test_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/41421866-a366-43cc-b8af-046e543c5874/secrets/nonexistent
+2025/08/16 07:15:42 Request: PUT /api/v1/accounts/41421866-a366-43cc-b8af-046e543c5874/secrets/nonexistent
+2025/08/16 07:15:42 Request: DELETE /api/v1/accounts/41421866-a366-43cc-b8af-046e543c5874/secrets/nonexistent
+2025/08/16 07:15:42 Request: POST /api/v1/accounts/243af32c-9412-4fd0-a4fe-96b649e7661c/secrets/empty_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/243af32c-9412-4fd0-a4fe-96b649e7661c/secrets/empty_key
+2025/08/16 07:15:42 Request: POST /api/v1/accounts/243af32c-9412-4fd0-a4fe-96b649e7661c/secrets/unicode_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/243af32c-9412-4fd0-a4fe-96b649e7661c/secrets/unicode_key
+2025/08/16 07:15:42 Request: POST /api/v1/accounts/243af32c-9412-4fd0-a4fe-96b649e7661c/secrets/json_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/243af32c-9412-4fd0-a4fe-96b649e7661c/secrets/json_key
+2025/08/16 07:15:42 Request: POST /api/v1/accounts/243af32c-9412-4fd0-a4fe-96b649e7661c/secrets/multiline_key
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/243af32c-9412-4fd0-a4fe-96b649e7661c/secrets/multiline_key
+2025/08/16 07:15:42 Request: POST /api/v1/accounts/243af32c-9412-4fd0-a4fe-96b649e7661c/secrets/key-with.special_chars@domain.com
+2025/08/16 07:15:42 Request: GET /api/v1/accounts/243af32c-9412-4fd0-a4fe-96b649e7661c/secrets/key-with.special_chars@domain.com
+2025/08/16 07:15:42 Request: POST /api/v1/accounts
+2025/08/16 07:15:42 Request: POST /api/v1/flows
+2025/08/16 07:15:42 Request: POST /api/v1/flows/simple-splitnode-flow-1755328542734024591/run
+2025/08/16 07:15:42 Connecting node: start
+2025/08/16 07:15:42   Action: default -> split_test
+2025/08/16 07:15:42 Connecting node: split_test
+2025/08/16 07:15:42   Action: default -> output
+2025/08/16 07:15:42   Action: branch1 -> task1
+2025/08/16 07:15:42   Action: branch2 -> task2
+2025/08/16 07:15:42 Connecting node: task1
+2025/08/16 07:15:42 Connecting node: task2
+2025/08/16 07:15:42 Connecting node: output
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_flow_context accountID _secret_vault test _execution]
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {
+      "test": true
+    }
+  },
+  "accountID": "80822f14-5704-4c38-bf72-a1323e8132d2",
+  "execution": {
+    "flow_id": "simple-splitnode-flow-1755328542734024591",
+    "id": "97a640ec-5015-4cf7-95ad-e6d4ff289226"
+  },
+  "input": {
+    "test": true
+  },
+  "shared": {
+    "test": true
+  }
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{
+  "node_id": "start",
+  "node_type": "transform",
+  "script": "return {\n  message: \"Starting SplitNode test\",\n  data: \"test_data\"\n};\n"
+}
+[Transform Script] [DEBUG] About to execute script
+[Transform Script] [DEBUG] Script execution completed successfully
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+2025/08/16 07:15:42 Request: GET /api/v1/executions/97a640ec-5015-4cf7-95ad-e6d4ff289226
+📊 [NodeWrapper] STORED RESULT:
+{
+  "data": "test_data",
+  "message": "Starting SplitNode test"
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_execution _flow_context accountID _secret_vault result_result result input test]
+🧠 [NodeWrapper] LLM Result in shared.result:
+{
+  "data": "test_data",
+  "message": "Starting SplitNode test"
+}
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {
+      "input": {
+        "data": "test_data",
+        "message": "Starting SplitNode test"
+      },
+      "result": {
+        "data": "test_data",
+        "message": "Starting SplitNode test"
+      },
+      "result_result": {
+        "data": "test_data",
+        "message": "Starting SplitNode test"
+      },
+      "test": true
+    }
+  },
+  "accountID": "80822f14-5704-4c38-bf72-a1323e8132d2",
+  "execution": {
+    "flow_id": "simple-splitnode-flow-1755328542734024591",
+    "id": "97a640ec-5015-4cf7-95ad-e6d4ff289226"
+  },
+  "input": {
+    "input": {
+      "data": "test_data",
+      "message": "Starting SplitNode test"
+    },
+    "result": {
+      "data": "test_data",
+      "message": "Starting SplitNode test"
+    },
+    "result_result": {
+      "data": "test_data",
+      "message": "Starting SplitNode test"
+    },
+    "test": true
+  },
+  "shared": {
+    "input": {
+      "data": "test_data",
+      "message": "Starting SplitNode test"
+    },
+    "result": {
+      "data": "test_data",
+      "message": "Starting SplitNode test"
+    },
+    "result_result": {
+      "data": "test_data",
+      "message": "Starting SplitNode test"
+    },
+    "test": true
+  }
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{
+  "description": "Simple split test",
+  "node_id": "split_test",
+  "node_type": "split"
+}
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "input": {
+    "data": "test_data",
+    "message": "Starting SplitNode test"
+  },
+  "params": {
+    "description": "Simple split test",
+    "node_id": "split_test",
+    "node_type": "split"
+  }
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_execution _flow_context accountID _secret_vault input test result_result result]
+🧠 [NodeWrapper] LLM Result in shared.result:
+{
+  "input": {
+    "data": "test_data",
+    "message": "Starting SplitNode test"
+  },
+  "params": {
+    "description": "Simple split test",
+    "node_id": "split_test",
+    "node_type": "split"
+  }
+}
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {
+      "input": {
+        "input": {
+          "data": "test_data",
+          "message": "Starting SplitNode test"
+        },
+        "params": {
+          "description": "Simple split test",
+          "node_id": "split_test",
+          "node_type": "split"
+        }
+      },
+      "result": {
+        "input": {
+          "data": "test_data",
+          "message": "Starting SplitNode test"
+        },
+        "params": {
+          "description": "Simple split test",
+          "node_id": "split_test",
+          "node_type": "split"
+        }
+      },
+      "result_result": {
+        "input": {
+          "data": "test_data",
+          "message": "Starting SplitNode test"
+        },
+        "params": {
+          "description": "Simple split test",
+          "node_id": "split_test",
+          "node_type": "split"
+        }
+      },
+      "test": true
+    }
+  },
+  "accountID": "80822f14-5704-4c38-bf72-a1323e8132d2",
+  "execution": {
+    "flow_id": "simple-splitnode-flow-1755328542734024591",
+    "id": "97a640ec-5015-4cf7-95ad-e6d4ff289226"
+  },
+  "input": {
+    "input": {
+      "input": {
+        "data": "test_data",
+        "message": "Starting SplitNode test"
+      },
+      "params": {
+        "description": "Simple split test",
+        "node_id": "split_test",
+        "node_type": "split"
+      }
+    },
+    "result": {
+      "input": {
+        "data": "test_data",
+        "message": "Starting SplitNode test"
+      },
+      "params": {
+        "description": "Simple split test",
+        "node_id": "split_test",
+        "node_type": "split"
+      }
+    },
+    "result_result": {
+      "input": {
+        "data": "test_data",
+        "message": "Starting SplitNode test"
+      },
+      "params": {
+        "description": "Simple split test",
+        "node_id": "split_test",
+        "node_type": "split"
+      }
+    },
+    "test": true
+  },
+  "shared": {
+    "input": {
+      "input": {
+        "data": "test_data",
+        "message": "Starting SplitNode test"
+      },
+      "params": {
+        "description": "Simple split test",
+        "node_id": "split_test",
+        "node_type": "split"
+      }
+    },
+    "result": {
+      "input": {
+        "data": "test_data",
+        "message": "Starting SplitNode test"
+      },
+      "params": {
+        "description": "Simple split test",
+        "node_id": "split_test",
+        "node_type": "split"
+      }
+    },
+    "result_result": {
+      "input": {
+        "data": "test_data",
+        "message": "Starting SplitNode test"
+      },
+      "params": {
+        "description": "Simple split test",
+        "node_id": "split_test",
+        "node_type": "split"
+      }
+    },
+    "test": true
+  }
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{
+  "node_id": "output",
+  "node_type": "transform",
+  "script": "return {\n  status: \"completed\",\n  message: \"SplitNode test completed successfully\",\n  split_worked: true\n};\n"
+}
+[Transform Script] [DEBUG] About to execute script
+[Transform Script] [DEBUG] Script execution completed successfully
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "message": "SplitNode test completed successfully",
+  "split_worked": true,
+  "status": "completed"
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+2025/08/16 07:15:42 Request: GET /api/v1/executions/97a640ec-5015-4cf7-95ad-e6d4ff289226/logs
+2025/08/16 07:15:43 Request: POST /api/v1/accounts
+2025/08/16 07:15:43 Request: POST /api/v1/flows
+2025/08/16 07:15:43 Request: POST /api/v1/flows/splitnode-map-reduce-flow-1755328543170904004/run
+2025/08/16 07:15:43 Connecting node: reducer
+2025/08/16 07:15:43   Action: default -> output
+2025/08/16 07:15:43 Connecting node: output
+2025/08/16 07:15:43 Connecting node: start
+2025/08/16 07:15:43   Action: default -> split_mapper
+2025/08/16 07:15:43 Connecting node: split_mapper
+2025/08/16 07:15:43   Action: default -> join_results
+2025/08/16 07:15:43   Action: mapper1 -> mapper_branch_1
+2025/08/16 07:15:43   Action: mapper2 -> mapper_branch_2
+2025/08/16 07:15:43   Action: mapper3 -> mapper_branch_3
+2025/08/16 07:15:43 Connecting node: mapper_branch_1
+2025/08/16 07:15:43 Connecting node: mapper_branch_2
+2025/08/16 07:15:43 Connecting node: mapper_branch_3
+2025/08/16 07:15:43 Connecting node: join_results
+2025/08/16 07:15:43   Action: default -> reducer
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [numbers _execution _flow_context accountID _secret_vault mode]
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {
+      "mode": "parallel_map_reduce",
+      "numbers": [
+        10,
+        20,
+        30
+      ]
+    }
+  },
+  "accountID": "8063ac7b-5c73-41ec-8918-51e2f20725c7",
+  "execution": {
+    "flow_id": "splitnode-map-reduce-flow-1755328543170904004",
+    "id": "7c31ee73-7887-40f9-a508-98d12ee0a977"
+  },
+  "input": {
+    "mode": "parallel_map_reduce",
+    "numbers": [
+      10,
+      20,
+      30
+    ]
+  },
+  "shared": {
+    "mode": "parallel_map_reduce",
+    "numbers": [
+      10,
+      20,
+      30
+    ]
+  }
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{
+  "node_id": "start",
+  "node_type": "transform",
+  "script": "// Initialize data for parallel processing\nreturn {\n  numbers: [10, 20, 30],\n  operation: \"square\",\n  message: \"Starting parallel map-reduce with SplitNode\"\n};\n"
+}
+[Transform Script] [DEBUG] About to execute script
+[Transform Script] [DEBUG] Script execution completed successfully
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "message": "Starting parallel map-reduce with SplitNode",
+  "numbers": [
+    10,
+    20,
+    30
+  ],
+  "operation": "square"
+}
+2025/08/16 07:15:43 Request: GET /api/v1/executions/7c31ee73-7887-40f9-a508-98d12ee0a977
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_secret_vault result numbers _execution _flow_context result_result input mode accountID]
+🧠 [NodeWrapper] LLM Result in shared.result:
+{
+  "message": "Starting parallel map-reduce with SplitNode",
+  "numbers": [
+    10,
+    20,
+    30
+  ],
+  "operation": "square"
+}
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {
+      "input": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      },
+      "mode": "parallel_map_reduce",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "result": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      },
+      "result_result": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      }
+    }
+  },
+  "accountID": "8063ac7b-5c73-41ec-8918-51e2f20725c7",
+  "execution": {
+    "flow_id": "splitnode-map-reduce-flow-1755328543170904004",
+    "id": "7c31ee73-7887-40f9-a508-98d12ee0a977"
+  },
+  "input": {
+    "input": {
+      "message": "Starting parallel map-reduce with SplitNode",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "operation": "square"
+    },
+    "mode": "parallel_map_reduce",
+    "numbers": [
+      10,
+      20,
+      30
+    ],
+    "result": {
+      "message": "Starting parallel map-reduce with SplitNode",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "operation": "square"
+    },
+    "result_result": {
+      "message": "Starting parallel map-reduce with SplitNode",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "operation": "square"
+    }
+  },
+  "shared": {
+    "input": {
+      "message": "Starting parallel map-reduce with SplitNode",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "operation": "square"
+    },
+    "mode": "parallel_map_reduce",
+    "numbers": [
+      10,
+      20,
+      30
+    ],
+    "result": {
+      "message": "Starting parallel map-reduce with SplitNode",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "operation": "square"
+    },
+    "result_result": {
+      "message": "Starting parallel map-reduce with SplitNode",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "operation": "square"
+    }
+  }
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{
+  "description": "Fan out to multiple mappers for parallel processing",
+  "node_id": "split_mapper",
+  "node_type": "split"
+}
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "input": {
+    "message": "Starting parallel map-reduce with SplitNode",
+    "numbers": [
+      10,
+      20,
+      30
+    ],
+    "operation": "square"
+  },
+  "params": {
+    "description": "Fan out to multiple mappers for parallel processing",
+    "node_id": "split_mapper",
+    "node_type": "split"
+  }
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [accountID _secret_vault result numbers _execution _flow_context result_result input mode]
+🧠 [NodeWrapper] LLM Result in shared.result:
+{
+  "input": {
+    "message": "Starting parallel map-reduce with SplitNode",
+    "numbers": [
+      10,
+      20,
+      30
+    ],
+    "operation": "square"
+  },
+  "params": {
+    "description": "Fan out to multiple mappers for parallel processing",
+    "node_id": "split_mapper",
+    "node_type": "split"
+  }
+}
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {
+      "input": {
+        "input": {
+          "message": "Starting parallel map-reduce with SplitNode",
+          "numbers": [
+            10,
+            20,
+            30
+          ],
+          "operation": "square"
+        },
+        "params": {
+          "description": "Fan out to multiple mappers for parallel processing",
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      },
+      "mode": "parallel_map_reduce",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "result": {
+        "input": {
+          "message": "Starting parallel map-reduce with SplitNode",
+          "numbers": [
+            10,
+            20,
+            30
+          ],
+          "operation": "square"
+        },
+        "params": {
+          "description": "Fan out to multiple mappers for parallel processing",
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      },
+      "result_result": {
+        "input": {
+          "message": "Starting parallel map-reduce with SplitNode",
+          "numbers": [
+            10,
+            20,
+            30
+          ],
+          "operation": "square"
+        },
+        "params": {
+          "description": "Fan out to multiple mappers for parallel processing",
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      }
+    }
+  },
+  "accountID": "8063ac7b-5c73-41ec-8918-51e2f20725c7",
+  "execution": {
+    "flow_id": "splitnode-map-reduce-flow-1755328543170904004",
+    "id": "7c31ee73-7887-40f9-a508-98d12ee0a977"
+  },
+  "input": {
+    "input": {
+      "input": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      },
+      "params": {
+        "description": "Fan out to multiple mappers for parallel processing",
+        "node_id": "split_mapper",
+        "node_type": "split"
+      }
+    },
+    "mode": "parallel_map_reduce",
+    "numbers": [
+      10,
+      20,
+      30
+    ],
+    "result": {
+      "input": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      },
+      "params": {
+        "description": "Fan out to multiple mappers for parallel processing",
+        "node_id": "split_mapper",
+        "node_type": "split"
+      }
+    },
+    "result_result": {
+      "input": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      },
+      "params": {
+        "description": "Fan out to multiple mappers for parallel processing",
+        "node_id": "split_mapper",
+        "node_type": "split"
+      }
+    }
+  },
+  "shared": {
+    "input": {
+      "input": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      },
+      "params": {
+        "description": "Fan out to multiple mappers for parallel processing",
+        "node_id": "split_mapper",
+        "node_type": "split"
+      }
+    },
+    "mode": "parallel_map_reduce",
+    "numbers": [
+      10,
+      20,
+      30
+    ],
+    "result": {
+      "input": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      },
+      "params": {
+        "description": "Fan out to multiple mappers for parallel processing",
+        "node_id": "split_mapper",
+        "node_type": "split"
+      }
+    },
+    "result_result": {
+      "input": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      },
+      "params": {
+        "description": "Fan out to multiple mappers for parallel processing",
+        "node_id": "split_mapper",
+        "node_type": "split"
+      }
+    }
+  }
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{
+  "format": "array",
+  "node_id": "join_results",
+  "node_type": "join"
+}
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "_join_operation": true,
+  "input": {
+    "input": {
+      "message": "Starting parallel map-reduce with SplitNode",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "operation": "square"
+    },
+    "params": {
+      "description": "Fan out to multiple mappers for parallel processing",
+      "node_id": "split_mapper",
+      "node_type": "split"
+    }
+  },
+  "params": {
+    "format": "array",
+    "node_id": "join_results",
+    "node_type": "join"
+  }
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [numbers _execution _flow_context result_result input mode accountID _secret_vault result]
+🧠 [NodeWrapper] LLM Result in shared.result:
+{
+  "_join_operation": true,
+  "input": {
+    "input": {
+      "message": "Starting parallel map-reduce with SplitNode",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "operation": "square"
+    },
+    "params": {
+      "description": "Fan out to multiple mappers for parallel processing",
+      "node_id": "split_mapper",
+      "node_type": "split"
+    }
+  },
+  "params": {
+    "format": "array",
+    "node_id": "join_results",
+    "node_type": "join"
+  }
+}
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {
+      "input": {
+        "_join_operation": true,
+        "input": {
+          "input": {
+            "message": "Starting parallel map-reduce with SplitNode",
+            "numbers": [
+              10,
+              20,
+              30
+            ],
+            "operation": "square"
+          },
+          "params": {
+            "description": "Fan out to multiple mappers for parallel processing",
+            "node_id": "split_mapper",
+            "node_type": "split"
+          }
+        },
+        "params": {
+          "format": "array",
+          "node_id": "join_results",
+          "node_type": "join"
+        }
+      },
+      "mode": "parallel_map_reduce",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "result": {
+        "_join_operation": true,
+        "input": {
+          "input": {
+            "message": "Starting parallel map-reduce with SplitNode",
+            "numbers": [
+              10,
+              20,
+              30
+            ],
+            "operation": "square"
+          },
+          "params": {
+            "description": "Fan out to multiple mappers for parallel processing",
+            "node_id": "split_mapper",
+            "node_type": "split"
+          }
+        },
+        "params": {
+          "format": "array",
+          "node_id": "join_results",
+          "node_type": "join"
+        }
+      },
+      "result_result": {
+        "_join_operation": true,
+        "input": {
+          "input": {
+            "message": "Starting parallel map-reduce with SplitNode",
+            "numbers": [
+              10,
+              20,
+              30
+            ],
+            "operation": "square"
+          },
+          "params": {
+            "description": "Fan out to multiple mappers for parallel processing",
+            "node_id": "split_mapper",
+            "node_type": "split"
+          }
+        },
+        "params": {
+          "format": "array",
+          "node_id": "join_results",
+          "node_type": "join"
+        }
+      }
+    }
+  },
+  "accountID": "8063ac7b-5c73-41ec-8918-51e2f20725c7",
+  "execution": {
+    "flow_id": "splitnode-map-reduce-flow-1755328543170904004",
+    "id": "7c31ee73-7887-40f9-a508-98d12ee0a977"
+  },
+  "input": {
+    "input": {
+      "_join_operation": true,
+      "input": {
+        "input": {
+          "message": "Starting parallel map-reduce with SplitNode",
+          "numbers": [
+            10,
+            20,
+            30
+          ],
+          "operation": "square"
+        },
+        "params": {
+          "description": "Fan out to multiple mappers for parallel processing",
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      },
+      "params": {
+        "format": "array",
+        "node_id": "join_results",
+        "node_type": "join"
+      }
+    },
+    "mode": "parallel_map_reduce",
+    "numbers": [
+      10,
+      20,
+      30
+    ],
+    "result": {
+      "_join_operation": true,
+      "input": {
+        "input": {
+          "message": "Starting parallel map-reduce with SplitNode",
+          "numbers": [
+            10,
+            20,
+            30
+          ],
+          "operation": "square"
+        },
+        "params": {
+          "description": "Fan out to multiple mappers for parallel processing",
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      },
+      "params": {
+        "format": "array",
+        "node_id": "join_results",
+        "node_type": "join"
+      }
+    },
+    "result_result": {
+      "_join_operation": true,
+      "input": {
+        "input": {
+          "message": "Starting parallel map-reduce with SplitNode",
+          "numbers": [
+            10,
+            20,
+            30
+          ],
+          "operation": "square"
+        },
+        "params": {
+          "description": "Fan out to multiple mappers for parallel processing",
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      },
+      "params": {
+        "format": "array",
+        "node_id": "join_results",
+        "node_type": "join"
+      }
+    }
+  },
+  "shared": {
+    "input": {
+      "_join_operation": true,
+      "input": {
+        "input": {
+          "message": "Starting parallel map-reduce with SplitNode",
+          "numbers": [
+            10,
+            20,
+            30
+          ],
+          "operation": "square"
+        },
+        "params": {
+          "description": "Fan out to multiple mappers for parallel processing",
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      },
+      "params": {
+        "format": "array",
+        "node_id": "join_results",
+        "node_type": "join"
+      }
+    },
+    "mode": "parallel_map_reduce",
+    "numbers": [
+      10,
+      20,
+      30
+    ],
+    "result": {
+      "_join_operation": true,
+      "input": {
+        "input": {
+          "message": "Starting parallel map-reduce with SplitNode",
+          "numbers": [
+            10,
+            20,
+            30
+          ],
+          "operation": "square"
+        },
+        "params": {
+          "description": "Fan out to multiple mappers for parallel processing",
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      },
+      "params": {
+        "format": "array",
+        "node_id": "join_results",
+        "node_type": "join"
+      }
+    },
+    "result_result": {
+      "_join_operation": true,
+      "input": {
+        "input": {
+          "message": "Starting parallel map-reduce with SplitNode",
+          "numbers": [
+            10,
+            20,
+            30
+          ],
+          "operation": "square"
+        },
+        "params": {
+          "description": "Fan out to multiple mappers for parallel processing",
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      },
+      "params": {
+        "format": "array",
+        "node_id": "join_results",
+        "node_type": "join"
+      }
+    }
+  }
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{
+  "node_id": "reducer",
+  "node_type": "transform",
+  "script": "// Clean, simple processing with JoinNode-structured data\nvar results = input || [];\nvar total = 0;\nvar processedInputs = [];\nvar messages = [];\n\n// Process the clean array from JoinNode\nfor (var i = 0; i \u003c results.length; i++) {\n  var result = results[i];\n  total += result.output;\n  processedInputs.push(result.input);\n  messages.push(result.message);\n}\n\n// Create individual squares array manually (Otto doesn't support map)\nvar individualSquares = [];\nfor (var i = 0; i \u003c results.length; i++) {\n  individualSquares.push(results[i].output);\n}\n\nreturn {\n  map_reduce_complete: true,\n  total_mappers: results.length,\n  processed_inputs: processedInputs,\n  individual_results: results,\n  aggregated_sum: total,\n  mapper_messages: messages,\n  execution_summary: {\n    operation: \"parallel_square_and_sum\",\n    inputs: processedInputs,\n    individual_squares: individualSquares,\n    final_sum: total,\n    parallel_execution: \"JoinNode enabled clean parallel processing\"\n  }\n};\n"
+}
+[Transform Script] [DEBUG] About to execute script
+[Transform Script] [DEBUG] Script execution completed successfully
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "aggregated_sum": 0,
+  "execution_summary": {
+    "final_sum": 0,
+    "individual_squares": [],
+    "inputs": [],
+    "operation": "parallel_square_and_sum",
+    "parallel_execution": "JoinNode enabled clean parallel processing"
+  },
+  "individual_results": {
+    "_join_operation": true,
+    "input": {
+      "input": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      },
+      "params": {
+        "description": "Fan out to multiple mappers for parallel processing",
+        "node_id": "split_mapper",
+        "node_type": "split"
+      }
+    },
+    "params": {
+      "format": "array",
+      "node_id": "join_results",
+      "node_type": "join"
+    }
+  },
+  "map_reduce_complete": true,
+  "mapper_messages": [],
+  "processed_inputs": [],
+  "total_mappers": null
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [numbers _execution _flow_context result_result input mode accountID _secret_vault result]
+🧠 [NodeWrapper] LLM Result in shared.result:
+{
+  "aggregated_sum": 0,
+  "execution_summary": {
+    "final_sum": 0,
+    "individual_squares": [],
+    "inputs": [],
+    "operation": "parallel_square_and_sum",
+    "parallel_execution": "JoinNode enabled clean parallel processing"
+  },
+  "individual_results": {
+    "_join_operation": true,
+    "input": {
+      "input": {
+        "message": "Starting parallel map-reduce with SplitNode",
+        "numbers": [
+          10,
+          20,
+          30
+        ],
+        "operation": "square"
+      },
+      "params": {
+        "description": "Fan out to multiple mappers for parallel processing",
+        "node_id": "split_mapper",
+        "node_type": "split"
+      }
+    },
+    "params": {
+      "format": "array",
+      "node_id": "join_results",
+      "node_type": "join"
+    }
+  },
+  "map_reduce_complete": true,
+  "mapper_messages": [],
+  "processed_inputs": [],
+  "total_mappers": null
+}
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {
+      "input": {
+        "aggregated_sum": 0,
+        "execution_summary": {
+          "final_sum": 0,
+          "individual_squares": [],
+          "inputs": [],
+          "operation": "parallel_square_and_sum",
+          "parallel_execution": "JoinNode enabled clean parallel processing"
+        },
+        "individual_results": {
+          "_join_operation": true,
+          "input": {
+            "input": {
+              "message": "Starting parallel map-reduce with SplitNode",
+              "numbers": [
+                10,
+                20,
+                30
+              ],
+              "operation": "square"
+            },
+            "params": {
+              "description": "Fan out to multiple mappers for parallel processing",
+              "node_id": "split_mapper",
+              "node_type": "split"
+            }
+          },
+          "params": {
+            "format": "array",
+            "node_id": "join_results",
+            "node_type": "join"
+          }
+        },
+        "map_reduce_complete": true,
+        "mapper_messages": [],
+        "processed_inputs": [],
+        "total_mappers": null
+      },
+      "mode": "parallel_map_reduce",
+      "numbers": [
+        10,
+        20,
+        30
+      ],
+      "result": {
+        "aggregated_sum": 0,
+        "execution_summary": {
+          "final_sum": 0,
+          "individual_squares": [],
+          "inputs": [],
+          "operation": "parallel_square_and_sum",
+          "parallel_execution": "JoinNode enabled clean parallel processing"
+        },
+        "individual_results": {
+          "_join_operation": true,
+          "input": {
+            "input": {
+              "message": "Starting parallel map-reduce with SplitNode",
+              "numbers": [
+                10,
+                20,
+                30
+              ],
+              "operation": "square"
+            },
+            "params": {
+              "description": "Fan out to multiple mappers for parallel processing",
+              "node_id": "split_mapper",
+              "node_type": "split"
+            }
+          },
+          "params": {
+            "format": "array",
+            "node_id": "join_results",
+            "node_type": "join"
+          }
+        },
+        "map_reduce_complete": true,
+        "mapper_messages": [],
+        "processed_inputs": [],
+        "total_mappers": null
+      },
+      "result_result": {
+        "aggregated_sum": 0,
+        "execution_summary": {
+          "final_sum": 0,
+          "individual_squares": [],
+          "inputs": [],
+          "operation": "parallel_square_and_sum",
+          "parallel_execution": "JoinNode enabled clean parallel processing"
+        },
+        "individual_results": {
+          "_join_operation": true,
+          "input": {
+            "input": {
+              "message": "Starting parallel map-reduce with SplitNode",
+              "numbers": [
+                10,
+                20,
+                30
+              ],
+              "operation": "square"
+            },
+            "params": {
+              "description": "Fan out to multiple mappers for parallel processing",
+              "node_id": "split_mapper",
+              "node_type": "split"
+            }
+          },
+          "params": {
+            "format": "array",
+            "node_id": "join_results",
+            "node_type": "join"
+          }
+        },
+        "map_reduce_complete": true,
+        "mapper_messages": [],
+        "processed_inputs": [],
+        "total_mappers": null
+      }
+    }
+  },
+  "accountID": "8063ac7b-5c73-41ec-8918-51e2f20725c7",
+  "execution": {
+    "flow_id": "splitnode-map-reduce-flow-1755328543170904004",
+    "id": "7c31ee73-7887-40f9-a508-98d12ee0a977"
+  },
+  "input": {
+    "input": {
+      "aggregated_sum": 0,
+      "execution_summary": {
+        "final_sum": 0,
+        "individual_squares": [],
+        "inputs": [],
+        "operation": "parallel_square_and_sum",
+        "parallel_execution": "JoinNode enabled clean parallel processing"
+      },
+      "individual_results": {
+        "_join_operation": true,
+        "input": {
+          "input": {
+            "message": "Starting parallel map-reduce with SplitNode",
+            "numbers": [
+              10,
+              20,
+              30
+            ],
+            "operation": "square"
+          },
+          "params": {
+            "description": "Fan out to multiple mappers for parallel processing",
+            "node_id": "split_mapper",
+            "node_type": "split"
+          }
+        },
+        "params": {
+          "format": "array",
+          "node_id": "join_results",
+          "node_type": "join"
+        }
+      },
+      "map_reduce_complete": true,
+      "mapper_messages": [],
+      "processed_inputs": [],
+      "total_mappers": null
+    },
+    "mode": "parallel_map_reduce",
+    "numbers": [
+      10,
+      20,
+      30
+    ],
+    "result": {
+      "aggregated_sum": 0,
+      "execution_summary": {
+        "final_sum": 0,
+        "individual_squares": [],
+        "inputs": [],
+        "operation": "parallel_square_and_sum",
+        "parallel_execution": "JoinNode enabled clean parallel processing"
+      },
+      "individual_results": {
+        "_join_operation": true,
+        "input": {
+          "input": {
+            "message": "Starting parallel map-reduce with SplitNode",
+            "numbers": [
+              10,
+              20,
+              30
+            ],
+            "operation": "square"
+          },
+          "params": {
+            "description": "Fan out to multiple mappers for parallel processing",
+            "node_id": "split_mapper",
+            "node_type": "split"
+          }
+        },
+        "params": {
+          "format": "array",
+          "node_id": "join_results",
+          "node_type": "join"
+        }
+      },
+      "map_reduce_complete": true,
+      "mapper_messages": [],
+      "processed_inputs": [],
+      "total_mappers": null
+    },
+    "result_result": {
+      "aggregated_sum": 0,
+      "execution_summary": {
+        "final_sum": 0,
+        "individual_squares": [],
+        "inputs": [],
+        "operation": "parallel_square_and_sum",
+        "parallel_execution": "JoinNode enabled clean parallel processing"
+      },
+      "individual_results": {
+        "_join_operation": true,
+        "input": {
+          "input": {
+            "message": "Starting parallel map-reduce with SplitNode",
+            "numbers": [
+              10,
+              20,
+              30
+            ],
+            "operation": "square"
+          },
+          "params": {
+            "description": "Fan out to multiple mappers for parallel processing",
+            "node_id": "split_mapper",
+            "node_type": "split"
+          }
+        },
+        "params": {
+          "format": "array",
+          "node_id": "join_results",
+          "node_type": "join"
+        }
+      },
+      "map_reduce_complete": true,
+      "mapper_messages": [],
+      "processed_inputs": [],
+      "total_mappers": null
+    }
+  },
+  "shared": {
+    "input": {
+      "aggregated_sum": 0,
+      "execution_summary": {
+        "final_sum": 0,
+        "individual_squares": [],
+        "inputs": [],
+        "operation": "parallel_square_and_sum",
+        "parallel_execution": "JoinNode enabled clean parallel processing"
+      },
+      "individual_results": {
+        "_join_operation": true,
+        "input": {
+          "input": {
+            "message": "Starting parallel map-reduce with SplitNode",
+            "numbers": [
+              10,
+              20,
+              30
+            ],
+            "operation": "square"
+          },
+          "params": {
+            "description": "Fan out to multiple mappers for parallel processing",
+            "node_id": "split_mapper",
+            "node_type": "split"
+          }
+        },
+        "params": {
+          "format": "array",
+          "node_id": "join_results",
+          "node_type": "join"
+        }
+      },
+      "map_reduce_complete": true,
+      "mapper_messages": [],
+      "processed_inputs": [],
+      "total_mappers": null
+    },
+    "mode": "parallel_map_reduce",
+    "numbers": [
+      10,
+      20,
+      30
+    ],
+    "result": {
+      "aggregated_sum": 0,
+      "execution_summary": {
+        "final_sum": 0,
+        "individual_squares": [],
+        "inputs": [],
+        "operation": "parallel_square_and_sum",
+        "parallel_execution": "JoinNode enabled clean parallel processing"
+      },
+      "individual_results": {
+        "_join_operation": true,
+        "input": {
+          "input": {
+            "message": "Starting parallel map-reduce with SplitNode",
+            "numbers": [
+              10,
+              20,
+              30
+            ],
+            "operation": "square"
+          },
+          "params": {
+            "description": "Fan out to multiple mappers for parallel processing",
+            "node_id": "split_mapper",
+            "node_type": "split"
+          }
+        },
+        "params": {
+          "format": "array",
+          "node_id": "join_results",
+          "node_type": "join"
+        }
+      },
+      "map_reduce_complete": true,
+      "mapper_messages": [],
+      "processed_inputs": [],
+      "total_mappers": null
+    },
+    "result_result": {
+      "aggregated_sum": 0,
+      "execution_summary": {
+        "final_sum": 0,
+        "individual_squares": [],
+        "inputs": [],
+        "operation": "parallel_square_and_sum",
+        "parallel_execution": "JoinNode enabled clean parallel processing"
+      },
+      "individual_results": {
+        "_join_operation": true,
+        "input": {
+          "input": {
+            "message": "Starting parallel map-reduce with SplitNode",
+            "numbers": [
+              10,
+              20,
+              30
+            ],
+            "operation": "square"
+          },
+          "params": {
+            "description": "Fan out to multiple mappers for parallel processing",
+            "node_id": "split_mapper",
+            "node_type": "split"
+          }
+        },
+        "params": {
+          "format": "array",
+          "node_id": "join_results",
+          "node_type": "join"
+        }
+      },
+      "map_reduce_complete": true,
+      "mapper_messages": [],
+      "processed_inputs": [],
+      "total_mappers": null
+    }
+  }
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{
+  "node_id": "output",
+  "node_type": "transform",
+  "script": "return {\n  status: \"completed\",\n  map_reduce_results: input,\n  conclusion: \"SplitNode successfully enabled parallel map-reduce pattern\",\n  performance_note: \"All mappers executed simultaneously, then reducer aggregated results\"\n};\n"
+}
+[Transform Script] [DEBUG] About to execute script
+[Transform Script] [DEBUG] Script execution completed successfully
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "conclusion": "SplitNode successfully enabled parallel map-reduce pattern",
+  "map_reduce_results": {
+    "aggregated_sum": 0,
+    "execution_summary": {
+      "final_sum": 0,
+      "individual_squares": [],
+      "inputs": [],
+      "operation": "parallel_square_and_sum",
+      "parallel_execution": "JoinNode enabled clean parallel processing"
+    },
+    "individual_results": {
+      "_join_operation": true,
+      "input": {
+        "input": {
+          "message": "Starting parallel map-reduce with SplitNode",
+          "numbers": [
+            10,
+            20,
+            30
+          ],
+          "operation": "square"
+        },
+        "params": {
+          "description": "Fan out to multiple mappers for parallel processing",
+          "node_id": "split_mapper",
+          "node_type": "split"
+        }
+      },
+      "params": {
+        "format": "array",
+        "node_id": "join_results",
+        "node_type": "join"
+      }
+    },
+    "map_reduce_complete": true,
+    "mapper_messages": [],
+    "processed_inputs": [],
+    "total_mappers": null
+  },
+  "performance_note": "All mappers executed simultaneously, then reducer aggregated results",
+  "status": "completed"
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+2025/08/16 07:15:43 Request: GET /api/v1/executions/7c31ee73-7887-40f9-a508-98d12ee0a977/logs
+--- FAIL: TestSplitNodeIntegration (0.43s)
+    split_node_test.go:74: Test server started at: http://127.0.0.1:44297
+    split_node_test.go:77: Step 1: Creating test user...
+    split_node_test.go:105: Created account: testuser-split-1755328543002013999 (ID: 8063ac7b-5c73-41ec-8918-51e2f20725c7)
+    split_node_test.go:108: Step 2: Creating SplitNode demonstration flow...
+    split_node_test.go:291: Created flow: splitnode-map-reduce-flow-1755328543170904004
+    split_node_test.go:294: Step 3: Executing SplitNode flow...
+    split_node_test.go:332: Started execution: 7c31ee73-7887-40f9-a508-98d12ee0a977
+    split_node_test.go:335: Step 4: Polling for execution completion...
+    split_node_test.go:368: Execution finished with status: completed
+    split_node_test.go:381: Total execution time: 171.643809ms
+    split_node_test.go:384: Step 5: Verifying execution results...
+    split_node_test.go:394: Step 6: Getting execution logs and analyzing SplitNode behavior...
+    split_node_test.go:415: Found 7 log entries
+    split_node_test.go:422:
+        📋 EXECUTION LOGS ANALYSIS:
+    split_node_test.go:423: ==========================
+    split_node_test.go:430: Log 1 [Node: ] [2025-08-16T07:15:43.256139916Z]: Starting flow execution
+    split_node_test.go:430: Log 2 [Node: start] [2025-08-16T07:15:43.256758874Z]: Node start executed
+    split_node_test.go:430: Log 3 [Node: split_mapper] [2025-08-16T07:15:43.257293013Z]: Node split_mapper executed
+    split_node_test.go:430: Log 4 [Node: join_results] [2025-08-16T07:15:43.258065177Z]: Node join_results executed
+    split_node_test.go:430: Log 5 [Node: reducer] [2025-08-16T07:15:43.258777087Z]: Node reducer executed
+    split_node_test.go:449:   📊 REDUCER RESULTS: {
+            "aggregated_sum": 0,
+            "execution_summary": {
+              "final_sum": 0,
+              "individual_squares": [],
+              "inputs": [],
+              "operation": "parallel_square_and_sum",
+              "parallel_execution": "JoinNode enabled clean parallel processing"
+            },
+            "individual_results": {
+              "_join_operation": true,
+              "input": {
+                "input": {
+                  "message": "Starting parallel map-reduce with SplitNode",
+                  "numbers": [
+                    10,
+                    20,
+                    30
+                  ],
+                  "operation": "square"
+                },
+                "params": {
+                  "description": "Fan out to multiple mappers for parallel processing",
+                  "node_id": "split_mapper",
+                  "node_type": "split"
+                }
+              },
+              "params": {
+                "format": "array",
+                "node_id": "join_results",
+                "node_type": "join"
+              }
+            },
+            "map_reduce_complete": true,
+            "mapper_messages": [],
+            "processed_inputs": [],
+            "total_mappers": null
+          }
+    split_node_test.go:430: Log 6 [Node: output] [2025-08-16T07:15:43.260382815Z]: Node output executed
+    split_node_test.go:430: Log 7 [Node: ] [2025-08-16T07:15:43.260473535Z]: Flow execution completed successfully
+    split_node_test.go:465:
+        🔍 SPLITNODE VERIFICATION:
+    split_node_test.go:466: =========================
+    split_node_test.go:469:
+		Error Trace:	/app/pkg/api/split_node_test.go:469
+		Error:      	"0" is not greater than or equal to "3"
+		Test:       	TestSplitNodeIntegration
+		Messages:   	All three mapper branches should have executed
+    split_node_test.go:470: ✅ Mapper executions found: 0
+    split_node_test.go:474: ✅ SplitNode logs found: 1
+    split_node_test.go:489:
+		Error Trace:	/app/pkg/api/split_node_test.go:489
+		Error:      	Not equal:
+				expected: 1400
+				actual  : 0
+		Test:       	TestSplitNodeIntegration
+		Messages:   	Sum of squares should be 1400
+    split_node_test.go:490: ✅ Correct aggregated sum: 0 (10² + 20² + 30² = 1400)
+    split_node_test.go:498:
+        📊 FINAL EXECUTION RESULTS:
+    split_node_test.go:499: ==========================
+    split_node_test.go:501: {
+            "action": "default",
+            "conclusion": "SplitNode successfully enabled parallel map-reduce pattern",
+            "map_reduce_results": {
+              "aggregated_sum": 0,
+              "execution_summary": {
+                "final_sum": 0,
+                "individual_squares": [],
+                "inputs": [],
+                "operation": "parallel_square_and_sum",
+                "parallel_execution": "JoinNode enabled clean parallel processing"
+              },
+              "individual_results": {
+                "_join_operation": true,
+                "input": {
+                  "input": {
+                    "message": "Starting parallel map-reduce with SplitNode",
+                    "numbers": [
+                      10,
+                      20,
+                      30
+                    ],
+                    "operation": "square"
+                  },
+                  "params": {
+                    "description": "Fan out to multiple mappers for parallel processing",
+                    "node_id": "split_mapper",
+                    "node_type": "split"
+                  }
+                },
+                "params": {
+                  "format": "array",
+                  "node_id": "join_results",
+                  "node_type": "join"
+                }
+              },
+              "map_reduce_complete": true,
+              "mapper_messages": [],
+              "processed_inputs": [],
+              "total_mappers": null
+            },
+            "performance_note": "All mappers executed simultaneously, then reducer aggregated results",
+            "status": "completed"
+          }
+    split_node_test.go:513: ✅ Execution completed in 171.643809ms - consistent with parallel processing
+    split_node_test.go:516:
+        🎉 SPLITNODE INTEGRATION TEST SUMMARY:
+    split_node_test.go:517: ====================================
+    split_node_test.go:518: ✅ SplitNode successfully integrated into flowrunner
+    split_node_test.go:519: ✅ YAML flow definition with SplitNode parsed correctly
+    split_node_test.go:520: ✅ Parallel fan-out to multiple mapper branches executed
+    split_node_test.go:521: ✅ All mapper branches processed data simultaneously
+    split_node_test.go:522: ✅ SplitNode waited for all branches before continuing to reducer
+    split_node_test.go:523: ✅ Reducer successfully aggregated results from all parallel mappers
+    split_node_test.go:524: ✅ True map-reduce pattern achieved through HTTP API
+    split_node_test.go:525: ✅ End-to-end integration test PASSED!
+2025/08/16 07:15:43 Request: GET /api/v1/ws
+2025/08/16 07:15:43 WebSocket connection established for account 37ee11e2-2386-4fac-a810-5ea6e8f7be17
+2025/08/16 07:15:43 Request: POST /api/v1/flows/test-flow-1755328543511838275/run
+2025/08/16 07:15:43 Connecting node: start
+2025/08/16 07:15:43   Action: success -> end
+2025/08/16 07:15:43 Connecting node: end
+2025/08/16 07:15:43 Account 37ee11e2-2386-4fac-a810-5ea6e8f7be17 subscribed to execution 6ea81cb5-8813-47dd-b1aa-7d520c1a5c11
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "type": "duration",
+  "waited_for": "100ms"
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+⚠️  Flow ends: action 'default' not found (map[success:0xc000660780])
+2025/08/16 07:15:43 Request: GET /api/v1/executions/6ea81cb5-8813-47dd-b1aa-7d520c1a5c11
+2025/08/16 07:15:43 WebSocket connection closed for account 37ee11e2-2386-4fac-a810-5ea6e8f7be17
+2025/08/16 07:15:43 Request: GET /api/v1/ws
+2025/08/16 07:15:44 WebSocket connection established for account 73a41c50-4062-4a2d-ab16-f1d4d637cc2e
+2025/08/16 07:15:44 WebSocket connection closed for account 73a41c50-4062-4a2d-ab16-f1d4d637cc2e
+2025/08/16 07:15:44 Request: GET /api/v1/ws
+2025/08/16 07:15:44 Request: GET /api/v1/ws
+2025/08/16 07:15:44 Request: GET /api/v1/ws
+2025/08/16 07:15:44 WebSocket connection established for account f82800b7-8136-4f83-bf44-0fb4dd948036
+2025/08/16 07:15:44 Request: GET /api/v1/ws
+2025/08/16 07:15:44 WebSocket connection established for account f82800b7-8136-4f83-bf44-0fb4dd948036
+2025/08/16 07:15:44 Request: GET /api/v1/ws
+2025/08/16 07:15:44 WebSocket connection established for account f82800b7-8136-4f83-bf44-0fb4dd948036
+2025/08/16 07:15:44 Request: GET /api/v1/ws
+2025/08/16 07:15:44 WebSocket connection established for account f82800b7-8136-4f83-bf44-0fb4dd948036
+2025/08/16 07:15:44 Request: GET /api/v1/ws
+2025/08/16 07:15:44 WebSocket connection established for account f82800b7-8136-4f83-bf44-0fb4dd948036
+2025/08/16 07:15:44 WebSocket connection closed for account f82800b7-8136-4f83-bf44-0fb4dd948036
+2025/08/16 07:15:44 WebSocket connection closed for account f82800b7-8136-4f83-bf44-0fb4dd948036
+2025/08/16 07:15:44 WebSocket connection closed for account f82800b7-8136-4f83-bf44-0fb4dd948036
+2025/08/16 07:15:44 WebSocket connection closed for account f82800b7-8136-4f83-bf44-0fb4dd948036
+2025/08/16 07:15:44 WebSocket connection closed for account f82800b7-8136-4f83-bf44-0fb4dd948036
+2025/08/16 07:15:44 WebSocket connection established for account test-account
+2025/08/16 07:15:44 WebSocket connection closed for account test-account
+2025/08/16 07:15:44 WebSocket connection established for account test-account
+2025/08/16 07:15:44 Account test-account subscribed to execution test-execution
+2025/08/16 07:15:45 WebSocket connection closed for account test-account
+2025/08/16 07:15:45 WebSocket connection established for account test-account
+2025/08/16 07:15:45 Account test-account subscribed to execution test-execution
+2025/08/16 07:15:45 Connection unsubscribed from execution test-execution
+2025/08/16 07:15:45 WebSocket connection closed for account test-account
+2025/08/16 07:15:45 WebSocket connection established for account test-account
+2025/08/16 07:15:45 WebSocket connection closed for account test-account
+2025/08/16 07:15:45 WebSocket connection established for account test-account
+2025/08/16 07:15:45 WebSocket connection closed for account test-account
+FAIL
+FAIL	github.com/tcmartin/flowrunner/pkg/api	5.503s
+?   	github.com/tcmartin/flowrunner/pkg/api/middleware	[no test files]
+?   	github.com/tcmartin/flowrunner/pkg/auth	[no test files]
+ok  	github.com/tcmartin/flowrunner/pkg/config	(cached)
+ok  	github.com/tcmartin/flowrunner/pkg/loader	(cached)
+?   	github.com/tcmartin/flowrunner/pkg/logging	[no test files]
+?   	github.com/tcmartin/flowrunner/pkg/middleware	[no test files]
+ok  	github.com/tcmartin/flowrunner/pkg/plugins	(cached)
+ok  	github.com/tcmartin/flowrunner/pkg/registry	(cached)
+[Condition Node] Starting condition evaluation
+[Condition Node] Script length: 12 characters
+[Condition Node] Setting flow input with 0 keys
+[Condition Node] About to execute JavaScript
+[Condition Node] JavaScript execution successful
+[Condition Node] Final result: true (type: bool)
+--- FAIL: TestCronNode (0.08s)
+    --- FAIL: TestCronNode/Schedule_job (0.08s)
+        cron_node_test.go:46:
+		Error Trace:	/app/pkg/runtime/cron_node_test.go:46
+		Error:      	Received unexpected error:
+				failed to initialize cron system: failed to connect to Redis: dial tcp 127.0.0.1:6379: connect: connection refused
+		Test:       	TestCronNode/Schedule_job
+        cron_node_test.go:47:
+		Error Trace:	/app/pkg/runtime/cron_node_test.go:47
+		Error:      	Expected value not to be nil.
+		Test:       	TestCronNode/Schedule_job
+panic: interface conversion: flowlib.Node is nil, not *runtime.NodeWrapper [recovered]
+	panic: interface conversion: flowlib.Node is nil, not *runtime.NodeWrapper
+
+goroutine 13 [running]:
+testing.tRunner.func1.2({0x113bb20, 0xc000179200})
+	/usr/local/go/src/testing/testing.go:1734 +0x21c
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:1737 +0x35e
+panic({0x113bb20?, 0xc000179200?})
+	/usr/local/go/src/runtime/panic.go:792 +0x132
+github.com/tcmartin/flowrunner/pkg/runtime.TestCronNode.func2(0xc000524e00)
+	/app/pkg/runtime/cron_node_test.go:49 +0x5c5
+testing.tRunner(0xc000524e00, 0x130af70)
+	/usr/local/go/src/testing/testing.go:1792 +0xf4
+created by testing.(*T).Run in goroutine 10
+	/usr/local/go/src/testing/testing.go:1851 +0x413
+FAIL	github.com/tcmartin/flowrunner/pkg/runtime	0.119s
+ok  	github.com/tcmartin/flowrunner/pkg/scripting	(cached)
+?   	github.com/tcmartin/flowrunner/pkg/scripting/examples	[no test files]
+ok  	github.com/tcmartin/flowrunner/pkg/services	(cached)
+ok  	github.com/tcmartin/flowrunner/pkg/storage	(cached)
+?   	github.com/tcmartin/flowrunner/pkg/utils	[no test files]
+?   	github.com/tcmartin/flowrunner/pkg/webhooks	[no test files]
+?   	github.com/tcmartin/flowrunner/test_programs/transform_integration_test	[no test files]
+?   	github.com/tcmartin/flowrunner/test_programs/transform_node_test	[no test files]
+FAIL
