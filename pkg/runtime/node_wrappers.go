@@ -170,11 +170,11 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
             }
 		}
 
-		// Execute the function
-		result, err := w.exec(combinedInput)
-		if err != nil {
-			return "", err
-		}
+        // Execute the function
+        result, err := w.exec(combinedInput)
+        if err != nil {
+            return "", err
+        }
 
 		// Store the result in the shared context if it's a map
 		if sharedMap, ok := shared.(map[string]interface{}); ok {
@@ -257,11 +257,21 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 		// Call the post function if provided
 		if w.post != nil {
 			return w.post(shared, processedParams, result)
-		}
+        }
 
-		// Default to the "default" action
-		return flowlib.DefaultAction, nil
-	}
+        // If a custom post handler is defined, use it to determine the next action
+        if w.post != nil {
+            if act, err := w.post(shared, combinedInput, result); err == nil {
+                return act, nil
+            } else {
+                // If post handler errors, surface the error to fail fast
+                return "", err
+            }
+        }
+
+        // Default to the "default" action
+        return flowlib.DefaultAction, nil
+    }
 
 	// Fall back to the wrapped node's Run method
 	return w.node.Run(shared)
