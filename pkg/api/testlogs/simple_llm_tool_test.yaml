@@ -1,10 +1,10 @@
 metadata:
   name: "Simple LLM Tool Test"
-  description: "Simple test of LLM node with tool calling"
+  description: "Simple test of LLM node tool calling with router + http"
   version: "1.0.0"
 
 nodes:
-  start:
+  ask:
     type: llm
     params:
       provider: openai
@@ -12,7 +12,7 @@ nodes:
       model: gpt-4o-mini
       temperature: 0.3
       max_tokens: 500
-      prompt: "Please fetch the content from https://httpbin.org/json and tell me what you found."
+      question: "Use the get_website tool to fetch https://httpbin.org/json and summarize it."
       tools:
         - type: function
           function:
@@ -25,7 +25,30 @@ nodes:
                   type: string
                   description: The URL to fetch content from
               required: ["url"]
+      options:
+        tool_choice:
+          type: function
+          function:
+            name: get_website
     next:
+      default: route
+
+  route:
+    type: router
+    next:
+      get_website: http
+      output: end
+
+  http:
+    type: http.request
+    params:
+      url: ${shared.result.tool_params.url}
+      method: GET
+      headers:
+        User-Agent: FlowRunner-Simple-Test
+      timeout: "10s"
+    next:
+      success: end
       default: end
 
   end:
@@ -33,6 +56,6 @@ nodes:
     params:
       script: |
         return {
-          final_response: input.content || input.message || "LLM execution completed",
+          final_response: input.body ? "HTTP body length: " + input.body.length : (input.content || input.message || "LLM execution completed"),
           llm_result: input
         };

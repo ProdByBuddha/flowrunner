@@ -163,16 +163,16 @@ func NewSMTPNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 				smtpPort = portParam
 			}
 
-			// Extract IMAP server parameters (for connection sharing)
-			imapHost := smtpHost // Default to same as SMTP
-			if hostParam, ok := params["imap_host"].(string); ok {
-				imapHost = hostParam
-			}
+            // Extract IMAP server parameters (optional). Leave empty unless explicitly provided.
+            imapHost := ""
+            if hostParam, ok := params["imap_host"].(string); ok {
+                imapHost = hostParam
+            }
 
-			imapPort := 993 // Default IMAP port
-			if portParam, ok := params["imap_port"].(int); ok {
-				imapPort = portParam
-			}
+            imapPort := 0
+            if portParam, ok := params["imap_port"].(int); ok {
+                imapPort = portParam
+            }
 
 			// Extract authentication parameters
 			username, ok := params["username"].(string)

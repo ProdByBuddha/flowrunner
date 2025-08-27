@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -78,10 +79,15 @@ func TestComprehensiveToolExecution(t *testing.T) {
 
 	// Using real httpbin.org endpoints for reliable testing
 
-	// Create and start server
-	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, pluginRegistry)
-	testServer := httptest.NewServer(server.router)
-	defer testServer.Close()
+    // Create and start server on IPv4 localhost to avoid IPv6 bind restrictions in sandbox
+    server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, pluginRegistry)
+    unstarted := httptest.NewUnstartedServer(server.router)
+    ln, err := net.Listen("tcp4", "127.0.0.1:0")
+    require.NoError(t, err)
+    unstarted.Listener = ln
+    unstarted.Start()
+    defer unstarted.Close()
+    testServer := unstarted
 
 	t.Logf("Test server started at: %s", testServer.URL)
 	t.Log("Using real httpbin.org endpoints for tool calls")
@@ -127,6 +133,10 @@ func TestComprehensiveToolExecution(t *testing.T) {
 	require.NoError(t, err, "Failed to retrieve stored API key")
 	assert.Equal(t, apiKey, retrievedKey, "Retrieved API key should match stored key")
 	t.Logf("Successfully stored and verified OpenAI API key")
+	
+	// Also store with alternative key names for template resolution
+	err = secretVault.Set(accountID, "openai_api_key", apiKey)
+	require.NoError(t, err, "Failed to store OpenAI API key with lowercase name")
 
 	// Test scenarios
 	testScenarios := []struct {
@@ -165,9 +175,14 @@ func TestComprehensiveToolExecution(t *testing.T) {
 		t.Run(scenario.name, func(t *testing.T) {
 			t.Logf("Testing scenario: %s", scenario.name)
 
-			// Load and register flow
+					// Load and register flow
 			flowContent, err := os.ReadFile(scenario.yamlFile)
 			require.NoError(t, err, "Failed to read YAML file: %s", scenario.yamlFile)
+
+			// Replace secret templates with direct API key for compatibility
+			flowContentStr := string(flowContent)
+			flowContentStr = strings.ReplaceAll(flowContentStr, "${secrets.OPENAI_API_KEY}", apiKey)
+			flowContent = []byte(flowContentStr)
 
 			flowName := fmt.Sprintf("test-flow-%s-%d", strings.ToLower(strings.ReplaceAll(scenario.name, " ", "-")), time.Now().UnixNano())
 

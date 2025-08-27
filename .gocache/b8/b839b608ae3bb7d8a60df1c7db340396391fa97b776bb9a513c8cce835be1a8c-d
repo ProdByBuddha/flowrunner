@@ -1,0 +1,43 @@
+=== RUN   TestYAMLLoaderValidate
+=== RUN   TestYAMLLoaderValidate/Valid_YAML
+=== RUN   TestYAMLLoaderValidate/Invalid_YAML_-_Missing_metadata
+=== RUN   TestYAMLLoaderValidate/Invalid_YAML_-_Missing_nodes
+=== RUN   TestYAMLLoaderValidate/Invalid_YAML_-_Unknown_node_type
+=== RUN   TestYAMLLoaderValidate/Invalid_YAML_-_Invalid_reference
+--- PASS: TestYAMLLoaderValidate (0.00s)
+    --- PASS: TestYAMLLoaderValidate/Valid_YAML (0.00s)
+    --- PASS: TestYAMLLoaderValidate/Invalid_YAML_-_Missing_metadata (0.00s)
+    --- PASS: TestYAMLLoaderValidate/Invalid_YAML_-_Missing_nodes (0.00s)
+    --- PASS: TestYAMLLoaderValidate/Invalid_YAML_-_Unknown_node_type (0.00s)
+    --- PASS: TestYAMLLoaderValidate/Invalid_YAML_-_Invalid_reference (0.00s)
+=== RUN   TestYAMLLoaderParse
+2025/08/27 04:55:07 Connecting node: start
+2025/08/27 04:55:07   Action: default -> end
+2025/08/27 04:55:07 Connecting node: end
+--- PASS: TestYAMLLoaderParse (0.00s)
+=== RUN   TestYAMLLoader_Parse_SimpleFlow
+2025/08/27 04:55:07 Connecting node: start
+2025/08/27 04:55:07   Action: default -> end
+2025/08/27 04:55:07 Connecting node: end
+--- PASS: TestYAMLLoader_Parse_SimpleFlow (0.00s)
+=== RUN   TestYAMLLoader_Parse_FlowWithRetryAndBatch
+2025/08/27 04:55:07 Connecting node: start
+2025/08/27 04:55:07   Action: default -> process_data
+2025/08/27 04:55:07 Connecting node: process_data
+2025/08/27 04:55:07   Action: success -> end
+2025/08/27 04:55:07   Action: failure -> error_node
+2025/08/27 04:55:07 Connecting node: error_node
+2025/08/27 04:55:07 Connecting node: end
+--- PASS: TestYAMLLoader_Parse_FlowWithRetryAndBatch (0.00s)
+=== RUN   TestYAMLLoader_Parse_NoStartNode
+2025/08/27 04:55:07 Connecting node: nodeA
+2025/08/27 04:55:07   Action: default -> nodeB
+2025/08/27 04:55:07 Connecting node: nodeB
+2025/08/27 04:55:07   Action: default -> nodeA
+--- PASS: TestYAMLLoader_Parse_NoStartNode (0.00s)
+=== RUN   TestYAMLLoader_Parse_MultipleStartNodes
+2025/08/27 04:55:07 Connecting node: nodeA
+2025/08/27 04:55:07 Connecting node: nodeB
+--- PASS: TestYAMLLoader_Parse_MultipleStartNodes (0.00s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/loader	0.019s

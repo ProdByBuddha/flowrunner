@@ -1,0 +1,7 @@
+# test log
+getenv TMPDIR
+stat /tmp/flowrunner-config-test2760996608
+open /tmp/flowrunner-config-test2760996608/config.json
+open /tmp/flowrunner-config-test2760996608/config.json
+open /tmp
+open non-existent-file.json

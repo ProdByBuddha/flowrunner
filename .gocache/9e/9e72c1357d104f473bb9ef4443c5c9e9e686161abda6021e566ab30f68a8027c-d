@@ -1,0 +1,8 @@
+./condition.go
+./doc.go
+./error.go
+./expression.go
+./key_condition.go
+./operand.go
+./projection.go
+./update.go

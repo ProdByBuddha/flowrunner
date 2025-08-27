@@ -404,7 +404,7 @@ nodes:
 	}
 
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, plugins.NewPluginRegistry())
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	// Test multiple concurrent executions with WebSocket monitoring
@@ -868,13 +868,15 @@ nodes:
 	}
 
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, plugins.NewPluginRegistry())
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	// Test the flow execution with WebSocket monitoring
-	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http") + "/api/v1/ws"
-	header := make(http.Header)
-	header.Set("Authorization", "Basic c2ltcGxlX3Rlc3RfdXNlcjp0ZXN0X3Bhc3N3b3Jk") // simple_test_user:test_password
+    wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http") + "/api/v1/ws"
+    header := make(http.Header)
+    // Use the dynamically created account for Basic auth
+    authStr := fmt.Sprintf("%s:%s", testUsername, "test_password")
+    header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(authStr)))
 
 	ws, resp, err := websocket.DefaultDialer.Dial(wsURL, header)
 	require.NoError(t, err, "WebSocket connection failed")
@@ -967,7 +969,7 @@ nodes:
 	statusURL := testServer.URL + "/api/v1/executions/" + executionID
 	statusReq, err := http.NewRequest("GET", statusURL, nil)
 	require.NoError(t, err)
-	statusReq.SetBasicAuth("simple_test_user", "test_password")
+        statusReq.SetBasicAuth(testUsername, "test_password")
 
 	statusResp, err := client.Do(statusReq)
 	require.NoError(t, err)

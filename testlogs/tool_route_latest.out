@@ -1,0 +1,11 @@
+=== RUN   TestEmailToolRouteSend
+    email_tool_route_test.go:123: 
+        	Error Trace:	/root/projects/flowrunner/pkg/api/email_tool_route_test.go:123
+        	Error:      	Received unexpected error:
+        	            	invalid YAML flow definition: yaml: unmarshal errors:
+        	            	  line 33: mapping key "next" already defined at line 30
+        	Test:       	TestEmailToolRouteSend
+--- FAIL: TestEmailToolRouteSend (0.00s)
+FAIL
+FAIL	github.com/tcmartin/flowrunner/pkg/api	0.016s
+FAIL

@@ -1,0 +1,93 @@
+=== RUN   TestEmailSummaryParallel
+2025/08/27 09:24:38 Connecting node: summarize
+2025/08/27 09:24:38   Action: success -> email
+2025/08/27 09:24:38 Connecting node: email
+2025/08/27 09:24:38   Action: default -> END
+2025/08/27 09:24:38 Connecting node: fetch
+2025/08/27 09:24:38   Action: success -> summarize
+2025/08/27 09:24:38   Action: default -> summarize
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_execution _flow_context accountID _secret_vault]
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {}
+  },
+  "accountID": "email-summary-1756286678935148261",
+  "execution": {
+    "flow_id": "email-summary-1756286678935578291",
+    "id": "4f7847db-fab2-4414-8f5f-cdb0729081eb"
+  },
+  "input": {},
+  "shared": {}
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+
+2025/08/27 09:24:38 Connecting node: fetch
+2025/08/27 09:24:38   Action: success -> summarize
+2025/08/27 09:24:38   Action: default -> summarize
+2025/08/27 09:24:38 Connecting node: summarize
+2025/08/27 09:24:38   Action: success -> email
+2025/08/27 09:24:38 Connecting node: email
+2025/08/27 09:24:38   Action: default -> END
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_execution _flow_context accountID _secret_vault]
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {}
+  },
+  "accountID": "email-summary-1756286678936795470",
+  "execution": {
+    "flow_id": "email-summary-1756286678939135338",
+    "id": "0b083c57-3286-4815-a5fe-d1b45b139924"
+  },
+  "input": {},
+  "shared": {}
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+
+    email_summary_test.go:130: 
+        	Error Trace:	/root/projects/flowrunner/pkg/api/email_summary_test.go:112
+        	            				/root/projects/flowrunner/pkg/api/email_summary_test.go:130
+        	            				/root/projects/flowrunner/pkg/api/asm_amd64.s:1700
+        	Error:      	Not equal: 
+        	            	expected: "completed"
+        	            	actual  : "failed"
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1 +1 @@
+        	            	-completed
+        	            	+failed
+        	Test:       	TestEmailSummaryParallel
+        	Messages:   	Email summary flow should complete: https://httpbin.org/html
+    email_summary_test.go:130: 
+        	Error Trace:	/root/projects/flowrunner/pkg/api/email_summary_test.go:112
+        	            				/root/projects/flowrunner/pkg/api/email_summary_test.go:130
+        	            				/root/projects/flowrunner/pkg/api/asm_amd64.s:1700
+        	Error:      	Not equal: 
+        	            	expected: "completed"
+        	            	actual  : "failed"
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1 +1 @@
+        	            	-completed
+        	            	+failed
+        	Test:       	TestEmailSummaryParallel
+        	Messages:   	Email summary flow should complete: https://www.gemmit.org
+--- FAIL: TestEmailSummaryParallel (1.01s)
+FAIL
+FAIL	github.com/tcmartin/flowrunner/pkg/api	1.018s
+FAIL

@@ -23,3 +23,6 @@ test_results.txt
 /test_dynamodb_debug
 /test_dynamodb_getuser
 /test_dynamodb_account_debug
+
+.kiro
+

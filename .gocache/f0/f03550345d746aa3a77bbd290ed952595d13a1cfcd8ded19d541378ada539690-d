@@ -1,0 +1,8 @@
+./account_handlers.go
+./auth_handlers.go
+./plugin_handlers.go
+./registry.go
+./secret_handlers.go
+./server.go
+./structured_secret_handlers.go
+./websocket.go

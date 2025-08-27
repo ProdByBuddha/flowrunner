@@ -1,0 +1,38 @@
+=== RUN   TestWebSocketPostgreSQLIntegration_SimpleBranching
+    websocket_postgres_integration_test.go:668: Testing with PostgreSQL: 127.0.0.1:5432/flowrunner_db (user: flowrunner)
+    websocket_postgres_integration_test.go:855: Created simple branching flow with ID: simple-branching-flow-1756279061150208397
+2025/08/27 07:17:41 Request: GET /api/v1/ws
+2025/08/27 07:17:41 WebSocket connection established for account 7c97a6cd-8c3d-49a9-97fb-f9ce182a74cd
+2025/08/27 07:17:41 Request: POST /api/v1/flows/simple-branching-flow-1756279061150208397/run
+2025/08/27 07:17:41 Connecting node: finalize
+2025/08/27 07:17:41 Connecting node: start
+2025/08/27 07:17:41   Action: success -> evaluate_category
+2025/08/27 07:17:41   Action: error -> error_handler
+2025/08/27 07:17:41 Connecting node: evaluate_category
+2025/08/27 07:17:41   Action: high -> high_value_processor
+2025/08/27 07:17:41   Action: medium -> medium_value_processor
+2025/08/27 07:17:41   Action: low -> low_value_processor
+2025/08/27 07:17:41   Action: default -> default_processor
+2025/08/27 07:17:41 Connecting node: high_value_processor
+2025/08/27 07:17:41   Action: success -> finalize
+2025/08/27 07:17:41 Connecting node: medium_value_processor
+2025/08/27 07:17:41   Action: success -> finalize
+2025/08/27 07:17:41 Connecting node: low_value_processor
+2025/08/27 07:17:41   Action: success -> finalize
+2025/08/27 07:17:41 Connecting node: default_processor
+2025/08/27 07:17:41   Action: success -> finalize
+2025/08/27 07:17:41 Connecting node: error_handler
+2025/08/27 07:17:41   Action: success -> finalize
+    websocket_postgres_integration_test.go:928: Started execution: 39350a6a-d823-4587-9204-91dcf69f56de
+2025/08/27 07:17:41 Account 7c97a6cd-8c3d-49a9-97fb-f9ce182a74cd subscribed to execution 39350a6a-d823-4587-9204-91dcf69f56de
+    websocket_postgres_integration_test.go:953: Status Update: running, Progress: 0.0%, Node: 
+    websocket_postgres_integration_test.go:953: Status Update: failed, Progress: 100.0%, Node: 
+2025/08/27 07:17:41 Request: GET /api/v1/executions/39350a6a-d823-4587-9204-91dcf69f56de
+    websocket_postgres_integration_test.go:983: Final Status: failed, Progress: 100.0%
+    websocket_postgres_integration_test.go:985: Execution failed with error: failed to execute transform script: (anonymous): Line 2:1 Unexpected reserved word (and 3 more errors)
+    websocket_postgres_integration_test.go:1003: PostgreSQL Simple Branching Integration Test completed successfully!
+    websocket_postgres_integration_test.go:1004: Received 4 WebSocket updates during execution
+2025/08/27 07:17:41 WebSocket connection closed for account 7c97a6cd-8c3d-49a9-97fb-f9ce182a74cd
+--- PASS: TestWebSocketPostgreSQLIntegration_SimpleBranching (0.30s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/api	0.308s

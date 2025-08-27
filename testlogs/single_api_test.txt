@@ -1,0 +1,292 @@
+{"Time":"2025-08-27T19:30:04.718574122Z","Action":"start","Package":"github.com/tcmartin/flowrunner/pkg/api"}
+{"Time":"2025-08-27T19:30:04.731795334Z","Action":"run","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend"}
+{"Time":"2025-08-27T19:30:04.732049784Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"=== RUN   TestEmailToolRouteSend\n"}
+{"Time":"2025-08-27T19:30:04.734304262Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04 Connecting node: tool_router\n"}
+{"Time":"2025-08-27T19:30:04.735423732Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04   Action: default -\u003e pre_send_delay\n"}
+{"Time":"2025-08-27T19:30:04.735442862Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04   Action: send_email -\u003e pre_send_delay\n"}
+{"Time":"2025-08-27T19:30:04.735450632Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04 Connecting node: pre_send_delay\n"}
+{"Time":"2025-08-27T19:30:04.735457702Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04   Action: default -\u003e email_send\n"}
+{"Time":"2025-08-27T19:30:04.735670572Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04 Connecting node: email_send\n"}
+{"Time":"2025-08-27T19:30:04.735685173Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04   Action: default -\u003e END\n"}
+{"Time":"2025-08-27T19:30:04.735692873Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04 Connecting node: start\n"}
+{"Time":"2025-08-27T19:30:04.735699393Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04   Action: default -\u003e tool_router\n"}
+{"Time":"2025-08-27T19:30:04.745370296Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:04.745458037Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:\n"}
+{"Time":"2025-08-27T19:30:04.745473757Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:04.745480947Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"📋 [NodeWrapper] Available shared context keys: [_execution _flow_context accountID _secret_vault]\n"}
+{"Time":"2025-08-27T19:30:04.745488256Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:\n"}
+{"Time":"2025-08-27T19:30:04.745495027Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"{\n"}
+{"Time":"2025-08-27T19:30:04.745501007Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"_flow_context\": {\n"}
+{"Time":"2025-08-27T19:30:04.745507737Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"node_results\": {},\n"}
+{"Time":"2025-08-27T19:30:04.745513717Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"shared_data\": {}\n"}
+{"Time":"2025-08-27T19:30:04.745519327Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  },\n"}
+{"Time":"2025-08-27T19:30:04.745549977Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"accountID\": \"email-tool-route-1756323004732112324\",\n"}
+{"Time":"2025-08-27T19:30:04.745556827Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"execution\": {\n"}
+{"Time":"2025-08-27T19:30:04.745563557Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"flow_id\": \"email-tool-route-1756323004732588154\",\n"}
+{"Time":"2025-08-27T19:30:04.745570417Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"id\": \"e69a9a36-ae86-4b3f-8895-3f7d4f315a83\"\n"}
+{"Time":"2025-08-27T19:30:04.745577957Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  },\n"}
+{"Time":"2025-08-27T19:30:04.745584027Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"input\": {},\n"}
+{"Time":"2025-08-27T19:30:04.745589697Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"shared\": {}\n"}
+{"Time":"2025-08-27T19:30:04.745595557Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"}\n"}
+{"Time":"2025-08-27T19:30:04.745601947Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"✅ [NodeWrapper] Template expressions processed successfully\n"}
+{"Time":"2025-08-27T19:30:04.745614227Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"📝 [NodeWrapper] PROCESSED PARAMETERS:\n"}
+{"Time":"2025-08-27T19:30:04.745625647Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"{\n"}
+{"Time":"2025-08-27T19:30:04.745632257Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"script\": \"// Build a tool_call under llm_result.tool_calls for router detection\\nvar ts = new Date().toISOString();\\nvar subj = \\\"FlowRunner Tool Route Test — \\\" + ts;\\nvar args = JSON.stringify({ subject: subj, body: \\\"Tool route delivery test.\\\" });\\nreturn {\\n  llm_result: {\\n    tool_calls: [\\n      { id: \\\"call_1\\\", type: \\\"function\\\", function: { name: \\\"send_email\\\", arguments: args } }\\n    ]\\n  }\\n};\\n\"\n"}
+{"Time":"2025-08-27T19:30:04.745645247Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"}\n"}
+{"Time":"2025-08-27T19:30:04.745664537Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context\n"}
+{"Time":"2025-08-27T19:30:04.746805596Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"📊 [NodeWrapper] STORED RESULT:\n"}
+{"Time":"2025-08-27T19:30:04.746832335Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"{\n"}
+{"Time":"2025-08-27T19:30:04.746844935Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"llm_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.746853716Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"tool_calls\": [\n"}
+{"Time":"2025-08-27T19:30:04.746859356Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      {\n"}
+{"Time":"2025-08-27T19:30:04.746864975Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"function\": {\n"}
+{"Time":"2025-08-27T19:30:04.746884916Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          \"arguments\": \"{\\\"body\\\":\\\"Tool route delivery test.\\\",\\\"subject\\\":\\\"FlowRunner Tool Route Test — 2025-08-27T19:30:04.745Z\\\"}\",\n"}
+{"Time":"2025-08-27T19:30:04.746892266Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          \"name\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.746898596Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        },\n"}
+{"Time":"2025-08-27T19:30:04.746904746Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"id\": \"call_1\",\n"}
+{"Time":"2025-08-27T19:30:04.746909696Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"type\": \"function\"\n"}
+{"Time":"2025-08-27T19:30:04.746915366Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      }\n"}
+{"Time":"2025-08-27T19:30:04.746920106Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    ]\n"}
+{"Time":"2025-08-27T19:30:04.746924586Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  }\n"}
+{"Time":"2025-08-27T19:30:04.746929076Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"}\n"}
+{"Time":"2025-08-27T19:30:04.746933586Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:04.746938446Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:\n"}
+{"Time":"2025-08-27T19:30:04.746943346Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:04.746947726Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:04.746952596Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:\n"}
+{"Time":"2025-08-27T19:30:04.746957146Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:04.746961926Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"📋 [NodeWrapper] Available shared context keys: [_secret_vault result_result result _execution _flow_context accountID]\n"}
+{"Time":"2025-08-27T19:30:04.746967706Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🧠 [NodeWrapper] LLM Result in shared.result:\n"}
+{"Time":"2025-08-27T19:30:04.746972216Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"{\n"}
+{"Time":"2025-08-27T19:30:04.746976786Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"llm_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.746981396Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"tool_calls\": [\n"}
+{"Time":"2025-08-27T19:30:04.746985886Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      {\n"}
+{"Time":"2025-08-27T19:30:04.746995416Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"function\": {\n"}
+{"Time":"2025-08-27T19:30:04.747006756Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          \"arguments\": \"{\\\"body\\\":\\\"Tool route delivery test.\\\",\\\"subject\\\":\\\"FlowRunner Tool Route Test — 2025-08-27T19:30:04.745Z\\\"}\",\n"}
+{"Time":"2025-08-27T19:30:04.747012166Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          \"name\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.747016756Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        },\n"}
+{"Time":"2025-08-27T19:30:04.747021496Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"id\": \"call_1\",\n"}
+{"Time":"2025-08-27T19:30:04.747026216Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"type\": \"function\"\n"}
+{"Time":"2025-08-27T19:30:04.747031016Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      }\n"}
+{"Time":"2025-08-27T19:30:04.747035836Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    ]\n"}
+{"Time":"2025-08-27T19:30:04.747040346Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  }\n"}
+{"Time":"2025-08-27T19:30:04.747044996Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"}\n"}
+{"Time":"2025-08-27T19:30:04.747049586Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:\n"}
+{"Time":"2025-08-27T19:30:04.747054796Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"{\n"}
+{"Time":"2025-08-27T19:30:04.747059976Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"_flow_context\": {\n"}
+{"Time":"2025-08-27T19:30:04.747064516Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"node_results\": {},\n"}
+{"Time":"2025-08-27T19:30:04.747069116Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"shared_data\": {\n"}
+{"Time":"2025-08-27T19:30:04.747073756Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747078486Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"llm_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747123156Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          \"tool_calls\": [\n"}
+{"Time":"2025-08-27T19:30:04.747131926Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            {\n"}
+{"Time":"2025-08-27T19:30:04.747138707Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"function\": {\n"}
+{"Time":"2025-08-27T19:30:04.747144907Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"                \"arguments\": \"{\\\"body\\\":\\\"Tool route delivery test.\\\",\\\"subject\\\":\\\"FlowRunner Tool Route Test — 2025-08-27T19:30:04.745Z\\\"}\",\n"}
+{"Time":"2025-08-27T19:30:04.747174835Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"                \"name\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.747180755Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              },\n"}
+{"Time":"2025-08-27T19:30:04.747194005Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"id\": \"call_1\",\n"}
+{"Time":"2025-08-27T19:30:04.747199975Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"type\": \"function\"\n"}
+{"Time":"2025-08-27T19:30:04.747207906Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            }\n"}
+{"Time":"2025-08-27T19:30:04.747213396Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          ]\n"}
+{"Time":"2025-08-27T19:30:04.747219156Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        }\n"}
+{"Time":"2025-08-27T19:30:04.747225725Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      },\n"}
+{"Time":"2025-08-27T19:30:04.747231975Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"result_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747237815Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"llm_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747243365Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          \"tool_calls\": [\n"}
+{"Time":"2025-08-27T19:30:04.747249026Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            {\n"}
+{"Time":"2025-08-27T19:30:04.747254596Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"function\": {\n"}
+{"Time":"2025-08-27T19:30:04.747260236Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"                \"arguments\": \"{\\\"body\\\":\\\"Tool route delivery test.\\\",\\\"subject\\\":\\\"FlowRunner Tool Route Test — 2025-08-27T19:30:04.745Z\\\"}\",\n"}
+{"Time":"2025-08-27T19:30:04.747266685Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"                \"name\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.747272276Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              },\n"}
+{"Time":"2025-08-27T19:30:04.747277525Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"id\": \"call_1\",\n"}
+{"Time":"2025-08-27T19:30:04.747283015Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"type\": \"function\"\n"}
+{"Time":"2025-08-27T19:30:04.747289836Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            }\n"}
+{"Time":"2025-08-27T19:30:04.747312266Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          ]\n"}
+{"Time":"2025-08-27T19:30:04.747318606Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        }\n"}
+{"Time":"2025-08-27T19:30:04.747324286Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      }\n"}
+{"Time":"2025-08-27T19:30:04.747329766Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    }\n"}
+{"Time":"2025-08-27T19:30:04.747343686Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  },\n"}
+{"Time":"2025-08-27T19:30:04.747355146Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"accountID\": \"email-tool-route-1756323004732112324\",\n"}
+{"Time":"2025-08-27T19:30:04.747361396Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"execution\": {\n"}
+{"Time":"2025-08-27T19:30:04.747377746Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"flow_id\": \"email-tool-route-1756323004732588154\",\n"}
+{"Time":"2025-08-27T19:30:04.747383646Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"id\": \"e69a9a36-ae86-4b3f-8895-3f7d4f315a83\"\n"}
+{"Time":"2025-08-27T19:30:04.747390996Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  },\n"}
+{"Time":"2025-08-27T19:30:04.747396706Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"input\": {\n"}
+{"Time":"2025-08-27T19:30:04.747402286Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747407936Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"llm_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747413266Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"tool_calls\": [\n"}
+{"Time":"2025-08-27T19:30:04.747419076Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          {\n"}
+{"Time":"2025-08-27T19:30:04.747425546Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"function\": {\n"}
+{"Time":"2025-08-27T19:30:04.747431456Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"arguments\": \"{\\\"body\\\":\\\"Tool route delivery test.\\\",\\\"subject\\\":\\\"FlowRunner Tool Route Test — 2025-08-27T19:30:04.745Z\\\"}\",\n"}
+{"Time":"2025-08-27T19:30:04.747437936Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"name\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.747443906Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            },\n"}
+{"Time":"2025-08-27T19:30:04.747450136Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"id\": \"call_1\",\n"}
+{"Time":"2025-08-27T19:30:04.747456576Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"type\": \"function\"\n"}
+{"Time":"2025-08-27T19:30:04.747462636Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          }\n"}
+{"Time":"2025-08-27T19:30:04.747468916Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        ]\n"}
+{"Time":"2025-08-27T19:30:04.747474776Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      }\n"}
+{"Time":"2025-08-27T19:30:04.747480866Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    },\n"}
+{"Time":"2025-08-27T19:30:04.747486816Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"result_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747492636Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"llm_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747504906Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"tool_calls\": [\n"}
+{"Time":"2025-08-27T19:30:04.747511726Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          {\n"}
+{"Time":"2025-08-27T19:30:04.747518016Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"function\": {\n"}
+{"Time":"2025-08-27T19:30:04.747524506Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"arguments\": \"{\\\"body\\\":\\\"Tool route delivery test.\\\",\\\"subject\\\":\\\"FlowRunner Tool Route Test — 2025-08-27T19:30:04.745Z\\\"}\",\n"}
+{"Time":"2025-08-27T19:30:04.747536676Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"name\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.747544865Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            },\n"}
+{"Time":"2025-08-27T19:30:04.747551145Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"id\": \"call_1\",\n"}
+{"Time":"2025-08-27T19:30:04.747557145Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"type\": \"function\"\n"}
+{"Time":"2025-08-27T19:30:04.747570515Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          }\n"}
+{"Time":"2025-08-27T19:30:04.747576385Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        ]\n"}
+{"Time":"2025-08-27T19:30:04.747582155Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      }\n"}
+{"Time":"2025-08-27T19:30:04.747588655Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    }\n"}
+{"Time":"2025-08-27T19:30:04.747603826Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  },\n"}
+{"Time":"2025-08-27T19:30:04.747617866Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"shared\": {\n"}
+{"Time":"2025-08-27T19:30:04.747625435Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747632115Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"llm_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747638205Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"tool_calls\": [\n"}
+{"Time":"2025-08-27T19:30:04.747650946Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          {\n"}
+{"Time":"2025-08-27T19:30:04.747656685Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"function\": {\n"}
+{"Time":"2025-08-27T19:30:04.747662285Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"arguments\": \"{\\\"body\\\":\\\"Tool route delivery test.\\\",\\\"subject\\\":\\\"FlowRunner Tool Route Test — 2025-08-27T19:30:04.745Z\\\"}\",\n"}
+{"Time":"2025-08-27T19:30:04.747668706Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"name\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.747674495Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            },\n"}
+{"Time":"2025-08-27T19:30:04.747686975Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"id\": \"call_1\",\n"}
+{"Time":"2025-08-27T19:30:04.747692735Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"type\": \"function\"\n"}
+{"Time":"2025-08-27T19:30:04.747698546Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          }\n"}
+{"Time":"2025-08-27T19:30:04.747704175Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        ]\n"}
+{"Time":"2025-08-27T19:30:04.747709735Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      }\n"}
+{"Time":"2025-08-27T19:30:04.747715365Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    },\n"}
+{"Time":"2025-08-27T19:30:04.747721196Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"result_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747727196Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"llm_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.747732906Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"tool_calls\": [\n"}
+{"Time":"2025-08-27T19:30:04.747738546Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          {\n"}
+{"Time":"2025-08-27T19:30:04.747744906Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"function\": {\n"}
+{"Time":"2025-08-27T19:30:04.747750775Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"arguments\": \"{\\\"body\\\":\\\"Tool route delivery test.\\\",\\\"subject\\\":\\\"FlowRunner Tool Route Test — 2025-08-27T19:30:04.745Z\\\"}\",\n"}
+{"Time":"2025-08-27T19:30:04.747757356Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"              \"name\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.747763526Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            },\n"}
+{"Time":"2025-08-27T19:30:04.747769446Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"id\": \"call_1\",\n"}
+{"Time":"2025-08-27T19:30:04.747775476Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"            \"type\": \"function\"\n"}
+{"Time":"2025-08-27T19:30:04.747781295Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          }\n"}
+{"Time":"2025-08-27T19:30:04.747786876Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        ]\n"}
+{"Time":"2025-08-27T19:30:04.747792586Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      }\n"}
+{"Time":"2025-08-27T19:30:04.747798476Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    }\n"}
+{"Time":"2025-08-27T19:30:04.747805596Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  }\n"}
+{"Time":"2025-08-27T19:30:04.747811666Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"}\n"}
+{"Time":"2025-08-27T19:30:04.747823216Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"✅ [NodeWrapper] Template expressions processed successfully\n"}
+{"Time":"2025-08-27T19:30:04.747829746Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"📝 [NodeWrapper] PROCESSED PARAMETERS:\n"}
+{"Time":"2025-08-27T19:30:04.747835816Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"{\n"}
+{"Time":"2025-08-27T19:30:04.747841886Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"condition_script\": \"// Hardened routing: if tool calls are present or unknown, route to send_email\\nreturn 'send_email';\\n\",\n"}
+{"Time":"2025-08-27T19:30:04.747848426Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"input\": {\n"}
+{"Time":"2025-08-27T19:30:04.747854386Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"tool_calls\": [\n"}
+{"Time":"2025-08-27T19:30:04.747860496Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      {\n"}
+{"Time":"2025-08-27T19:30:04.747868016Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"function\": {\n"}
+{"Time":"2025-08-27T19:30:04.747874856Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          \"arguments\": \"{\\\"body\\\":\\\"Tool route delivery test.\\\",\\\"subject\\\":\\\"FlowRunner Tool Route Test — 2025-08-27T19:30:04.745Z\\\"}\",\n"}
+{"Time":"2025-08-27T19:30:04.747881336Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"          \"name\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.747887526Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        },\n"}
+{"Time":"2025-08-27T19:30:04.747893406Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"id\": \"call_1\",\n"}
+{"Time":"2025-08-27T19:30:04.747899566Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"type\": \"function\"\n"}
+{"Time":"2025-08-27T19:30:04.747906336Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      }\n"}
+{"Time":"2025-08-27T19:30:04.747915056Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    ]\n"}
+{"Time":"2025-08-27T19:30:04.747925305Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  }\n"}
+{"Time":"2025-08-27T19:30:04.747931685Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"}\n"}
+{"Time":"2025-08-27T19:30:04.747937645Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04 [Router] Processing input for tool call detection\n"}
+{"Time":"2025-08-27T19:30:04.747943505Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04 [Router] Found 0 tool calls at location: \n"}
+{"Time":"2025-08-27T19:30:04.750454634Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context\n"}
+{"Time":"2025-08-27T19:30:04.750494214Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"📊 [NodeWrapper] STORED RESULT:\n"}
+{"Time":"2025-08-27T19:30:04.750515865Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"{\n"}
+{"Time":"2025-08-27T19:30:04.750523865Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"reason\": \"custom_script\",\n"}
+{"Time":"2025-08-27T19:30:04.750530814Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"route\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.750536705Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"}\n"}
+{"Time":"2025-08-27T19:30:04.750541315Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:04.750545934Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:\n"}
+{"Time":"2025-08-27T19:30:04.750550725Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:04.750555355Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"2025/08/27 19:30:04 [Router] Returning action from 'route' field: send_email\n"}
+{"Time":"2025-08-27T19:30:04.750999733Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:04.751052284Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:\n"}
+{"Time":"2025-08-27T19:30:04.751061434Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:04.751068034Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"📋 [NodeWrapper] Available shared context keys: [_execution _flow_context accountID _secret_vault result_result result]\n"}
+{"Time":"2025-08-27T19:30:04.751118034Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🧠 [NodeWrapper] LLM Result in shared.result:\n"}
+{"Time":"2025-08-27T19:30:04.751131104Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"{\n"}
+{"Time":"2025-08-27T19:30:04.751137994Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"reason\": \"custom_script\",\n"}
+{"Time":"2025-08-27T19:30:04.751145534Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"route\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.751160764Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"}\n"}
+{"Time":"2025-08-27T19:30:04.751166674Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:\n"}
+{"Time":"2025-08-27T19:30:04.751172394Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"{\n"}
+{"Time":"2025-08-27T19:30:04.751178064Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"_flow_context\": {\n"}
+{"Time":"2025-08-27T19:30:04.751183664Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"node_results\": {},\n"}
+{"Time":"2025-08-27T19:30:04.751189194Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"shared_data\": {\n"}
+{"Time":"2025-08-27T19:30:04.751194664Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"result\": {\n"}
+{"Time":"2025-08-27T19:30:04.751211944Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"reason\": \"custom_script\",\n"}
+{"Time":"2025-08-27T19:30:04.751217754Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"route\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.751224124Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      },\n"}
+{"Time":"2025-08-27T19:30:04.751230354Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"result_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.751236734Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"reason\": \"custom_script\",\n"}
+{"Time":"2025-08-27T19:30:04.751242754Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \"route\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.751248494Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      }\n"}
+{"Time":"2025-08-27T19:30:04.751254214Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    }\n"}
+{"Time":"2025-08-27T19:30:04.751259814Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  },\n"}
+{"Time":"2025-08-27T19:30:04.751266294Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"accountID\": \"email-tool-route-1756323004732112324\",\n"}
+{"Time":"2025-08-27T19:30:04.751272994Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"execution\": {\n"}
+{"Time":"2025-08-27T19:30:04.751279224Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"flow_id\": \"email-tool-route-1756323004732588154\",\n"}
+{"Time":"2025-08-27T19:30:04.751285354Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"id\": \"e69a9a36-ae86-4b3f-8895-3f7d4f315a83\"\n"}
+{"Time":"2025-08-27T19:30:04.751291384Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  },\n"}
+{"Time":"2025-08-27T19:30:04.751297484Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"input\": {\n"}
+{"Time":"2025-08-27T19:30:04.751304234Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"result\": {\n"}
+{"Time":"2025-08-27T19:30:04.751310284Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"reason\": \"custom_script\",\n"}
+{"Time":"2025-08-27T19:30:04.751607174Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"route\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.751618994Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    },\n"}
+{"Time":"2025-08-27T19:30:04.751625404Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"result_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.751631464Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"reason\": \"custom_script\",\n"}
+{"Time":"2025-08-27T19:30:04.751637934Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"route\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.751657034Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    }\n"}
+{"Time":"2025-08-27T19:30:04.751663214Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  },\n"}
+{"Time":"2025-08-27T19:30:04.751669364Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"shared\": {\n"}
+{"Time":"2025-08-27T19:30:04.751675284Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"result\": {\n"}
+{"Time":"2025-08-27T19:30:04.751681334Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"reason\": \"custom_script\",\n"}
+{"Time":"2025-08-27T19:30:04.751687524Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"route\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.751693424Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    },\n"}
+{"Time":"2025-08-27T19:30:04.751699264Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    \"result_result\": {\n"}
+{"Time":"2025-08-27T19:30:04.751705134Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"reason\": \"custom_script\",\n"}
+{"Time":"2025-08-27T19:30:04.751711273Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"      \"route\": \"send_email\"\n"}
+{"Time":"2025-08-27T19:30:04.751717093Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    }\n"}
+{"Time":"2025-08-27T19:30:04.751722713Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  }\n"}
+{"Time":"2025-08-27T19:30:04.751728443Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"}\n"}
+{"Time":"2025-08-27T19:30:04.751737433Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"✅ [NodeWrapper] Template expressions processed successfully\n"}
+{"Time":"2025-08-27T19:30:04.751744053Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"📝 [NodeWrapper] PROCESSED PARAMETERS:\n"}
+{"Time":"2025-08-27T19:30:04.751750163Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"{\n"}
+{"Time":"2025-08-27T19:30:04.751755993Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"  \"duration_ms\": 30000\n"}
+{"Time":"2025-08-27T19:30:04.751761833Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"}\n"}
+{"Time":"2025-08-27T19:30:34.751466859Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context\n"}
+{"Time":"2025-08-27T19:30:34.751563948Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"📊 [NodeWrapper] STORED RESULT:\n"}
+{"Time":"2025-08-27T19:30:34.751576238Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:34.751582568Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:34.751587788Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:\n"}
+{"Time":"2025-08-27T19:30:34.751604418Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:34.752085178Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:34.752198709Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:\n"}
+{"Time":"2025-08-27T19:30:34.752210078Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:34.752217388Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"📋 [NodeWrapper] Available shared context keys: [_execution _flow_context accountID _secret_vault result_result result]\n"}
+{"Time":"2025-08-27T19:30:34.752224908Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🧠 [NodeWrapper] LLM Result in shared.result:\n"}
+{"Time":"2025-08-27T19:30:34.752231308Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:34.752237927Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:\n"}
+{"Time":"2025-08-27T19:30:34.752247908Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"\n"}
+{"Time":"2025-08-27T19:30:34.752258288Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"❌ [NodeWrapper] Template processing error: failed to evaluate expression '${input.tool_params.body}': failed to evaluate expression 'input.tool_params.body': TypeError: Cannot access member \"body\" of undefined\n"}
+{"Time":"2025-08-27T19:30:35.744778915Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"    email_tool_route_test.go:136: \n"}
+{"Time":"2025-08-27T19:30:35.744856945Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \tError Trace:\t/root/projects/flowrunner/pkg/api/email_tool_route_test.go:136\n"}
+{"Time":"2025-08-27T19:30:35.744866275Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \tError:      \tNot equal: \n"}
+{"Time":"2025-08-27T19:30:35.744873795Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \t            \texpected: \"completed\"\n"}
+{"Time":"2025-08-27T19:30:35.744881056Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \t            \tactual  : \"failed\"\n"}
+{"Time":"2025-08-27T19:30:35.744888225Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \t            \t\n"}
+{"Time":"2025-08-27T19:30:35.744900616Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \t            \tDiff:\n"}
+{"Time":"2025-08-27T19:30:35.744905555Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \t            \t--- Expected\n"}
+{"Time":"2025-08-27T19:30:35.744912395Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \t            \t+++ Actual\n"}
+{"Time":"2025-08-27T19:30:35.744920536Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \t            \t@@ -1 +1 @@\n"}
+{"Time":"2025-08-27T19:30:35.744952466Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \t            \t-completed\n"}
+{"Time":"2025-08-27T19:30:35.744958336Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \t            \t+failed\n"}
+{"Time":"2025-08-27T19:30:35.744963266Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \tTest:       \tTestEmailToolRouteSend\n"}
+{"Time":"2025-08-27T19:30:35.744968146Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"        \tMessages:   \tTool-route email flow should complete\n"}
+{"Time":"2025-08-27T19:30:35.744985626Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Output":"--- FAIL: TestEmailToolRouteSend (31.01s)\n"}
+{"Time":"2025-08-27T19:30:35.745001675Z","Action":"fail","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestEmailToolRouteSend","Elapsed":31.01}
+{"Time":"2025-08-27T19:30:35.745028636Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Output":"FAIL\n"}
+{"Time":"2025-08-27T19:30:35.747386074Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Output":"FAIL\tgithub.com/tcmartin/flowrunner/pkg/api\t31.028s\n"}
+{"Time":"2025-08-27T19:30:35.747462314Z","Action":"fail","Package":"github.com/tcmartin/flowrunner/pkg/api","Elapsed":31.029}

@@ -1,0 +1,91 @@
+=== RUN   TestEmailSummarySeries
+2025/08/27 09:18:21 Connecting node: fetch
+2025/08/27 09:18:21   Action: default -> summarize
+2025/08/27 09:18:21   Action: success -> summarize
+2025/08/27 09:18:21 Connecting node: summarize
+2025/08/27 09:18:21   Action: success -> email
+2025/08/27 09:18:21 Connecting node: email
+2025/08/27 09:18:21   Action: default -> END
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [accountID _secret_vault _execution _flow_context]
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {}
+  },
+  "accountID": "email-summary-1756286301304610059",
+  "execution": {
+    "flow_id": "email-summary-1756286301304876669",
+    "id": "9ee855cb-2190-4aa2-8214-968319dde975"
+  },
+  "input": {},
+  "shared": {}
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+
+    email_summary_test.go:117: 
+        	Error Trace:	/root/projects/flowrunner/pkg/api/email_summary_test.go:112
+        	            				/root/projects/flowrunner/pkg/api/email_summary_test.go:117
+        	Error:      	Not equal: 
+        	            	expected: "completed"
+        	            	actual  : "failed"
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1 +1 @@
+        	            	-completed
+        	            	+failed
+        	Test:       	TestEmailSummarySeries
+        	Messages:   	Email summary flow should complete: https://www.gemmit.org
+2025/08/27 09:18:22 Connecting node: fetch
+2025/08/27 09:18:22   Action: success -> summarize
+2025/08/27 09:18:22   Action: default -> summarize
+2025/08/27 09:18:22 Connecting node: summarize
+2025/08/27 09:18:22   Action: success -> email
+2025/08/27 09:18:22 Connecting node: email
+2025/08/27 09:18:22   Action: default -> END
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_execution _flow_context accountID _secret_vault]
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {}
+  },
+  "accountID": "email-summary-1756286302305919737",
+  "execution": {
+    "flow_id": "email-summary-1756286302306416525",
+    "id": "4bd4bba1-90d0-4e32-af9c-a677a06e21e8"
+  },
+  "input": {},
+  "shared": {}
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+
+    email_summary_test.go:118: 
+        	Error Trace:	/root/projects/flowrunner/pkg/api/email_summary_test.go:112
+        	            				/root/projects/flowrunner/pkg/api/email_summary_test.go:118
+        	Error:      	Not equal: 
+        	            	expected: "completed"
+        	            	actual  : "failed"
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1 +1 @@
+        	            	-completed
+        	            	+failed
+        	Test:       	TestEmailSummarySeries
+        	Messages:   	Email summary flow should complete: https://httpbin.org/html
+--- FAIL: TestEmailSummarySeries (2.00s)
+FAIL
+FAIL	github.com/tcmartin/flowrunner/pkg/api	2.011s
+FAIL

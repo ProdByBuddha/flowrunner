@@ -1,0 +1,205 @@
+=== RUN   TestAccountService_MultipleStorageBackends
+=== RUN   TestAccountService_MultipleStorageBackends/Memory_Storage
+--- PASS: TestAccountService_MultipleStorageBackends (0.14s)
+    --- PASS: TestAccountService_MultipleStorageBackends/Memory_Storage (0.14s)
+=== RUN   TestAccountService_InterfaceCompliance
+--- PASS: TestAccountService_InterfaceCompliance (0.12s)
+=== RUN   TestAccountService_ConcurrentAccess
+--- PASS: TestAccountService_ConcurrentAccess (0.15s)
+=== RUN   TestNewAccountService
+--- PASS: TestNewAccountService (0.00s)
+=== RUN   TestAccountService_CreateAccount
+=== RUN   TestAccountService_CreateAccount/successful_creation
+=== RUN   TestAccountService_CreateAccount/empty_username
+=== RUN   TestAccountService_CreateAccount/empty_password
+=== RUN   TestAccountService_CreateAccount/duplicate_username
+--- PASS: TestAccountService_CreateAccount (0.19s)
+    --- PASS: TestAccountService_CreateAccount/successful_creation (0.12s)
+    --- PASS: TestAccountService_CreateAccount/empty_username (0.00s)
+    --- PASS: TestAccountService_CreateAccount/empty_password (0.00s)
+    --- PASS: TestAccountService_CreateAccount/duplicate_username (0.06s)
+=== RUN   TestAccountService_Authenticate
+=== RUN   TestAccountService_Authenticate/successful_authentication
+=== RUN   TestAccountService_Authenticate/wrong_password
+=== RUN   TestAccountService_Authenticate/non-existent_username
+=== RUN   TestAccountService_Authenticate/empty_username
+=== RUN   TestAccountService_Authenticate/empty_password
+--- PASS: TestAccountService_Authenticate (0.19s)
+    --- PASS: TestAccountService_Authenticate/successful_authentication (0.06s)
+    --- PASS: TestAccountService_Authenticate/wrong_password (0.06s)
+    --- PASS: TestAccountService_Authenticate/non-existent_username (0.00s)
+    --- PASS: TestAccountService_Authenticate/empty_username (0.00s)
+    --- PASS: TestAccountService_Authenticate/empty_password (0.00s)
+=== RUN   TestAccountService_ValidateToken
+=== RUN   TestAccountService_ValidateToken/valid_token
+=== RUN   TestAccountService_ValidateToken/invalid_token
+=== RUN   TestAccountService_ValidateToken/empty_token
+--- PASS: TestAccountService_ValidateToken (0.06s)
+    --- PASS: TestAccountService_ValidateToken/valid_token (0.00s)
+    --- PASS: TestAccountService_ValidateToken/invalid_token (0.00s)
+    --- PASS: TestAccountService_ValidateToken/empty_token (0.00s)
+=== RUN   TestAccountService_GetAccount
+=== RUN   TestAccountService_GetAccount/existing_account
+=== RUN   TestAccountService_GetAccount/non-existent_account
+=== RUN   TestAccountService_GetAccount/empty_account_ID
+--- PASS: TestAccountService_GetAccount (0.06s)
+    --- PASS: TestAccountService_GetAccount/existing_account (0.00s)
+    --- PASS: TestAccountService_GetAccount/non-existent_account (0.00s)
+    --- PASS: TestAccountService_GetAccount/empty_account_ID (0.00s)
+=== RUN   TestAccountService_DeleteAccount
+=== RUN   TestAccountService_DeleteAccount/existing_account
+=== RUN   TestAccountService_DeleteAccount/non-existent_account
+=== RUN   TestAccountService_DeleteAccount/empty_account_ID
+--- PASS: TestAccountService_DeleteAccount (0.07s)
+    --- PASS: TestAccountService_DeleteAccount/existing_account (0.00s)
+    --- PASS: TestAccountService_DeleteAccount/non-existent_account (0.00s)
+    --- PASS: TestAccountService_DeleteAccount/empty_account_ID (0.00s)
+=== RUN   TestAccountService_ListAccounts
+=== RUN   TestAccountService_ListAccounts/empty_store
+=== RUN   TestAccountService_ListAccounts/with_accounts
+--- PASS: TestAccountService_ListAccounts (0.12s)
+    --- PASS: TestAccountService_ListAccounts/empty_store (0.00s)
+    --- PASS: TestAccountService_ListAccounts/with_accounts (0.12s)
+=== RUN   TestAccountService_APITokenGeneration
+--- PASS: TestAccountService_APITokenGeneration (0.32s)
+=== RUN   TestAccountService_PasswordSecurity
+--- PASS: TestAccountService_PasswordSecurity (0.19s)
+=== RUN   TestAccountService_Timestamps
+--- PASS: TestAccountService_Timestamps (0.06s)
+=== RUN   TestAccountService_ImplementsInterface
+--- PASS: TestAccountService_ImplementsInterface (0.00s)
+=== RUN   TestSecretVaultService_AllStorageBackends
+=== RUN   TestSecretVaultService_AllStorageBackends/memory
+=== RUN   TestSecretVaultService_AllStorageBackends/postgres
+    secret_vault_service_integration_test.go:50: Skipping PostgreSQL test: use -real-postgresql-secrets flag to enable
+=== RUN   TestSecretVaultService_AllStorageBackends/dynamodb
+--- PASS: TestSecretVaultService_AllStorageBackends (0.00s)
+    --- PASS: TestSecretVaultService_AllStorageBackends/memory (0.00s)
+    --- SKIP: TestSecretVaultService_AllStorageBackends/postgres (0.00s)
+    --- PASS: TestSecretVaultService_AllStorageBackends/dynamodb (0.00s)
+=== RUN   TestSecretVaultService_EdgeCases_AllBackends
+=== RUN   TestSecretVaultService_EdgeCases_AllBackends/memory
+=== RUN   TestSecretVaultService_EdgeCases_AllBackends/dynamodb_mock
+=== RUN   TestSecretVaultService_EdgeCases_AllBackends/dynamodb
+    secret_vault_service_integration_test.go:409: Skipping real DynamoDB edge cases test: use -real-dynamodb-secrets flag to enable
+=== RUN   TestSecretVaultService_EdgeCases_AllBackends/postgres
+    secret_vault_service_integration_test.go:465: Skipping PostgreSQL edge cases test: use -real-postgresql-secrets flag to enable
+--- PASS: TestSecretVaultService_EdgeCases_AllBackends (0.00s)
+    --- PASS: TestSecretVaultService_EdgeCases_AllBackends/memory (0.00s)
+    --- PASS: TestSecretVaultService_EdgeCases_AllBackends/dynamodb_mock (0.00s)
+    --- SKIP: TestSecretVaultService_EdgeCases_AllBackends/dynamodb (0.00s)
+    --- SKIP: TestSecretVaultService_EdgeCases_AllBackends/postgres (0.00s)
+=== RUN   TestSecretVaultService_MultipleConcurrentOperations
+=== RUN   TestSecretVaultService_MultipleConcurrentOperations/concurrent_writes
+=== RUN   TestSecretVaultService_MultipleConcurrentOperations/concurrent_reads
+=== RUN   TestSecretVaultService_MultipleConcurrentOperations/mixed_operations
+--- PASS: TestSecretVaultService_MultipleConcurrentOperations (0.06s)
+    --- PASS: TestSecretVaultService_MultipleConcurrentOperations/concurrent_writes (0.00s)
+    --- PASS: TestSecretVaultService_MultipleConcurrentOperations/concurrent_reads (0.00s)
+    --- PASS: TestSecretVaultService_MultipleConcurrentOperations/mixed_operations (0.06s)
+=== RUN   TestNewSecretVaultService
+=== RUN   TestNewSecretVaultService/valid_key
+=== RUN   TestNewSecretVaultService/invalid_key_length
+--- PASS: TestNewSecretVaultService (0.00s)
+    --- PASS: TestNewSecretVaultService/valid_key (0.00s)
+    --- PASS: TestNewSecretVaultService/invalid_key_length (0.00s)
+=== RUN   TestSecretVaultService_Set
+=== RUN   TestSecretVaultService_Set/successful_set
+=== RUN   TestSecretVaultService_Set/empty_account_ID
+=== RUN   TestSecretVaultService_Set/empty_secret_key
+=== RUN   TestSecretVaultService_Set/update_existing_secret_preserves_creation_time
+--- PASS: TestSecretVaultService_Set (0.01s)
+    --- PASS: TestSecretVaultService_Set/successful_set (0.00s)
+    --- PASS: TestSecretVaultService_Set/empty_account_ID (0.00s)
+    --- PASS: TestSecretVaultService_Set/empty_secret_key (0.00s)
+    --- PASS: TestSecretVaultService_Set/update_existing_secret_preserves_creation_time (0.01s)
+=== RUN   TestSecretVaultService_Get
+=== RUN   TestSecretVaultService_Get/successful_get
+=== RUN   TestSecretVaultService_Get/empty_account_ID
+=== RUN   TestSecretVaultService_Get/empty_secret_key
+=== RUN   TestSecretVaultService_Get/non-existent_secret
+=== RUN   TestSecretVaultService_Get/non-existent_account
+--- PASS: TestSecretVaultService_Get (0.00s)
+    --- PASS: TestSecretVaultService_Get/successful_get (0.00s)
+    --- PASS: TestSecretVaultService_Get/empty_account_ID (0.00s)
+    --- PASS: TestSecretVaultService_Get/empty_secret_key (0.00s)
+    --- PASS: TestSecretVaultService_Get/non-existent_secret (0.00s)
+    --- PASS: TestSecretVaultService_Get/non-existent_account (0.00s)
+=== RUN   TestSecretVaultService_Delete
+=== RUN   TestSecretVaultService_Delete/successful_delete
+=== RUN   TestSecretVaultService_Delete/empty_account_ID
+=== RUN   TestSecretVaultService_Delete/empty_secret_key
+=== RUN   TestSecretVaultService_Delete/delete_non-existent_secret
+--- PASS: TestSecretVaultService_Delete (0.00s)
+    --- PASS: TestSecretVaultService_Delete/successful_delete (0.00s)
+    --- PASS: TestSecretVaultService_Delete/empty_account_ID (0.00s)
+    --- PASS: TestSecretVaultService_Delete/empty_secret_key (0.00s)
+    --- PASS: TestSecretVaultService_Delete/delete_non-existent_secret (0.00s)
+=== RUN   TestSecretVaultService_List
+=== RUN   TestSecretVaultService_List/empty_list
+=== RUN   TestSecretVaultService_List/list_with_secrets
+=== RUN   TestSecretVaultService_List/empty_account_ID
+=== RUN   TestSecretVaultService_List/account_isolation
+--- PASS: TestSecretVaultService_List (0.00s)
+    --- PASS: TestSecretVaultService_List/empty_list (0.00s)
+    --- PASS: TestSecretVaultService_List/list_with_secrets (0.00s)
+    --- PASS: TestSecretVaultService_List/empty_account_ID (0.00s)
+    --- PASS: TestSecretVaultService_List/account_isolation (0.00s)
+=== RUN   TestSecretVaultService_ListWithMetadata
+=== RUN   TestSecretVaultService_ListWithMetadata/list_with_metadata
+=== RUN   TestSecretVaultService_ListWithMetadata/empty_account_ID
+--- PASS: TestSecretVaultService_ListWithMetadata (0.00s)
+    --- PASS: TestSecretVaultService_ListWithMetadata/list_with_metadata (0.00s)
+    --- PASS: TestSecretVaultService_ListWithMetadata/empty_account_ID (0.00s)
+=== RUN   TestSecretVaultService_Encryption
+=== RUN   TestSecretVaultService_Encryption/encryption_produces_different_output
+=== RUN   TestSecretVaultService_Encryption/decryption_consistency
+=== RUN   TestSecretVaultService_Encryption/different_keys_produce_different_encryption
+--- PASS: TestSecretVaultService_Encryption (0.00s)
+    --- PASS: TestSecretVaultService_Encryption/encryption_produces_different_output (0.00s)
+    --- PASS: TestSecretVaultService_Encryption/decryption_consistency (0.00s)
+    --- PASS: TestSecretVaultService_Encryption/different_keys_produce_different_encryption (0.00s)
+=== RUN   TestSecretVaultService_RotateEncryptionKey
+=== RUN   TestSecretVaultService_RotateEncryptionKey/invalid_new_key_length
+=== RUN   TestSecretVaultService_RotateEncryptionKey/successful_key_rotation
+--- PASS: TestSecretVaultService_RotateEncryptionKey (0.00s)
+    --- PASS: TestSecretVaultService_RotateEncryptionKey/invalid_new_key_length (0.00s)
+    --- PASS: TestSecretVaultService_RotateEncryptionKey/successful_key_rotation (0.00s)
+=== RUN   TestSecretVaultService_RotateEncryptionKeyForAccounts
+=== RUN   TestSecretVaultService_RotateEncryptionKeyForAccounts/invalid_new_key_length
+=== RUN   TestSecretVaultService_RotateEncryptionKeyForAccounts/invalid_old_key_length
+=== RUN   TestSecretVaultService_RotateEncryptionKeyForAccounts/successful_key_rotation_for_accounts
+=== RUN   TestSecretVaultService_RotateEncryptionKeyForAccounts/key_rotation_with_non-existent_account
+--- PASS: TestSecretVaultService_RotateEncryptionKeyForAccounts (0.00s)
+    --- PASS: TestSecretVaultService_RotateEncryptionKeyForAccounts/invalid_new_key_length (0.00s)
+    --- PASS: TestSecretVaultService_RotateEncryptionKeyForAccounts/invalid_old_key_length (0.00s)
+    --- PASS: TestSecretVaultService_RotateEncryptionKeyForAccounts/successful_key_rotation_for_accounts (0.00s)
+    --- PASS: TestSecretVaultService_RotateEncryptionKeyForAccounts/key_rotation_with_non-existent_account (0.00s)
+=== RUN   TestGenerateEncryptionKey
+=== RUN   TestGenerateEncryptionKey/generates_valid_key
+=== RUN   TestGenerateEncryptionKey/generates_different_keys
+--- PASS: TestGenerateEncryptionKey (0.00s)
+    --- PASS: TestGenerateEncryptionKey/generates_valid_key (0.00s)
+    --- PASS: TestGenerateEncryptionKey/generates_different_keys (0.00s)
+=== RUN   TestEncryptionKeyFromHex
+=== RUN   TestEncryptionKeyFromHex/valid_hex_key
+=== RUN   TestEncryptionKeyFromHex/invalid_hex
+=== RUN   TestEncryptionKeyFromHex/wrong_length
+--- PASS: TestEncryptionKeyFromHex (0.00s)
+    --- PASS: TestEncryptionKeyFromHex/valid_hex_key (0.00s)
+    --- PASS: TestEncryptionKeyFromHex/invalid_hex (0.00s)
+    --- PASS: TestEncryptionKeyFromHex/wrong_length (0.00s)
+=== RUN   TestEncryptionKeyToHex
+--- PASS: TestEncryptionKeyToHex (0.00s)
+=== RUN   TestSecretVaultService_EdgeCases
+=== RUN   TestSecretVaultService_EdgeCases/empty_secret_value
+=== RUN   TestSecretVaultService_EdgeCases/unicode_secret_value
+=== RUN   TestSecretVaultService_EdgeCases/large_secret_value
+=== RUN   TestSecretVaultService_EdgeCases/special_characters_in_key
+--- PASS: TestSecretVaultService_EdgeCases (0.00s)
+    --- PASS: TestSecretVaultService_EdgeCases/empty_secret_value (0.00s)
+    --- PASS: TestSecretVaultService_EdgeCases/unicode_secret_value (0.00s)
+    --- PASS: TestSecretVaultService_EdgeCases/large_secret_value (0.00s)
+    --- PASS: TestSecretVaultService_EdgeCases/special_characters_in_key (0.00s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/services	1.757s

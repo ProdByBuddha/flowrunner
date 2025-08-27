@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -35,7 +34,7 @@ import (
 // for all operations, with no mocking involved.
 func TestLLMFlowIntegration(t *testing.T) {
 	// Load environment variables
-	_ = godotenv.Load("../../.env")
+    _ = godotenv.Overload("../../.env")
 
 	// Skip test if OpenAI API key is not available
 	apiKey := os.Getenv("OPENAI_API_KEY")
@@ -86,7 +85,7 @@ func TestLLMFlowIntegration(t *testing.T) {
 
 	// Create and start server
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, pluginRegistry)
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	t.Logf("Test server started at: %s", testServer.URL)
@@ -347,8 +346,8 @@ nodes:
 		t.Log("  • Flow execution: ✅")
 		t.Log("  • Status polling: ✅")
 
-		// Don't fail the test - the integration framework is working
-		t.Skip("Skipping LLM-specific assertions due to execution failure")
+        // Don't fail the test – integration framework is working; continue assertions
+        t.Log("Continuing despite LLM execution failure; integration paths verified")
 	}
 
 	// Verify execution ID matches
@@ -487,7 +486,7 @@ func TestParallelLLMFlowIntegration(t *testing.T) {
 
 	// Create and start server
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, pluginRegistry)
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	t.Logf("Test server started at: %s", testServer.URL)
@@ -779,8 +778,8 @@ nodes:
 		t.Log("  • Multi-LLM flow execution: ✅")
 		t.Log("  • Status polling: ✅")
 
-		// Don't fail the test - the integration framework is working
-		t.Skip("Skipping LLM-specific assertions due to execution failure")
+        // Don't fail the test – integration framework is working; continue assertions
+        t.Log("Continuing despite LLM execution failure; integration paths verified")
 	}
 
 	// Verify execution details
@@ -874,9 +873,9 @@ func TestLLMToolCallsFlowIntegration(t *testing.T) {
 		t.Skip("Skipping LLM tool calls integration test: OPENAI_API_KEY environment variable not set")
 	}
 
-	// Create in-memory storage provider
-	storageProvider := storage.NewMemoryProvider()
-	require.NoError(t, storageProvider.Initialize())
+    // Create in-memory storage provider
+    storageProvider := storage.NewMemoryProvider()
+    require.NoError(t, storageProvider.Initialize())
 
 	// Create account service
 	accountService := services.NewAccountService(storageProvider.GetAccountStore())
@@ -917,7 +916,7 @@ func TestLLMToolCallsFlowIntegration(t *testing.T) {
 
 	// Create and start server
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, pluginRegistry)
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	t.Logf("Test server started at: %s", testServer.URL)
@@ -953,11 +952,11 @@ func TestLLMToolCallsFlowIntegration(t *testing.T) {
 	require.True(t, ok, "Account ID should be returned")
 	t.Logf("Created account: %s (ID: %s)", username, accountID)
 
-	// Step 2: Store OpenAI API key as a secret
-	t.Log("Step 2: Storing OpenAI API key as secret...")
-	secretReq := map[string]interface{}{
-		"value": apiKey,
-	}
+    // Step 2: Store OpenAI API key as a secret
+    t.Log("Step 2: Storing OpenAI API key as secret...")
+    secretReq := map[string]interface{}{
+        "value": apiKey,
+    }
 
 	secretBody, err := json.Marshal(secretReq)
 	require.NoError(t, err)
@@ -977,15 +976,49 @@ func TestLLMToolCallsFlowIntegration(t *testing.T) {
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
-	assert.Equal(t, http.StatusCreated, resp.StatusCode, "Failed to create secret")
-	t.Log("Stored OpenAI API key as secret")
+    assert.Equal(t, http.StatusCreated, resp.StatusCode, "Failed to create secret")
+    t.Log("Stored OpenAI API key as secret")
+
+    // Also store email SMTP credentials and recipient from environment
+    emailUser := os.Getenv("GMAIL_USERNAME")
+    emailPass := os.Getenv("GMAIL_PASSWORD")
+    emailRecipient := os.Getenv("EMAIL_RECIPIENT")
+
+    if emailUser == "" || emailPass == "" || emailRecipient == "" {
+        t.Skip("Skipping email send: GMAIL_USERNAME, GMAIL_PASSWORD, or EMAIL_RECIPIENT not set")
+    }
+    if strings.EqualFold(emailUser, emailRecipient) {
+        t.Skip("Skipping email send to avoid loop: recipient equals sender")
+    }
+
+    // Helper to store a secret via API
+    storeSecret := func(key, value string) {
+        reqBody, _ := json.Marshal(map[string]interface{}{"value": value})
+        r, err := http.NewRequest(
+            "POST",
+            testServer.URL+"/api/v1/accounts/"+accountID+"/secrets/"+key,
+            bytes.NewReader(reqBody),
+        )
+        require.NoError(t, err)
+        r.SetBasicAuth(username, password)
+        r.Header.Set("Content-Type", "application/json")
+        resp2, err := client.Do(r)
+        require.NoError(t, err)
+        defer resp2.Body.Close()
+        assert.Equal(t, http.StatusCreated, resp2.StatusCode, "Failed to create secret %s", key)
+    }
+
+    t.Log("Storing SMTP credentials and recipient for email send...")
+    storeSecret("GMAIL_USERNAME", emailUser)
+    storeSecret("GMAIL_PASSWORD", emailPass)
+    storeSecret("EMAIL_RECIPIENT", emailRecipient)
 
 	// Step 3: Create LLM flow with tool calling capabilities
 	t.Log("Step 3: Creating LLM flow with tool calling...")
 
-	// Create a sophisticated flow that demonstrates tool calling
-	// The LLM will be configured with tools and should decide when to call them
-	flowYAML := `metadata:
+    // Create a sophisticated flow that demonstrates tool calling
+    // The LLM will be configured with tools and should decide when to call them
+    flowYAML := `metadata:
   name: "LLM Tool Calling Flow"
   description: "Demonstrates LLM autonomous tool calling with HTTP requests and conditional routing"
   version: "1.0.0"
@@ -1115,7 +1148,7 @@ nodes:
     next:
       search: http_search
       email: send_summary_email
-      output: final_output
+      output: send_summary_email
 
   # HTTP node for web search (simulates tool execution)
   http_search:
@@ -1138,21 +1171,20 @@ nodes:
       temperature: 0.5
       max_tokens: 200
     next:
-      default: final_output
+      default: send_summary_email
 
   # Email node for sending summary (simulates tool execution)
   send_summary_email:
-    type: "transform"
+    type: "email.send"
     params:
-      script: |
-        // Simulate email sending (would normally use SMTP node)
-        return {
-          email_sent: true,
-          recipient: input.recipient || "test@example.com",
-          subject: input.subject || "Tool Call Test",
-          body: input.body || "Tool call email simulation",
-          timestamp: new Date().toISOString()
-        };
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      username: "${secrets.GMAIL_USERNAME}"
+      password: "${secrets.GMAIL_PASSWORD}"
+      from: "${secrets.GMAIL_USERNAME}"
+      to: "${secrets.EMAIL_RECIPIENT}"
+      subject: "FlowRunner Tool Call Test"
+      body: "This is an automated email from the FlowRunner LLM tool-calling integration test."
     next:
       default: final_output
 
@@ -1338,8 +1370,8 @@ nodes:
 		t.Log("  • Tool calling flow execution: ✅")
 		t.Log("  • Status polling: ✅")
 
-		// Don't fail the test - the integration framework is working
-		t.Skip("Skipping LLM-specific assertions due to execution failure")
+        // Don't fail or skip – integration framework is working; continue assertions
+        t.Log("Continuing despite tool calling execution failure; integration paths verified")
 	}
 
 	// Verify execution details

@@ -71,7 +71,7 @@ func TestPluginHandlers(t *testing.T) {
 	require.NoError(t, err)
 
 	server := NewServer(cfg, flowRegistry, accountService, secretVault, pluginRegistry)
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	// Create a test account and get auth header
@@ -133,4 +133,3 @@ func TestPluginHandlers(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
 }
-

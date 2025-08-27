@@ -1,0 +1,22 @@
+=== RUN   TestMCPPlugin_CreateNode_Success
+--- PASS: TestMCPPlugin_CreateNode_Success (0.00s)
+=== RUN   TestMCPPlugin_CreateNode_MissingOperation
+--- PASS: TestMCPPlugin_CreateNode_MissingOperation (0.00s)
+=== RUN   TestMCPPlugin_ExecuteTool_CMD_Success
+--- PASS: TestMCPPlugin_ExecuteTool_CMD_Success (0.01s)
+=== RUN   TestMCPPlugin_ExecuteTool_HTTP_Success
+--- PASS: TestMCPPlugin_ExecuteTool_HTTP_Success (0.00s)
+=== RUN   TestPluginRegistry
+=== RUN   TestPluginRegistry/Register_and_Get
+=== RUN   TestPluginRegistry/Register_ExampleNodePlugin
+=== RUN   TestPluginRegistry/Register_duplicate
+=== RUN   TestPluginRegistry/Get_non-existent
+=== RUN   TestPluginRegistry/List_plugins
+--- PASS: TestPluginRegistry (0.00s)
+    --- PASS: TestPluginRegistry/Register_and_Get (0.00s)
+    --- PASS: TestPluginRegistry/Register_ExampleNodePlugin (0.00s)
+    --- PASS: TestPluginRegistry/Register_duplicate (0.00s)
+    --- PASS: TestPluginRegistry/Get_non-existent (0.00s)
+    --- PASS: TestPluginRegistry/List_plugins (0.00s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/plugins	0.028s

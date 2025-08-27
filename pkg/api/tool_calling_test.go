@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"regexp"
 	"strings"
@@ -78,7 +77,7 @@ func TestSimpleToolCalling(t *testing.T) {
 	}
 
 	// Create a mock search server
-	mockSearchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    mockSearchServer := NewIPv4Server(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check if this is a search request
 		if r.URL.Path == "/search" {
 			// Get the search query
@@ -109,7 +108,7 @@ func TestSimpleToolCalling(t *testing.T) {
 
 	// Create and start server
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, pluginRegistry)
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	t.Logf("Test server started at: %s", testServer.URL)

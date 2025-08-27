@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -127,7 +126,7 @@ nodes:
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, plugins.NewPluginRegistry())
 
 	// Create test server
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	// Create WebSocket connection with basic auth
@@ -264,7 +263,7 @@ func TestWebSocketAuthentication(t *testing.T) {
 	}
 
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, nil, plugins.NewPluginRegistry())
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http") + "/api/v1/ws"
@@ -342,7 +341,7 @@ func TestWebSocketConcurrentConnections(t *testing.T) {
 	}
 
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, plugins.NewPluginRegistry())
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http") + "/api/v1/ws"

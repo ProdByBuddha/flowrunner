@@ -1,10 +1,10 @@
 package runtime
 
 import (
-	"encoding/json"
-	"fmt"
-	"strings"
-	"time"
+    "encoding/json"
+    "fmt"
+    "strings"
+    "time"
 
 	"github.com/robertkrimen/otto"
 	"github.com/tcmartin/flowlib"
@@ -80,11 +80,11 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 			}
 		}
 
-		// Process node parameters through template engine if FlowContext is available
-		processedParams := params
-		if flowContext != nil {
-			// Update the flow context with current shared data for template evaluation
-			if sharedMap, ok := shared.(map[string]interface{}); ok {
+        // Process node parameters through template engine if FlowContext is available
+        processedParams := params
+        if flowContext != nil {
+            // Update the flow context with current shared data for template evaluation
+            if sharedMap, ok := shared.(map[string]interface{}); ok {
 				// Log the complete shared state in readable JSON format
 				sharedJSON, _ := json.MarshalIndent(sharedMap, "", "  ")
 				fmt.Printf("\n🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:\n%s\n", string(sharedJSON))
@@ -118,64 +118,56 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 				fmt.Printf("🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:\n%s\n", string(evalJSON))
 			}
 			
-			var err error
-			processedParams, err = flowContext.ProcessNodeParams(params)
+                // Ensure tool_params are available in shared context for template evaluation
+                if sm2, ok2 := shared.(map[string]interface{}); ok2 {
+                    if _, exists := sm2["tool_params"]; !exists {
+                        if tp := deriveToolParamsFromShared(sm2); tp != nil {
+                            sm2["tool_params"] = tp
+                            flowContext.SetSharedData("tool_params", tp)
+                        }
+                    }
+                }
+
+                var err error
+                processedParams, err = flowContext.ProcessNodeParams(params)
 			if err != nil {
 				// Log the error but continue with original parameters to avoid breaking the flow
 				fmt.Printf("❌ [NodeWrapper] Template processing error: %v\n", err)
 				processedParams = params
-			} else {
-				fmt.Printf("✅ [NodeWrapper] Template expressions processed successfully\n")
-				// Log the processed parameters
-				processedJSON, _ := json.MarshalIndent(processedParams, "", "  ")
-				fmt.Printf("📝 [NodeWrapper] PROCESSED PARAMETERS:\n%s\n", string(processedJSON))
-			}
+            } else {
+                fmt.Printf("✅ [NodeWrapper] Template expressions processed successfully\n")
+                // Log the processed parameters with redaction for sensitive keys
+                redacted := make(map[string]interface{}, len(processedParams))
+                for k, v := range processedParams {
+                    lk := strings.ToLower(k)
+                    if lk == "password" || lk == "pass" || lk == "token" || lk == "api_key" {
+                        redacted[k] = "***"
+                    } else {
+                        redacted[k] = v
+                    }
+                }
+                processedJSON, _ := json.MarshalIndent(redacted, "", "  ")
+                fmt.Printf("📝 [NodeWrapper] PROCESSED PARAMETERS:\n%s\n", string(processedJSON))
+            }
 		}
 
 		// For direct node usage, shared is typically an empty map or only contains result storage
 		// For flow execution, shared contains meaningful input data
 		var combinedInput map[string]interface{}
 		
-		if sharedMap, ok := shared.(map[string]interface{}); ok {
-			// Check if this looks like flow input (has meaningful data keys)
-			hasFlowInput := false
-			for key, value := range sharedMap {
-				// Skip empty values
-				if value == nil {
-					continue
-				}
-				// These are typical flow input keys with meaningful data
-				if key == "question" || key == "input" || key == "context" || key == "data" {
-					if str, ok := value.(string); ok && str != "" {
-						hasFlowInput = true
-						break
-					}
-					if _, ok := value.(map[string]interface{}); ok {
-						hasFlowInput = true
-						break
-					}
-				}
-			}
-			
-			if hasFlowInput {
-				// Flow execution: create combined input format with processed parameters
-				combinedInput = map[string]interface{}{
-					"params": processedParams,  // Use processed parameters with resolved templates
-					"input":  shared,
-				}
-			} else {
-				// Direct node usage: use processed parameters only
-				combinedInput = map[string]interface{}{
-					"params": processedParams,  // Use processed parameters
-					"input":  map[string]interface{}{}, // empty flow input
-				}
-			}
-		} else {
-			// Non-map shared context or nil: direct node usage
-			combinedInput = map[string]interface{}{
-				"params": processedParams,  // Use processed parameters
-				"input":  map[string]interface{}{},
-			}
+        if sharedMap, ok := shared.(map[string]interface{}); ok {
+            // Always provide the current shared context as 'input' to downstream nodes.
+            // This ensures router/tool outputs are accessible via `${input.*}` in templates.
+            combinedInput = map[string]interface{}{
+                "params": processedParams,
+                "input":  sharedMap,
+            }
+        } else {
+            // Non-map shared context or nil: direct node usage
+            combinedInput = map[string]interface{}{
+                "params": processedParams,  // Use processed parameters
+                "input":  map[string]interface{}{},
+            }
 		}
 
 		// Execute the function
@@ -217,6 +209,49 @@ func (w *NodeWrapper) Run(shared interface{}) (flowlib.Action, error) {
 			// Log the updated shared state after storing the result
 			sharedJSON, _ := json.MarshalIndent(sharedMap, "", "  ")
 			fmt.Printf("\n🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:\n%s\n", string(sharedJSON))
+
+			// Emit an execution log entry if the runtime logger is available
+			if execCtx, ok := sharedMap["_execution"].(map[string]interface{}); ok {
+				if logger, ok := execCtx["logger"].(func(string, string, string, map[string]interface{})); ok {
+					if execID, ok := execCtx["execution_id"].(string); ok {
+						// Build a concise, searchable message that mentions tool/http/request where applicable
+						message := "node executed"
+						data := map[string]interface{}{
+							"node_type": nodeType,
+						}
+						// Add HTTP-specific context
+						if nodeType == "http" {
+							message = "http request executed"
+							if url, ok := processedParams["url"].(string); ok {
+								data["url"] = url
+							}
+						}
+						// Add LLM/tool-specific context
+						if nodeType == "llm" {
+							// Check for tool calls in the result
+							if resMap, ok := result.(map[string]interface{}); ok {
+								if hasTools, ok := resMap["has_tool_calls"].(bool); ok && hasTools {
+									message = "llm tool call detected"
+									if tcArr, ok := resMap["tool_calls"].([]interface{}); ok && len(tcArr) > 0 {
+										if tcFirst, ok := tcArr[0].(map[string]interface{}); ok {
+											if fn, ok := tcFirst["function"].(map[string]interface{}); ok {
+												if name, ok := fn["name"].(string); ok {
+													data["tool_name"] = name
+												}
+												if args, ok := fn["arguments"].(string); ok {
+													data["tool_args"] = args
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+
+						logger(execID, "info", message, data)
+					}
+				}
+			}
 		}
 
 		// Call the post function if provided
@@ -469,6 +504,64 @@ func NewHTTPRequestNodeWrapper(params map[string]interface{}) (flowlib.Node, err
 	return wrapper, nil
 }
 
+// deriveToolParamsFromShared tries to extract tool params from common shapes
+// left by upstream LLM/router nodes and attaches them for downstream templates.
+func deriveToolParamsFromShared(sharedMap map[string]interface{}) map[string]any {
+    // Helper to parse arguments JSON
+    parseArgs := func(argStr string) map[string]any {
+        if argStr == "" {
+            return nil
+        }
+        var m map[string]any
+        if err := json.Unmarshal([]byte(argStr), &m); err == nil {
+            return m
+        }
+        return nil
+    }
+
+    // Check nested llm_result.tool_calls under various keys
+    try := func(container map[string]any) map[string]any {
+        if container == nil {
+            return nil
+        }
+        if lr, ok := container["llm_result"].(map[string]any); ok {
+            if arr, ok := lr["tool_calls"].([]interface{}); ok && len(arr) > 0 {
+                if first, ok := arr[0].(map[string]any); ok {
+                    if fn, ok := first["function"].(map[string]any); ok {
+                        if argStr, ok := fn["arguments"].(string); ok {
+                            return parseArgs(argStr)
+                        }
+                    }
+                }
+            }
+        }
+        if arr, ok := container["tool_calls"].([]interface{}); ok && len(arr) > 0 {
+            if first, ok := arr[0].(map[string]any); ok {
+                if fn, ok := first["function"].(map[string]any); ok {
+                    if argStr, ok := fn["arguments"].(string); ok {
+                        return parseArgs(argStr)
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+    if res, ok := sharedMap["result"].(map[string]any); ok {
+        if tp := try(res); tp != nil { return tp }
+        if inner, ok := res["result"].(map[string]any); ok {
+            if tp := try(inner); tp != nil { return tp }
+        }
+    }
+    if res2, ok := sharedMap["result_result"].(map[string]any); ok {
+        if tp := try(res2); tp != nil { return tp }
+        if inner, ok := res2["result"].(map[string]any); ok {
+            if tp := try(inner); tp != nil { return tp }
+        }
+    }
+    return nil
+}
+
 // Store node implementation moved to store_node.go
 
 // NewDelayNodeWrapper creates a new delay node wrapper
@@ -499,16 +592,36 @@ func NewDelayNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
 			}
 
-			durationStr, ok := params["duration"].(string)
-			if !ok {
-				return nil, fmt.Errorf("duration parameter is required")
-			}
-
-			// Parse duration
-			duration, err := time.ParseDuration(durationStr)
-			if err != nil {
-				return nil, fmt.Errorf("invalid duration: %w", err)
-			}
+            // Support either duration (Go duration string) or duration_ms (integer milliseconds)
+            var duration time.Duration
+            if durationStr, ok := params["duration"].(string); ok {
+                // Parse duration string like "100ms", "2s"
+                d, err := time.ParseDuration(durationStr)
+                if err != nil {
+                    return nil, fmt.Errorf("invalid duration: %w", err)
+                }
+                duration = d
+            } else if msVal, ok := params["duration_ms"]; ok {
+                switch v := msVal.(type) {
+                case int:
+                    duration = time.Duration(v) * time.Millisecond
+                case int64:
+                    duration = time.Duration(v) * time.Millisecond
+                case float64:
+                    duration = time.Duration(int64(v)) * time.Millisecond
+                case string:
+                    // Allow numeric string representing milliseconds
+                    if parsed, err := time.ParseDuration(v + "ms"); err == nil {
+                        duration = parsed
+                    } else {
+                        return nil, fmt.Errorf("invalid duration_ms: %v", err)
+                    }
+                default:
+                    return nil, fmt.Errorf("invalid duration_ms type: %T", v)
+                }
+            } else {
+                return nil, fmt.Errorf("duration parameter is required")
+            }
 
 			// Wait
 			time.Sleep(duration)

@@ -1,11 +1,10 @@
 package api
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
-	"time"
+    "net/http"
+    "strings"
+    "testing"
+    "time"
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
@@ -65,7 +64,7 @@ func TestWebSocketManager_HandleWebSocket(t *testing.T) {
 	wsManager := NewWebSocketManager(mockRuntime)
 	
 	// Create test server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    server := NewIPv4Server(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wsManager.HandleWebSocket(w, r, "test-account")
 	}))
 	defer server.Close()
@@ -107,7 +106,7 @@ func TestWebSocketManager_SubscribeToExecution(t *testing.T) {
 	mockRuntime.On("SubscribeToLogs", "test-execution").Return((<-chan runtime.ExecutionLog)(logChan), nil)
 	
 	// Create test server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    server := NewIPv4Server(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wsManager.HandleWebSocket(w, r, "test-account")
 	}))
 	defer server.Close()
@@ -171,7 +170,7 @@ func TestWebSocketManager_UnsubscribeFromExecution(t *testing.T) {
 	mockRuntime.On("SubscribeToLogs", "test-execution").Return((<-chan runtime.ExecutionLog)(logChan), nil)
 	
 	// Create test server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    server := NewIPv4Server(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wsManager.HandleWebSocket(w, r, "test-account")
 	}))
 	defer server.Close()
@@ -224,7 +223,7 @@ func TestWebSocketManager_PingPong(t *testing.T) {
 	wsManager := NewWebSocketManager(mockRuntime)
 	
 	// Create test server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    server := NewIPv4Server(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wsManager.HandleWebSocket(w, r, "test-account")
 	}))
 	defer server.Close()
@@ -262,7 +261,7 @@ func TestWebSocketManager_ExecutionNotFound(t *testing.T) {
 	mockRuntime.On("GetStatus", "nonexistent-execution").Return(runtime.ExecutionStatus{}, assert.AnError)
 	
 	// Create test server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    server := NewIPv4Server(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wsManager.HandleWebSocket(w, r, "test-account")
 	}))
 	defer server.Close()

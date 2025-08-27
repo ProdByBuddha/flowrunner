@@ -1,0 +1,8 @@
+./example_plugin.go
+./interfaces.go
+./mcp_plugin.go
+./node_factory.go
+./registry.go
+./schema.go
+./mcp_plugin_test.go
+./registry_test.go

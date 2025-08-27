@@ -1,0 +1,441 @@
+=== RUN   TestAgentNodeCreation
+--- PASS: TestAgentNodeCreation (0.00s)
+=== RUN   TestAgentNodeParameterHandling
+=== RUN   TestAgentNodeParameterHandling/TestCase_0
+=== RUN   TestAgentNodeParameterHandling/TestCase_1
+=== RUN   TestAgentNodeParameterHandling/TestCase_2
+--- PASS: TestAgentNodeParameterHandling (0.00s)
+    --- PASS: TestAgentNodeParameterHandling/TestCase_0 (0.00s)
+    --- PASS: TestAgentNodeParameterHandling/TestCase_1 (0.00s)
+    --- PASS: TestAgentNodeParameterHandling/TestCase_2 (0.00s)
+=== RUN   TestHTTPRequestNode
+--- PASS: TestHTTPRequestNode (0.00s)
+=== RUN   TestDelayNode
+--- PASS: TestDelayNode (0.01s)
+=== RUN   TestConditionNode
+[Condition Node] Starting condition evaluation
+[Condition Node] Script length: 12 characters
+[Condition Node] Setting flow input with 0 keys
+[Condition Node] About to execute JavaScript
+[Condition Node] JavaScript execution successful
+[Condition Node] Final result: true (type: bool)
+--- PASS: TestConditionNode (0.00s)
+=== RUN   TestCronNode
+=== RUN   TestCronNode/Schedule_job
+=== RUN   TestCronNode/List_jobs
+=== RUN   TestCronNode/Get_job
+=== RUN   TestCronNode/Delete_job
+--- PASS: TestCronNode (0.03s)
+    --- PASS: TestCronNode/Schedule_job (0.02s)
+    --- PASS: TestCronNode/List_jobs (0.00s)
+    --- PASS: TestCronNode/Get_job (0.00s)
+    --- PASS: TestCronNode/Delete_job (0.00s)
+=== RUN   TestDynamoDBNode
+    dynamodb_node_test.go:34: AWS_ACCESS_KEY_ID: 
+    dynamodb_node_test.go:38: AWS_SECRET_ACCESS_KEY: 
+    dynamodb_node_test.go:43: Skipping DynamoDB test as AWS credentials are not set
+--- SKIP: TestDynamoDBNode (0.00s)
+=== RUN   TestEnhancedFlowRuntime_Execute
+    flow_runtime_enhanced_test.go:166: PASS:	GetFlow(string,string)
+    flow_runtime_enhanced_test.go:167: PASS:	Parse(string)
+--- PASS: TestEnhancedFlowRuntime_Execute (0.10s)
+=== RUN   TestEnhancedFlowRuntime_GetStatus
+    flow_runtime_enhanced_test.go:220: PASS:	GetFlow(string,string)
+    flow_runtime_enhanced_test.go:221: PASS:	Parse(string)
+--- PASS: TestEnhancedFlowRuntime_GetStatus (0.20s)
+=== RUN   TestEnhancedFlowRuntime_GetStatusFromStore
+    flow_runtime_enhanced_test.go:251: PASS:	GetExecution(string)
+--- PASS: TestEnhancedFlowRuntime_GetStatusFromStore (0.00s)
+=== RUN   TestEnhancedFlowRuntime_GetLogs
+    flow_runtime_enhanced_test.go:286: PASS:	GetExecutionLogs(string)
+--- PASS: TestEnhancedFlowRuntime_GetLogs (0.00s)
+=== RUN   TestEnhancedFlowRuntime_Cancel
+    flow_runtime_enhanced_test.go:341: PASS:	GetFlow(string,string)
+    flow_runtime_enhanced_test.go:342: PASS:	Parse(string)
+--- PASS: TestEnhancedFlowRuntime_Cancel (0.15s)
+=== RUN   TestEnhancedFlowRuntime_SubscribeToLogs
+    flow_runtime_enhanced_test.go:387: PASS:	GetFlow(string,string)
+    flow_runtime_enhanced_test.go:388: PASS:	Parse(string)
+--- PASS: TestEnhancedFlowRuntime_SubscribeToLogs (0.30s)
+=== RUN   TestEnhancedFlowRuntime_ErrorHandling
+=== RUN   TestEnhancedFlowRuntime_ErrorHandling/flow_not_found
+    flow_runtime_enhanced_test.go:406: PASS:	GetFlow(string,string)
+=== RUN   TestEnhancedFlowRuntime_ErrorHandling/yaml_parse_error
+    flow_runtime_enhanced_test.go:424: PASS:	GetFlow(string,string)
+    flow_runtime_enhanced_test.go:424: PASS:	GetFlow(string,string)
+    flow_runtime_enhanced_test.go:425: PASS:	Parse(string)
+=== RUN   TestEnhancedFlowRuntime_ErrorHandling/non-existent_execution_status
+=== RUN   TestEnhancedFlowRuntime_ErrorHandling/cancel_non-existent_execution
+=== RUN   TestEnhancedFlowRuntime_ErrorHandling/subscribe_to_logs_for_non-existent_execution
+--- PASS: TestEnhancedFlowRuntime_ErrorHandling (0.00s)
+    --- PASS: TestEnhancedFlowRuntime_ErrorHandling/flow_not_found (0.00s)
+    --- PASS: TestEnhancedFlowRuntime_ErrorHandling/yaml_parse_error (0.00s)
+    --- PASS: TestEnhancedFlowRuntime_ErrorHandling/non-existent_execution_status (0.00s)
+    --- PASS: TestEnhancedFlowRuntime_ErrorHandling/cancel_non-existent_execution (0.00s)
+    --- PASS: TestEnhancedFlowRuntime_ErrorHandling/subscribe_to_logs_for_non-existent_execution (0.00s)
+=== RUN   TestEnhancedFlowRuntime_WithoutExecutionStore
+    flow_runtime_enhanced_test.go:493: PASS:	GetFlow(string,string)
+    flow_runtime_enhanced_test.go:494: PASS:	Parse(string)
+    flow_runtime_enhanced_test.go:495: PASS:	Run(string)
+    flow_runtime_enhanced_test.go:495: PASS:	Successors()
+--- PASS: TestEnhancedFlowRuntime_WithoutExecutionStore (0.10s)
+=== RUN   TestLLMNodeWithHTTPAndEmailFlow
+trevormartin@datastreamssolutions.com    llm_node_flow_test.go:49: Using email credentials: trevormartin@datastreamssolutions.com -> beatsbybuddha@gmail.com
+    llm_node_flow_test.go:57: Search query: latest advancements in artificial intelligence 2025
+    llm_node_flow_test.go:305: Starting flow execution...
+    llm_node_flow_test.go:172: Executing HTTP node with mock search results
+💾 [NodeWrapper] Stored result as 'http_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "body": {
+    "items": [
+      {
+        "displayLink": "example.com",
+        "link": "https://example.com/ai-breakthroughs-2025",
+        "snippet": "The latest advancements in artificial intelligence in 2025 include significant progress in multimodal models, quantum machine learning, and neuromorphic computing.",
+        "title": "AI Breakthroughs in 2025: A Comprehensive Overview"
+      },
+      {
+        "displayLink": "example.com",
+        "link": "https://example.com/ai-ethics-2025",
+        "snippet": "As AI continues to advance in 2025, researchers are focusing on ethical frameworks for autonomous systems and addressing bias in large language models.",
+        "title": "Ethical Considerations in AI Development - 2025 Perspective"
+      },
+      {
+        "displayLink": "example.com",
+        "link": "https://example.com/ai-healthcare-2025",
+        "snippet": "Medical AI systems in 2025 have achieved breakthrough capabilities in disease diagnosis, drug discovery, and personalized treatment planning.",
+        "title": "AI in Healthcare: 2025 Innovations"
+      }
+    ]
+  },
+  "status_code": 200,
+  "success": true
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+{
+  "http_result": {
+    "body": {
+      "items": [
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-breakthroughs-2025",
+          "snippet": "The latest advancements in artificial intelligence in 2025 include significant progress in multimodal models, quantum machine learning, and neuromorphic computing.",
+          "title": "AI Breakthroughs in 2025: A Comprehensive Overview"
+        },
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-ethics-2025",
+          "snippet": "As AI continues to advance in 2025, researchers are focusing on ethical frameworks for autonomous systems and addressing bias in large language models.",
+          "title": "Ethical Considerations in AI Development - 2025 Perspective"
+        },
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-healthcare-2025",
+          "snippet": "Medical AI systems in 2025 have achieved breakthrough capabilities in disease diagnosis, drug discovery, and personalized treatment planning.",
+          "title": "AI in Healthcare: 2025 Innovations"
+        }
+      ]
+    },
+    "status_code": 200,
+    "success": true
+  },
+  "result": {
+    "body": {
+      "items": [
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-breakthroughs-2025",
+          "snippet": "The latest advancements in artificial intelligence in 2025 include significant progress in multimodal models, quantum machine learning, and neuromorphic computing.",
+          "title": "AI Breakthroughs in 2025: A Comprehensive Overview"
+        },
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-ethics-2025",
+          "snippet": "As AI continues to advance in 2025, researchers are focusing on ethical frameworks for autonomous systems and addressing bias in large language models.",
+          "title": "Ethical Considerations in AI Development - 2025 Perspective"
+        },
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-healthcare-2025",
+          "snippet": "Medical AI systems in 2025 have achieved breakthrough capabilities in disease diagnosis, drug discovery, and personalized treatment planning.",
+          "title": "AI in Healthcare: 2025 Innovations"
+        }
+      ]
+    },
+    "status_code": 200,
+    "success": true
+  }
+}
+    llm_node_flow_test.go:117: Executing LLM node with mock response
+💾 [NodeWrapper] Stored result as 'llm_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "content": "Subject: Latest Advancements in Artificial Intelligence 2025 - Research Summary\n\nDear Recipient,\n\nI've compiled the key findings from my research on the latest advancements in artificial intelligence in 2025:\n\n1. Multimodal Models: Significant progress has been made in developing AI systems that can process and understand multiple types of data simultaneously (text, images, audio). These models are showing unprecedented capabilities in understanding context across different media formats.\n\n2. Quantum Machine Learning: The integration of quantum computing with machine learning algorithms has led to breakthroughs in processing complex datasets at speeds previously thought impossible.\n\n3. Neuromorphic Computing: AI systems modeled after the human brain have achieved new milestones in energy efficiency and adaptive learning capabilities.\n\n4. Ethical Frameworks: Researchers are focusing on developing robust ethical guidelines for autonomous systems, with particular attention to addressing bias in large language models.\n\n5. Healthcare Applications: Medical AI has made remarkable strides in disease diagnosis, drug discovery, and personalized treatment planning, potentially revolutionizing healthcare delivery.\n\nThese advancements represent significant steps forward in AI technology and its applications across various industries.\n\nBest regards,\n[Your Name]",
+  "model": "gpt-4-turbo-mock",
+  "usage": {
+    "completion_tokens": 200,
+    "prompt_tokens": 250,
+    "total_tokens": 450
+  }
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+{
+  "http_result": {
+    "body": {
+      "items": [
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-breakthroughs-2025",
+          "snippet": "The latest advancements in artificial intelligence in 2025 include significant progress in multimodal models, quantum machine learning, and neuromorphic computing.",
+          "title": "AI Breakthroughs in 2025: A Comprehensive Overview"
+        },
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-ethics-2025",
+          "snippet": "As AI continues to advance in 2025, researchers are focusing on ethical frameworks for autonomous systems and addressing bias in large language models.",
+          "title": "Ethical Considerations in AI Development - 2025 Perspective"
+        },
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-healthcare-2025",
+          "snippet": "Medical AI systems in 2025 have achieved breakthrough capabilities in disease diagnosis, drug discovery, and personalized treatment planning.",
+          "title": "AI in Healthcare: 2025 Innovations"
+        }
+      ]
+    },
+    "status_code": 200,
+    "success": true
+  },
+  "llm_result": {
+    "content": "Subject: Latest Advancements in Artificial Intelligence 2025 - Research Summary\n\nDear Recipient,\n\nI've compiled the key findings from my research on the latest advancements in artificial intelligence in 2025:\n\n1. Multimodal Models: Significant progress has been made in developing AI systems that can process and understand multiple types of data simultaneously (text, images, audio). These models are showing unprecedented capabilities in understanding context across different media formats.\n\n2. Quantum Machine Learning: The integration of quantum computing with machine learning algorithms has led to breakthroughs in processing complex datasets at speeds previously thought impossible.\n\n3. Neuromorphic Computing: AI systems modeled after the human brain have achieved new milestones in energy efficiency and adaptive learning capabilities.\n\n4. Ethical Frameworks: Researchers are focusing on developing robust ethical guidelines for autonomous systems, with particular attention to addressing bias in large language models.\n\n5. Healthcare Applications: Medical AI has made remarkable strides in disease diagnosis, drug discovery, and personalized treatment planning, potentially revolutionizing healthcare delivery.\n\nThese advancements represent significant steps forward in AI technology and its applications across various industries.\n\nBest regards,\n[Your Name]",
+    "model": "gpt-4-turbo-mock",
+    "usage": {
+      "completion_tokens": 200,
+      "prompt_tokens": 250,
+      "total_tokens": 450
+    }
+  },
+  "result": {
+    "content": "Subject: Latest Advancements in Artificial Intelligence 2025 - Research Summary\n\nDear Recipient,\n\nI've compiled the key findings from my research on the latest advancements in artificial intelligence in 2025:\n\n1. Multimodal Models: Significant progress has been made in developing AI systems that can process and understand multiple types of data simultaneously (text, images, audio). These models are showing unprecedented capabilities in understanding context across different media formats.\n\n2. Quantum Machine Learning: The integration of quantum computing with machine learning algorithms has led to breakthroughs in processing complex datasets at speeds previously thought impossible.\n\n3. Neuromorphic Computing: AI systems modeled after the human brain have achieved new milestones in energy efficiency and adaptive learning capabilities.\n\n4. Ethical Frameworks: Researchers are focusing on developing robust ethical guidelines for autonomous systems, with particular attention to addressing bias in large language models.\n\n5. Healthcare Applications: Medical AI has made remarkable strides in disease diagnosis, drug discovery, and personalized treatment planning, potentially revolutionizing healthcare delivery.\n\nThese advancements represent significant steps forward in AI technology and its applications across various industries.\n\nBest regards,\n[Your Name]",
+    "model": "gpt-4-turbo-mock",
+    "usage": {
+      "completion_tokens": 200,
+      "prompt_tokens": 250,
+      "total_tokens": 450
+    }
+  }
+}
+    llm_node_flow_test.go:213: Would send email with subject: 
+    llm_node_flow_test.go:218: Email body preview: 
+💾 [NodeWrapper] Stored result as 'email_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "from": "trevormartin@datastreamssolutions.com",
+  "status": "sent",
+  "subject": "",
+  "to": "beatsbybuddha@gmail.com"
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+{
+  "email_result": {
+    "from": "trevormartin@datastreamssolutions.com",
+    "status": "sent",
+    "subject": "",
+    "to": "beatsbybuddha@gmail.com"
+  },
+  "http_result": {
+    "body": {
+      "items": [
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-breakthroughs-2025",
+          "snippet": "The latest advancements in artificial intelligence in 2025 include significant progress in multimodal models, quantum machine learning, and neuromorphic computing.",
+          "title": "AI Breakthroughs in 2025: A Comprehensive Overview"
+        },
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-ethics-2025",
+          "snippet": "As AI continues to advance in 2025, researchers are focusing on ethical frameworks for autonomous systems and addressing bias in large language models.",
+          "title": "Ethical Considerations in AI Development - 2025 Perspective"
+        },
+        {
+          "displayLink": "example.com",
+          "link": "https://example.com/ai-healthcare-2025",
+          "snippet": "Medical AI systems in 2025 have achieved breakthrough capabilities in disease diagnosis, drug discovery, and personalized treatment planning.",
+          "title": "AI in Healthcare: 2025 Innovations"
+        }
+      ]
+    },
+    "status_code": 200,
+    "success": true
+  },
+  "llm_result": {
+    "content": "Subject: Latest Advancements in Artificial Intelligence 2025 - Research Summary\n\nDear Recipient,\n\nI've compiled the key findings from my research on the latest advancements in artificial intelligence in 2025:\n\n1. Multimodal Models: Significant progress has been made in developing AI systems that can process and understand multiple types of data simultaneously (text, images, audio). These models are showing unprecedented capabilities in understanding context across different media formats.\n\n2. Quantum Machine Learning: The integration of quantum computing with machine learning algorithms has led to breakthroughs in processing complex datasets at speeds previously thought impossible.\n\n3. Neuromorphic Computing: AI systems modeled after the human brain have achieved new milestones in energy efficiency and adaptive learning capabilities.\n\n4. Ethical Frameworks: Researchers are focusing on developing robust ethical guidelines for autonomous systems, with particular attention to addressing bias in large language models.\n\n5. Healthcare Applications: Medical AI has made remarkable strides in disease diagnosis, drug discovery, and personalized treatment planning, potentially revolutionizing healthcare delivery.\n\nThese advancements represent significant steps forward in AI technology and its applications across various industries.\n\nBest regards,\n[Your Name]",
+    "model": "gpt-4-turbo-mock",
+    "usage": {
+      "completion_tokens": 200,
+      "prompt_tokens": 250,
+      "total_tokens": 450
+    }
+  },
+  "result": {
+    "from": "trevormartin@datastreamssolutions.com",
+    "status": "sent",
+    "subject": "",
+    "to": "beatsbybuddha@gmail.com"
+  }
+}
+    llm_node_flow_test.go:313: Flow execution completed in 356.8µs
+    llm_node_flow_test.go:330: LLM response: Subject: Latest Advancements in Artificial Intelligence 2025 - Research Summary
+        
+        Dear Recipient,
+        
+        I've compiled the key findings from my research on the latest advancements in artificial intelligence in 2025:
+        
+        1. Multimodal Models: Significant progress has been made in developing AI systems that can process and understand multiple types of data simultaneously (text, images, audio). These models are showing unprecedented capabilities in understanding context across different media formats.
+        
+        2. Quantum Machine Learning: The integration of quantum computing with machine learning algorithms has led to breakthroughs in processing complex datasets at speeds previously thought impossible.
+        
+        3. Neuromorphic Computing: AI systems modeled after the human brain have achieved new milestones in energy efficiency and adaptive learning capabilities.
+        
+        4. Ethical Frameworks: Researchers are focusing on developing robust ethical guidelines for autonomous systems, with particular attention to addressing bias in large language models.
+        
+        5. Healthcare Applications: Medical AI has made remarkable strides in disease diagnosis, drug discovery, and personalized treatment planning, potentially revolutionizing healthcare delivery.
+        
+        These advancements represent significant steps forward in AI technology and its applications across various industries.
+        
+        Best regards,
+        [Your Name]
+--- PASS: TestLLMNodeWithHTTPAndEmailFlow (0.00s)
+=== RUN   TestLLMNodeAsAgent
+    llm_node_integration_test.go:22: Warning: Error loading .env file, using existing environment variables
+    llm_node_integration_test.go:37: Skipping test because email environment variables are not set
+--- SKIP: TestLLMNodeAsAgent (0.00s)
+=== RUN   TestPostgresNode
+    postgres_node_test.go:35: POSTGRES_HOST: localhost
+    postgres_node_test.go:36: POSTGRES_USER: flowrunner
+    postgres_node_test.go:37: POSTGRES_DB: flowrunner_db
+    postgres_node_test.go:39: POSTGRES_PASSWORD: f...
+PostgreSQL test parameters: host=localhost, user=flowrunner, dbname=flowrunner_db, table_name=flowrunner_test_20250827045509
+PostgreSQL connection parameters: host=localhost, user=flowrunner, dbname=flowrunner_db, table_name=flowrunner_test_20250827045509
+=== RUN   TestPostgresNode/Basic_operations
+PostgreSQL node exec parameters: map[key:test-key operation:set value:test-value]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost key:test-key operation:set password:flowrunner table_name:flowrunner_test_20250827045509 user:flowrunner value:test-value]
+PostgreSQL user from config: flowrunner
+Connecting to PostgreSQL with: host=localhost port=5432 user=flowrunner dbname=flowrunner_db sslmode=disable
+PostgreSQL node exec parameters: map[key:test-key operation:get]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost key:test-key operation:get password:flowrunner table_name:flowrunner_test_20250827045509 user:flowrunner]
+PostgreSQL node exec parameters: map[operation:list]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost operation:list password:flowrunner table_name:flowrunner_test_20250827045509 user:flowrunner]
+PostgreSQL node exec parameters: map[key:test-key operation:delete]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost key:test-key operation:delete password:flowrunner table_name:flowrunner_test_20250827045509 user:flowrunner]
+PostgreSQL node exec parameters: map[key:test-key operation:get]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost key:test-key operation:get password:flowrunner table_name:flowrunner_test_20250827045509 user:flowrunner]
+=== RUN   TestPostgresNode/Query_operation
+PostgreSQL node exec parameters: map[key:user1 operation:set value:map[age:30 name:Alice roles:[admin user]]]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost key:user1 operation:set password:flowrunner table_name:flowrunner_test_20250827045509 user:flowrunner value:map[age:30 name:Alice roles:[admin user]]]
+PostgreSQL node exec parameters: map[key:user2 operation:set value:map[age:25 name:Bob roles:[user]]]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost key:user2 operation:set password:flowrunner table_name:flowrunner_test_20250827045509 user:flowrunner value:map[age:25 name:Bob roles:[user]]]
+PostgreSQL node exec parameters: map[key:user3 operation:set value:map[age:35 name:Charlie roles:[user]]]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost key:user3 operation:set password:flowrunner table_name:flowrunner_test_20250827045509 user:flowrunner value:map[age:35 name:Charlie roles:[user]]]
+PostgreSQL node exec parameters: map[filter:map[age:map[$gt:25]] operation:query]
+PostgreSQL combined parameters: map[dbname:flowrunner_db filter:map[age:map[$gt:25]] host:localhost operation:query password:flowrunner table_name:flowrunner_test_20250827045509 user:flowrunner]
+=== RUN   TestPostgresNode/SQL_execution
+PostgreSQL node exec parameters: map[operation:execute query:DROP TABLE IF EXISTS test_sql]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost operation:execute password:flowrunner query:DROP TABLE IF EXISTS test_sql table_name:flowrunner_test_20250827045509 user:flowrunner]
+PostgreSQL node exec parameters: map[operation:execute query:CREATE TABLE test_sql (id SERIAL PRIMARY KEY, name TEXT, value INTEGER)]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost operation:execute password:flowrunner query:CREATE TABLE test_sql (id SERIAL PRIMARY KEY, name TEXT, value INTEGER) table_name:flowrunner_test_20250827045509 user:flowrunner]
+PostgreSQL node exec parameters: map[args:[test1 100 test2 200] operation:execute query:INSERT INTO test_sql (name, value) VALUES ($1, $2), ($3, $4)]
+PostgreSQL combined parameters: map[args:[test1 100 test2 200] dbname:flowrunner_db host:localhost operation:execute password:flowrunner query:INSERT INTO test_sql (name, value) VALUES ($1, $2), ($3, $4) table_name:flowrunner_test_20250827045509 user:flowrunner]
+PostgreSQL node exec parameters: map[operation:execute query:SELECT * FROM test_sql ORDER BY id]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost operation:execute password:flowrunner query:SELECT * FROM test_sql ORDER BY id table_name:flowrunner_test_20250827045509 user:flowrunner]
+=== RUN   TestPostgresNode/Transaction
+PostgreSQL node exec parameters: map[operation:execute query:DROP TABLE IF EXISTS test_tx]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost operation:execute password:flowrunner query:DROP TABLE IF EXISTS test_tx table_name:flowrunner_test_20250827045509 user:flowrunner]
+PostgreSQL node exec parameters: map[operation:execute query:CREATE TABLE test_tx (id SERIAL PRIMARY KEY, name TEXT, value INTEGER)]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost operation:execute password:flowrunner query:CREATE TABLE test_tx (id SERIAL PRIMARY KEY, name TEXT, value INTEGER) table_name:flowrunner_test_20250827045509 user:flowrunner]
+PostgreSQL node exec parameters: map[operation:transaction statements:[map[args:[tx1 100] query:INSERT INTO test_tx (name, value) VALUES ($1, $2)] map[args:[tx2 200] query:INSERT INTO test_tx (name, value) VALUES ($1, $2)] map[query:SELECT * FROM test_tx ORDER BY id]]]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost operation:transaction password:flowrunner statements:[map[args:[tx1 100] query:INSERT INTO test_tx (name, value) VALUES ($1, $2)] map[args:[tx2 200] query:INSERT INTO test_tx (name, value) VALUES ($1, $2)] map[query:SELECT * FROM test_tx ORDER BY id]] table_name:flowrunner_test_20250827045509 user:flowrunner]
+PostgreSQL node exec parameters: map[operation:execute query:DROP TABLE IF EXISTS flowrunner_test_20250827045509]
+PostgreSQL combined parameters: map[dbname:flowrunner_db host:localhost operation:execute password:flowrunner query:DROP TABLE IF EXISTS flowrunner_test_20250827045509 table_name:flowrunner_test_20250827045509 user:flowrunner]
+--- PASS: TestPostgresNode (0.10s)
+    --- PASS: TestPostgresNode/Basic_operations (0.05s)
+    --- PASS: TestPostgresNode/Query_operation (0.01s)
+    --- PASS: TestPostgresNode/SQL_execution (0.02s)
+    --- PASS: TestPostgresNode/Transaction (0.02s)
+=== RUN   TestStoreNode
+=== RUN   TestStoreNode/Basic_operations
+=== RUN   TestStoreNode/TTL_functionality
+=== RUN   TestStoreNode/Increment_operation
+=== RUN   TestStoreNode/Append_operation
+=== RUN   TestStoreNode/Query_operation
+=== RUN   TestStoreNode/Persistence
+--- PASS: TestStoreNode (0.21s)
+    --- PASS: TestStoreNode/Basic_operations (0.00s)
+    --- PASS: TestStoreNode/TTL_functionality (0.20s)
+    --- PASS: TestStoreNode/Increment_operation (0.00s)
+    --- PASS: TestStoreNode/Append_operation (0.00s)
+    --- PASS: TestStoreNode/Query_operation (0.00s)
+    --- PASS: TestStoreNode/Persistence (0.00s)
+=== RUN   TestWaitNode
+=== RUN   TestWaitNode/Duration_wait
+=== RUN   TestWaitNode/Until_time_(past)
+=== RUN   TestWaitNode/Condition_wait
+--- PASS: TestWaitNode (0.13s)
+    --- PASS: TestWaitNode/Duration_wait (0.10s)
+    --- PASS: TestWaitNode/Until_time_(past) (0.00s)
+    --- PASS: TestWaitNode/Condition_wait (0.03s)
+=== RUN   TestFlowRuntime_Integration_SimpleFlow
+2025/08/27 04:55:09 Connecting node: end
+2025/08/27 04:55:09 Connecting node: start
+2025/08/27 04:55:09   Action: default -> end
+    flow_runtime_integration_test.go:57: PASS:	GetFlow(string,string)
+--- PASS: TestFlowRuntime_Integration_SimpleFlow (0.00s)
+=== RUN   TestFlowRuntime_Integration_FlowWithRetry
+2025/08/27 04:55:09 Connecting node: start
+2025/08/27 04:55:09   Action: default -> end
+2025/08/27 04:55:09 Connecting node: end
+    flow_runtime_integration_test.go:96: PASS:	GetFlow(string,string)
+--- PASS: TestFlowRuntime_Integration_FlowWithRetry (0.00s)
+=== RUN   TestFlowRuntime_Integration_FlowWithBatch
+2025/08/27 04:55:09 Connecting node: start
+2025/08/27 04:55:09   Action: default -> process_items
+2025/08/27 04:55:09 Connecting node: process_items
+2025/08/27 04:55:09   Action: default -> end
+2025/08/27 04:55:09 Connecting node: end
+    flow_runtime_integration_test.go:137: PASS:	GetFlow(string,string)
+--- PASS: TestFlowRuntime_Integration_FlowWithBatch (0.00s)
+=== RUN   TestFlowRuntime_Integration_FlowWithWorkerPool
+2025/08/27 04:55:09 Connecting node: start
+2025/08/27 04:55:09   Action: default -> process_items
+2025/08/27 04:55:09 Connecting node: process_items
+2025/08/27 04:55:09   Action: default -> end
+2025/08/27 04:55:09 Connecting node: end
+    flow_runtime_integration_test.go:180: PASS:	GetFlow(string,string)
+--- PASS: TestFlowRuntime_Integration_FlowWithWorkerPool (0.00s)
+=== RUN   TestFlowRuntime_Integration_FlowWithAsyncBatch
+2025/08/27 04:55:09 Connecting node: start
+2025/08/27 04:55:09   Action: default -> process_items
+2025/08/27 04:55:09 Connecting node: process_items
+2025/08/27 04:55:09   Action: default -> end
+2025/08/27 04:55:09 Connecting node: end
+    flow_runtime_integration_test.go:221: PASS:	GetFlow(string,string)
+--- PASS: TestFlowRuntime_Integration_FlowWithAsyncBatch (0.00s)
+=== RUN   TestFlowRuntime_Integration_FlowWithParallelBatch
+2025/08/27 04:55:09 Connecting node: end
+2025/08/27 04:55:09 Connecting node: start
+2025/08/27 04:55:09   Action: default -> process_items
+2025/08/27 04:55:09 Connecting node: process_items
+2025/08/27 04:55:09   Action: default -> end
+    flow_runtime_integration_test.go:264: PASS:	GetFlow(string,string)
+--- PASS: TestFlowRuntime_Integration_FlowWithParallelBatch (0.00s)
+=== RUN   TestFlowRuntime_Execute
+    flow_runtime_service_test.go:103: PASS:	GetFlow(string,string)
+    flow_runtime_service_test.go:104: PASS:	Parse(string)
+--- PASS: TestFlowRuntime_Execute (0.00s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/runtime	1.375s

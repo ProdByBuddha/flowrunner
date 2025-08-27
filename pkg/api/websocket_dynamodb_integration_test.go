@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -34,13 +33,18 @@ import (
 // - Real-time WebSocket status updates
 // - Multiple concurrent executions
 func TestWebSocketDynamoDBIntegration_ComplexFlow(t *testing.T) {
-	// Load environment variables from project root first
-	_ = godotenv.Load("../../.env")
+    // Load environment variables from project root first
+    _ = godotenv.Load("../../.env")
 
-	// Skip if DynamoDB not configured
-	if os.Getenv("FLOWRUNNER_DYNAMODB_ENDPOINT") == "" {
-		t.Skip("Skipping DynamoDB integration test. Set FLOWRUNNER_DYNAMODB_ENDPOINT in .env file to run.")
-	}
+    // Explicit gate for DynamoDB WebSocket tests
+    if os.Getenv("RUN_DYNAMODB_WS") != "true" {
+        t.Skip("Skipping DynamoDB WebSocket tests (set RUN_DYNAMODB_WS=true to enable)")
+    }
+
+    // Skip if DynamoDB not configured
+    if os.Getenv("FLOWRUNNER_DYNAMODB_ENDPOINT") == "" {
+        t.Skip("Skipping DynamoDB integration test. Set FLOWRUNNER_DYNAMODB_ENDPOINT in .env file to run.")
+    }
 
 	// Get DynamoDB configuration from standard environment variables
 	endpoint := os.Getenv("FLOWRUNNER_DYNAMODB_ENDPOINT")
@@ -390,7 +394,7 @@ nodes:
 	}
 
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, plugins.NewPluginRegistry())
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	// Test multiple concurrent executions with WebSocket monitoring
@@ -447,13 +451,18 @@ func TestWebSocketDynamoDBIntegration_LoadTest(t *testing.T) {
 
 // TestWebSocketDynamoDBIntegration_SimpleBranching tests a simpler branching flow for easier testing
 func TestWebSocketDynamoDBIntegration_SimpleBranching(t *testing.T) {
-	// Load environment variables from project root first
-	_ = godotenv.Load("../../.env")
+    // Load environment variables from project root first
+    _ = godotenv.Load("../../.env")
 
-	// This test can run with any DynamoDB instance using standard env vars
-	if os.Getenv("FLOWRUNNER_DYNAMODB_ENDPOINT") == "" {
-		t.Skip("Skipping DynamoDB test. Set FLOWRUNNER_DYNAMODB_ENDPOINT in .env file to run.")
-	}
+    // Explicit gate for DynamoDB WebSocket tests
+    if os.Getenv("RUN_DYNAMODB_WS") != "true" {
+        t.Skip("Skipping DynamoDB WebSocket tests (set RUN_DYNAMODB_WS=true to enable)")
+    }
+
+    // This test can run with any DynamoDB instance using standard env vars
+    if os.Getenv("FLOWRUNNER_DYNAMODB_ENDPOINT") == "" {
+        t.Skip("Skipping DynamoDB test. Set FLOWRUNNER_DYNAMODB_ENDPOINT in .env file to run.")
+    }
 
 	// Get DynamoDB configuration from standard environment variables
 	endpoint := os.Getenv("FLOWRUNNER_DYNAMODB_ENDPOINT")
@@ -671,7 +680,7 @@ nodes:
 	}
 
 	server := NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, plugins.NewPluginRegistry())
-	testServer := httptest.NewServer(server.router)
+    testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 
 	// Test the flow execution with WebSocket monitoring

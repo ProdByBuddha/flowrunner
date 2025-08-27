@@ -77,6 +77,14 @@ func NewRouterNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 					if tc, ok := tcValue.([]interface{}); ok && len(tc) > 0 {
 						toolCalls = convertToToolCalls(tc)
 						foundLocation = "input.tool_calls"
+					} else if tcMapSlice, ok := tcValue.([]map[string]interface{}); ok && len(tcMapSlice) > 0 {
+						// Convert []map[string]interface{} to []interface{}
+						tmp := make([]interface{}, 0, len(tcMapSlice))
+						for _, m := range tcMapSlice {
+							tmp = append(tmp, m)
+						}
+						toolCalls = convertToToolCalls(tmp)
+						foundLocation = "input.tool_calls"
 					} else if utilsToolCalls, ok := tcValue.([]utils.ToolCall); ok && len(utilsToolCalls) > 0 {
 						toolCalls = utilsToolCalls
 						foundLocation = "input.tool_calls"
@@ -212,6 +220,14 @@ func NewRouterNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 					if sharedMap, ok := shared.(map[string]interface{}); ok {
 						sharedMap["active_tool_call"] = toolCall
 						log.Printf("[Router] Stored active_tool_call in shared context")
+					}
+				}
+
+				// Surface tool_params at the top level so downstream `${input.tool_params.*}` works
+				if tp, exists := resultMap["tool_params"]; exists {
+					if sharedMap, ok := shared.(map[string]interface{}); ok {
+						sharedMap["tool_params"] = tp
+						log.Printf("[Router] Exposed tool_params in shared context")
 					}
 				}
 

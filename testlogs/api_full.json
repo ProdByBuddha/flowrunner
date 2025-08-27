@@ -1,0 +1,48 @@
+{"Time":"2025-08-27T19:33:53.58329025Z","Action":"start","Package":"github.com/tcmartin/flowrunner/pkg/api"}
+{"Time":"2025-08-27T19:33:53.591481856Z","Action":"run","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleListAccounts"}
+{"Time":"2025-08-27T19:33:53.591615626Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleListAccounts","Output":"=== RUN   TestHandleListAccounts\n"}
+{"Time":"2025-08-27T19:33:53.596606803Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleListAccounts","Output":"    account_handlers_test.go:215: PASS:\tListAccounts()\n"}
+{"Time":"2025-08-27T19:33:53.596649373Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleListAccounts","Output":"--- PASS: TestHandleListAccounts (0.00s)\n"}
+{"Time":"2025-08-27T19:33:53.596659353Z","Action":"pass","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleListAccounts","Elapsed":0}
+{"Time":"2025-08-27T19:33:53.596667053Z","Action":"run","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleGetAccount"}
+{"Time":"2025-08-27T19:33:53.596671913Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleGetAccount","Output":"=== RUN   TestHandleGetAccount\n"}
+{"Time":"2025-08-27T19:33:53.597566212Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleGetAccount","Output":"    account_handlers_test.go:272: PASS:\tGetAccount(string)\n"}
+{"Time":"2025-08-27T19:33:53.597590592Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleGetAccount","Output":"--- PASS: TestHandleGetAccount (0.00s)\n"}
+{"Time":"2025-08-27T19:33:53.597603412Z","Action":"pass","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleGetAccount","Elapsed":0}
+{"Time":"2025-08-27T19:33:53.597610052Z","Action":"run","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleDeleteAccount"}
+{"Time":"2025-08-27T19:33:53.597616532Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleDeleteAccount","Output":"=== RUN   TestHandleDeleteAccount\n"}
+{"Time":"2025-08-27T19:33:53.598802682Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleDeleteAccount","Output":"    account_handlers_test.go:309: PASS:\tDeleteAccount(string)\n"}
+{"Time":"2025-08-27T19:33:53.598858582Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleDeleteAccount","Output":"--- PASS: TestHandleDeleteAccount (0.00s)\n"}
+{"Time":"2025-08-27T19:33:53.598872102Z","Action":"pass","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleDeleteAccount","Elapsed":0}
+{"Time":"2025-08-27T19:33:53.598878772Z","Action":"run","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleUpdateAccount"}
+{"Time":"2025-08-27T19:33:53.598884042Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleUpdateAccount","Output":"=== RUN   TestHandleUpdateAccount\n"}
+{"Time":"2025-08-27T19:33:53.60171185Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleUpdateAccount","Output":"--- PASS: TestHandleUpdateAccount (0.00s)\n"}
+{"Time":"2025-08-27T19:33:53.60173679Z","Action":"pass","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestHandleUpdateAccount","Elapsed":0}
+{"Time":"2025-08-27T19:33:53.60174449Z","Action":"run","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution"}
+{"Time":"2025-08-27T19:33:53.60175076Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"=== RUN   TestComprehensiveToolExecution\n"}
+{"Time":"2025-08-27T19:33:53.603154319Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"--- FAIL: TestComprehensiveToolExecution (0.00s)\n"}
+{"Time":"2025-08-27T19:33:53.605330748Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: socket: operation not permitted [recovered]\n"}
+{"Time":"2025-08-27T19:33:53.605378268Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\tpanic: httptest: failed to listen on a port: listen tcp6 [::1]:0: socket: operation not permitted\n"}
+{"Time":"2025-08-27T19:33:53.605386968Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\n"}
+{"Time":"2025-08-27T19:33:53.605394218Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"goroutine 11 [running]:\n"}
+{"Time":"2025-08-27T19:33:53.605400668Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"testing.tRunner.func1.2({0xe21040, 0xc000318b90})\n"}
+{"Time":"2025-08-27T19:33:53.605409248Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\t/root/projects/flowrunner/.tooling/go1.23.0/src/testing/testing.go:1632 +0x230\n"}
+{"Time":"2025-08-27T19:33:53.605414448Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"testing.tRunner.func1()\n"}
+{"Time":"2025-08-27T19:33:53.605424008Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\t/root/projects/flowrunner/.tooling/go1.23.0/src/testing/testing.go:1635 +0x35e\n"}
+{"Time":"2025-08-27T19:33:53.605430948Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"panic({0xe21040?, 0xc000318b90?})\n"}
+{"Time":"2025-08-27T19:33:53.605437768Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\t/root/projects/flowrunner/.tooling/go1.23.0/src/runtime/panic.go:785 +0x132\n"}
+{"Time":"2025-08-27T19:33:53.605444858Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"net/http/httptest.newLocalListener()\n"}
+{"Time":"2025-08-27T19:33:53.605451708Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\t/root/projects/flowrunner/.tooling/go1.23.0/src/net/http/httptest/server.go:71 +0xda\n"}
+{"Time":"2025-08-27T19:33:53.605460138Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"net/http/httptest.NewUnstartedServer(...)\n"}
+{"Time":"2025-08-27T19:33:53.605467098Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\t/root/projects/flowrunner/.tooling/go1.23.0/src/net/http/httptest/server.go:119\n"}
+{"Time":"2025-08-27T19:33:53.605472688Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"net/http/httptest.NewServer({0x121f500, 0xc0000003c0})\n"}
+{"Time":"2025-08-27T19:33:53.605477579Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\t/root/projects/flowrunner/.tooling/go1.23.0/src/net/http/httptest/server.go:106 +0x25\n"}
+{"Time":"2025-08-27T19:33:53.605482459Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"github.com/tcmartin/flowrunner/pkg/api.TestComprehensiveToolExecution(0xc0003be000)\n"}
+{"Time":"2025-08-27T19:33:53.605487318Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\t/root/projects/flowrunner/pkg/api/comprehensive_tool_execution_test.go:83 +0xd28\n"}
+{"Time":"2025-08-27T19:33:53.605492238Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"testing.tRunner(0xc0003be000, 0x1018d48)\n"}
+{"Time":"2025-08-27T19:33:53.605502019Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\t/root/projects/flowrunner/.tooling/go1.23.0/src/testing/testing.go:1690 +0xf4\n"}
+{"Time":"2025-08-27T19:33:53.605508688Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"created by testing.(*T).Run in goroutine 1\n"}
+{"Time":"2025-08-27T19:33:53.605516148Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Output":"\t/root/projects/flowrunner/.tooling/go1.23.0/src/testing/testing.go:1743 +0x390\n"}
+{"Time":"2025-08-27T19:33:53.607355877Z","Action":"fail","Package":"github.com/tcmartin/flowrunner/pkg/api","Test":"TestComprehensiveToolExecution","Elapsed":0}
+{"Time":"2025-08-27T19:33:53.607504817Z","Action":"output","Package":"github.com/tcmartin/flowrunner/pkg/api","Output":"FAIL\tgithub.com/tcmartin/flowrunner/pkg/api\t0.024s\n"}
+{"Time":"2025-08-27T19:33:53.607528006Z","Action":"fail","Package":"github.com/tcmartin/flowrunner/pkg/api","Elapsed":0.024}

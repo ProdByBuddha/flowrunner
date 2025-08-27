@@ -1,0 +1,1470 @@
+=== RUN   TestSimpleLLMFlow
+    simple_llm_flow_test.go:79: Registered flow: simple-llm-tool-test (ID: simple-llm-tool-test-1756281757500046264)
+    simple_llm_flow_test.go:82: Executing simple LLM flow...
+2025/08/27 08:02:37 Connecting node: http
+2025/08/27 08:02:37   Action: success -> end
+2025/08/27 08:02:37   Action: default -> end
+2025/08/27 08:02:37 Connecting node: end
+2025/08/27 08:02:37 Connecting node: ask
+2025/08/27 08:02:37   Action: default -> route
+2025/08/27 08:02:37 Connecting node: route
+2025/08/27 08:02:37   Action: get_website -> http
+2025/08/27 08:02:37   Action: output -> end
+    simple_llm_flow_test.go:88: Started execution: bb42d0d1-3a61-44f3-9976-2a0fb253994e
+    simple_llm_flow_test.go:91: Polling for execution completion...
+    simple_llm_flow_test.go:99: Execution status (attempt 1): running
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_execution _flow_context accountID _secret_vault]
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {}
+  },
+  "accountID": "test-account-simple",
+  "execution": {
+    "flow_id": "simple-llm-tool-test-1756281757500046264",
+    "id": "bb42d0d1-3a61-44f3-9976-2a0fb253994e"
+  },
+  "input": {},
+  "shared": {}
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+
+2025/08/27 08:02:37 [LLM Node][info] Starting LLM execution
+2025/08/27 08:02:37 [LLM Node][info] LLM configuration set
+2025/08/27 08:02:37 [LLM Node][info] Using 'question' parameter
+2025/08/27 08:02:37 [LLM Node] Making LLM request - Model: gpt-4o-mini, Messages: 2, Temperature: 0.30, MaxTokens: 0
+2025/08/27 08:02:37 [LLM Node] TOOLS COUNT: 1
+2025/08/27 08:02:37 [LLM Node] Tool 0: get_website (Fetch content from a website URL)
+2025/08/27 08:02:37 [LLM Node][info] Making LLM API request
+[DEBUG] Sending 1 tools to OpenAI API
+[DEBUG] Tool 0: {Type:function Function:{Name:get_website Description:Fetch content from a website URL Parameters:map[properties:map[url:map[description:The URL to fetch content from type:string]] required:[url] type:object]}}
+2025/08/27 08:02:38 [LLM Node][info] LLM request completed successfully
+2025/08/27 08:02:38 [LLM Node][info] LLM response received
+2025/08/27 08:02:38 [LLM Node] Tool calls detected: 1 calls
+2025/08/27 08:02:38 [LLM Node] Tool call 0: get_website with args: {"url":"https://httpbin.org/json"}
+2025/08/27 08:02:38 [LLM Node] Execution completed successfully - Response ID: chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN
+2025/08/27 08:02:38 [LLM Node] Result keys: [raw_response has_tool_calls id model choices usage finish_reason content tool_calls message]
+2025/08/27 08:02:38 [LLM Node] Tool calls in result: 1
+2025/08/27 08:02:38 [LLM Node] Has tool calls flag: true
+💾 [NodeWrapper] Stored result as 'llm_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ]
+      },
+      "finish_reason": "tool_calls"
+    }
+  ],
+  "content": "",
+  "finish_reason": "tool_calls",
+  "has_tool_calls": true,
+  "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+  "message": {
+    "role": "assistant",
+    "tool_calls": [
+      {
+        "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+        "type": "function",
+        "function": {
+          "name": "get_website",
+          "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+        }
+      }
+    ]
+  },
+  "model": "gpt-4o-mini-2024-07-18",
+  "raw_response": {
+    "choices": [
+      {
+        "finish_reason": "tool_calls",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "annotations": [],
+          "content": null,
+          "refusal": null,
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                "name": "get_website"
+              },
+              "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+              "type": "function"
+            }
+          ]
+        }
+      }
+    ],
+    "created": 1756281757,
+    "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+    "model": "gpt-4o-mini-2024-07-18",
+    "object": "chat.completion",
+    "service_tier": "default",
+    "system_fingerprint": "fp_560af6e559",
+    "usage": {
+      "completion_tokens": 20,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens": 82,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 102
+    }
+  },
+  "tool_calls": [
+    {
+      "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+      "type": "function",
+      "function": {
+        "name": "get_website",
+        "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 82,
+    "completion_tokens": 20,
+    "total_tokens": 102
+  }
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_secret_vault llm_result result _execution _flow_context accountID]
+🧠 [NodeWrapper] LLM Result in shared.result:
+{
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ]
+      },
+      "finish_reason": "tool_calls"
+    }
+  ],
+  "content": "",
+  "finish_reason": "tool_calls",
+  "has_tool_calls": true,
+  "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+  "message": {
+    "role": "assistant",
+    "tool_calls": [
+      {
+        "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+        "type": "function",
+        "function": {
+          "name": "get_website",
+          "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+        }
+      }
+    ]
+  },
+  "model": "gpt-4o-mini-2024-07-18",
+  "raw_response": {
+    "choices": [
+      {
+        "finish_reason": "tool_calls",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "annotations": [],
+          "content": null,
+          "refusal": null,
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                "name": "get_website"
+              },
+              "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+              "type": "function"
+            }
+          ]
+        }
+      }
+    ],
+    "created": 1756281757,
+    "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+    "model": "gpt-4o-mini-2024-07-18",
+    "object": "chat.completion",
+    "service_tier": "default",
+    "system_fingerprint": "fp_560af6e559",
+    "usage": {
+      "completion_tokens": 20,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens": 82,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 102
+    }
+  },
+  "tool_calls": [
+    {
+      "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+      "type": "function",
+      "function": {
+        "name": "get_website",
+        "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 82,
+    "completion_tokens": 20,
+    "total_tokens": 102
+  }
+}
+🧠 [NodeWrapper] LLM Result in shared.llm_result:
+{
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ]
+      },
+      "finish_reason": "tool_calls"
+    }
+  ],
+  "content": "",
+  "finish_reason": "tool_calls",
+  "has_tool_calls": true,
+  "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+  "message": {
+    "role": "assistant",
+    "tool_calls": [
+      {
+        "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+        "type": "function",
+        "function": {
+          "name": "get_website",
+          "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+        }
+      }
+    ]
+  },
+  "model": "gpt-4o-mini-2024-07-18",
+  "raw_response": {
+    "choices": [
+      {
+        "finish_reason": "tool_calls",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "annotations": [],
+          "content": null,
+          "refusal": null,
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                "name": "get_website"
+              },
+              "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+              "type": "function"
+            }
+          ]
+        }
+      }
+    ],
+    "created": 1756281757,
+    "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+    "model": "gpt-4o-mini-2024-07-18",
+    "object": "chat.completion",
+    "service_tier": "default",
+    "system_fingerprint": "fp_560af6e559",
+    "usage": {
+      "completion_tokens": 20,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens": 82,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 102
+    }
+  },
+  "tool_calls": [
+    {
+      "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+      "type": "function",
+      "function": {
+        "name": "get_website",
+        "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 82,
+    "completion_tokens": 20,
+    "total_tokens": 102
+  }
+}
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {
+      "llm_result": {
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                  "type": "function",
+                  "function": {
+                    "name": "get_website",
+                    "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+                  }
+                }
+              ]
+            },
+            "finish_reason": "tool_calls"
+          }
+        ],
+        "content": "",
+        "finish_reason": "tool_calls",
+        "has_tool_calls": true,
+        "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+        "message": {
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+              "type": "function",
+              "function": {
+                "name": "get_website",
+                "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+              }
+            }
+          ]
+        },
+        "model": "gpt-4o-mini-2024-07-18",
+        "raw_response": {
+          "choices": [
+            {
+              "finish_reason": "tool_calls",
+              "index": 0,
+              "logprobs": null,
+              "message": {
+                "annotations": [],
+                "content": null,
+                "refusal": null,
+                "role": "assistant",
+                "tool_calls": [
+                  {
+                    "function": {
+                      "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                      "name": "get_website"
+                    },
+                    "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                    "type": "function"
+                  }
+                ]
+              }
+            }
+          ],
+          "created": 1756281757,
+          "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+          "model": "gpt-4o-mini-2024-07-18",
+          "object": "chat.completion",
+          "service_tier": "default",
+          "system_fingerprint": "fp_560af6e559",
+          "usage": {
+            "completion_tokens": 20,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens": 82,
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            },
+            "total_tokens": 102
+          }
+        },
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 82,
+          "completion_tokens": 20,
+          "total_tokens": 102
+        }
+      },
+      "result": {
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                  "type": "function",
+                  "function": {
+                    "name": "get_website",
+                    "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+                  }
+                }
+              ]
+            },
+            "finish_reason": "tool_calls"
+          }
+        ],
+        "content": "",
+        "finish_reason": "tool_calls",
+        "has_tool_calls": true,
+        "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+        "message": {
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+              "type": "function",
+              "function": {
+                "name": "get_website",
+                "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+              }
+            }
+          ]
+        },
+        "model": "gpt-4o-mini-2024-07-18",
+        "raw_response": {
+          "choices": [
+            {
+              "finish_reason": "tool_calls",
+              "index": 0,
+              "logprobs": null,
+              "message": {
+                "annotations": [],
+                "content": null,
+                "refusal": null,
+                "role": "assistant",
+                "tool_calls": [
+                  {
+                    "function": {
+                      "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                      "name": "get_website"
+                    },
+                    "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                    "type": "function"
+                  }
+                ]
+              }
+            }
+          ],
+          "created": 1756281757,
+          "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+          "model": "gpt-4o-mini-2024-07-18",
+          "object": "chat.completion",
+          "service_tier": "default",
+          "system_fingerprint": "fp_560af6e559",
+          "usage": {
+            "completion_tokens": 20,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens": 82,
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            },
+            "total_tokens": 102
+          }
+        },
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 82,
+          "completion_tokens": 20,
+          "total_tokens": 102
+        }
+      }
+    }
+  },
+  "accountID": "test-account-simple",
+  "execution": {
+    "flow_id": "simple-llm-tool-test-1756281757500046264",
+    "id": "bb42d0d1-3a61-44f3-9976-2a0fb253994e"
+  },
+  "input": {
+    "llm_result": {
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                "type": "function",
+                "function": {
+                  "name": "get_website",
+                  "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+                }
+              }
+            ]
+          },
+          "finish_reason": "tool_calls"
+        }
+      ],
+      "content": "",
+      "finish_reason": "tool_calls",
+      "has_tool_calls": true,
+      "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "logprobs": null,
+            "message": {
+              "annotations": [],
+              "content": null,
+              "refusal": null,
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                    "name": "get_website"
+                  },
+                  "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1756281757,
+        "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+        "model": "gpt-4o-mini-2024-07-18",
+        "object": "chat.completion",
+        "service_tier": "default",
+        "system_fingerprint": "fp_560af6e559",
+        "usage": {
+          "completion_tokens": 20,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens": 82,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          },
+          "total_tokens": 102
+        }
+      },
+      "tool_calls": [
+        {
+          "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+          "type": "function",
+          "function": {
+            "name": "get_website",
+            "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 82,
+        "completion_tokens": 20,
+        "total_tokens": 102
+      }
+    },
+    "result": {
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                "type": "function",
+                "function": {
+                  "name": "get_website",
+                  "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+                }
+              }
+            ]
+          },
+          "finish_reason": "tool_calls"
+        }
+      ],
+      "content": "",
+      "finish_reason": "tool_calls",
+      "has_tool_calls": true,
+      "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "logprobs": null,
+            "message": {
+              "annotations": [],
+              "content": null,
+              "refusal": null,
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                    "name": "get_website"
+                  },
+                  "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1756281757,
+        "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+        "model": "gpt-4o-mini-2024-07-18",
+        "object": "chat.completion",
+        "service_tier": "default",
+        "system_fingerprint": "fp_560af6e559",
+        "usage": {
+          "completion_tokens": 20,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens": 82,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          },
+          "total_tokens": 102
+        }
+      },
+      "tool_calls": [
+        {
+          "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+          "type": "function",
+          "function": {
+            "name": "get_website",
+            "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 82,
+        "completion_tokens": 20,
+        "total_tokens": 102
+      }
+    }
+  },
+  "shared": {
+    "llm_result": {
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                "type": "function",
+                "function": {
+                  "name": "get_website",
+                  "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+                }
+              }
+            ]
+          },
+          "finish_reason": "tool_calls"
+        }
+      ],
+      "content": "",
+      "finish_reason": "tool_calls",
+      "has_tool_calls": true,
+      "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "logprobs": null,
+            "message": {
+              "annotations": [],
+              "content": null,
+              "refusal": null,
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                    "name": "get_website"
+                  },
+                  "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1756281757,
+        "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+        "model": "gpt-4o-mini-2024-07-18",
+        "object": "chat.completion",
+        "service_tier": "default",
+        "system_fingerprint": "fp_560af6e559",
+        "usage": {
+          "completion_tokens": 20,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens": 82,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          },
+          "total_tokens": 102
+        }
+      },
+      "tool_calls": [
+        {
+          "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+          "type": "function",
+          "function": {
+            "name": "get_website",
+            "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 82,
+        "completion_tokens": 20,
+        "total_tokens": 102
+      }
+    },
+    "result": {
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                "type": "function",
+                "function": {
+                  "name": "get_website",
+                  "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+                }
+              }
+            ]
+          },
+          "finish_reason": "tool_calls"
+        }
+      ],
+      "content": "",
+      "finish_reason": "tool_calls",
+      "has_tool_calls": true,
+      "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "logprobs": null,
+            "message": {
+              "annotations": [],
+              "content": null,
+              "refusal": null,
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                    "name": "get_website"
+                  },
+                  "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1756281757,
+        "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+        "model": "gpt-4o-mini-2024-07-18",
+        "object": "chat.completion",
+        "service_tier": "default",
+        "system_fingerprint": "fp_560af6e559",
+        "usage": {
+          "completion_tokens": 20,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens": 82,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          },
+          "total_tokens": 102
+        }
+      },
+      "tool_calls": [
+        {
+          "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+          "type": "function",
+          "function": {
+            "name": "get_website",
+            "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 82,
+        "completion_tokens": 20,
+        "total_tokens": 102
+      }
+    }
+  }
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{}
+2025/08/27 08:02:38 [Router] Processing input for tool call detection
+2025/08/27 08:02:38 [Router] Found 0 tool calls at location: 
+2025/08/27 08:02:38 [Router] No tool calls found, routing to default/output
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "reason": "no_tool_calls",
+  "route": "output"
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+2025/08/27 08:02:38 [Router] Returning action from 'route' field: output
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_flow_context accountID _secret_vault llm_result result result_result _execution]
+🧠 [NodeWrapper] LLM Result in shared.result:
+{
+  "reason": "no_tool_calls",
+  "route": "output"
+}
+🧠 [NodeWrapper] LLM Result in shared.llm_result:
+{
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ]
+      },
+      "finish_reason": "tool_calls"
+    }
+  ],
+  "content": "",
+  "finish_reason": "tool_calls",
+  "has_tool_calls": true,
+  "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+  "message": {
+    "role": "assistant",
+    "tool_calls": [
+      {
+        "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+        "type": "function",
+        "function": {
+          "name": "get_website",
+          "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+        }
+      }
+    ]
+  },
+  "model": "gpt-4o-mini-2024-07-18",
+  "raw_response": {
+    "choices": [
+      {
+        "finish_reason": "tool_calls",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "annotations": [],
+          "content": null,
+          "refusal": null,
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                "name": "get_website"
+              },
+              "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+              "type": "function"
+            }
+          ]
+        }
+      }
+    ],
+    "created": 1756281757,
+    "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+    "model": "gpt-4o-mini-2024-07-18",
+    "object": "chat.completion",
+    "service_tier": "default",
+    "system_fingerprint": "fp_560af6e559",
+    "usage": {
+      "completion_tokens": 20,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens": 82,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 102
+    }
+  },
+  "tool_calls": [
+    {
+      "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+      "type": "function",
+      "function": {
+        "name": "get_website",
+        "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 82,
+    "completion_tokens": 20,
+    "total_tokens": 102
+  }
+}
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {
+      "llm_result": {
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                  "type": "function",
+                  "function": {
+                    "name": "get_website",
+                    "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+                  }
+                }
+              ]
+            },
+            "finish_reason": "tool_calls"
+          }
+        ],
+        "content": "",
+        "finish_reason": "tool_calls",
+        "has_tool_calls": true,
+        "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+        "message": {
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+              "type": "function",
+              "function": {
+                "name": "get_website",
+                "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+              }
+            }
+          ]
+        },
+        "model": "gpt-4o-mini-2024-07-18",
+        "raw_response": {
+          "choices": [
+            {
+              "finish_reason": "tool_calls",
+              "index": 0,
+              "logprobs": null,
+              "message": {
+                "annotations": [],
+                "content": null,
+                "refusal": null,
+                "role": "assistant",
+                "tool_calls": [
+                  {
+                    "function": {
+                      "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                      "name": "get_website"
+                    },
+                    "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                    "type": "function"
+                  }
+                ]
+              }
+            }
+          ],
+          "created": 1756281757,
+          "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+          "model": "gpt-4o-mini-2024-07-18",
+          "object": "chat.completion",
+          "service_tier": "default",
+          "system_fingerprint": "fp_560af6e559",
+          "usage": {
+            "completion_tokens": 20,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens": 82,
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            },
+            "total_tokens": 102
+          }
+        },
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 82,
+          "completion_tokens": 20,
+          "total_tokens": 102
+        }
+      },
+      "result": {
+        "reason": "no_tool_calls",
+        "route": "output"
+      },
+      "result_result": {
+        "reason": "no_tool_calls",
+        "route": "output"
+      }
+    }
+  },
+  "accountID": "test-account-simple",
+  "execution": {
+    "flow_id": "simple-llm-tool-test-1756281757500046264",
+    "id": "bb42d0d1-3a61-44f3-9976-2a0fb253994e"
+  },
+  "input": {
+    "llm_result": {
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                "type": "function",
+                "function": {
+                  "name": "get_website",
+                  "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+                }
+              }
+            ]
+          },
+          "finish_reason": "tool_calls"
+        }
+      ],
+      "content": "",
+      "finish_reason": "tool_calls",
+      "has_tool_calls": true,
+      "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "logprobs": null,
+            "message": {
+              "annotations": [],
+              "content": null,
+              "refusal": null,
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                    "name": "get_website"
+                  },
+                  "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1756281757,
+        "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+        "model": "gpt-4o-mini-2024-07-18",
+        "object": "chat.completion",
+        "service_tier": "default",
+        "system_fingerprint": "fp_560af6e559",
+        "usage": {
+          "completion_tokens": 20,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens": 82,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          },
+          "total_tokens": 102
+        }
+      },
+      "tool_calls": [
+        {
+          "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+          "type": "function",
+          "function": {
+            "name": "get_website",
+            "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 82,
+        "completion_tokens": 20,
+        "total_tokens": 102
+      }
+    },
+    "result": {
+      "reason": "no_tool_calls",
+      "route": "output"
+    },
+    "result_result": {
+      "reason": "no_tool_calls",
+      "route": "output"
+    }
+  },
+  "shared": {
+    "llm_result": {
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                "type": "function",
+                "function": {
+                  "name": "get_website",
+                  "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+                }
+              }
+            ]
+          },
+          "finish_reason": "tool_calls"
+        }
+      ],
+      "content": "",
+      "finish_reason": "tool_calls",
+      "has_tool_calls": true,
+      "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+      "message": {
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+            "type": "function",
+            "function": {
+              "name": "get_website",
+              "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+            }
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "raw_response": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "logprobs": null,
+            "message": {
+              "annotations": [],
+              "content": null,
+              "refusal": null,
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"url\":\"https://httpbin.org/json\"}",
+                    "name": "get_website"
+                  },
+                  "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1756281757,
+        "id": "chatcmpl-C95P3ToEQ1uusPLhLVyqivrss9WpN",
+        "model": "gpt-4o-mini-2024-07-18",
+        "object": "chat.completion",
+        "service_tier": "default",
+        "system_fingerprint": "fp_560af6e559",
+        "usage": {
+          "completion_tokens": 20,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens": 82,
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          },
+          "total_tokens": 102
+        }
+      },
+      "tool_calls": [
+        {
+          "id": "call_FxBBKEAdNDLLtbeml9dX9NTH",
+          "type": "function",
+          "function": {
+            "name": "get_website",
+            "arguments": "{\"url\":\"https://httpbin.org/json\"}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 82,
+        "completion_tokens": 20,
+        "total_tokens": 102
+      }
+    },
+    "result": {
+      "reason": "no_tool_calls",
+      "route": "output"
+    },
+    "result_result": {
+      "reason": "no_tool_calls",
+      "route": "output"
+    }
+  }
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{
+  "script": "return {\n  final_response: input.body ? \"HTTP body length: \" + input.body.length : (input.content || input.message || \"LLM execution completed\"),\n  llm_result: input\n};\n"
+}
+💾 [NodeWrapper] Stored result as 'result_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "final_response": "LLM execution completed",
+  "llm_result": {}
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+    simple_llm_flow_test.go:99: Execution status (attempt 2): completed
+    simple_llm_flow_test.go:115: Execution results: map[action:default]
+    simple_llm_flow_test.go:127: Found tool-related log: llm tool call detected
+    simple_llm_flow_test.go:133: ✅ Found evidence of tool calling in logs
+    simple_llm_flow_test.go:139: ✅ Simple LLM flow test completed
+--- PASS: TestSimpleLLMFlow (1.00s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/api	1.023s

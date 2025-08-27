@@ -1,0 +1,427 @@
+package otto
+
+import (
+	"encoding/json"
+	"math"
+	"reflect"
+	"testing"
+)
+
+func TestValue(t *testing.T) {
+	tt(t, func() {
+		value := UndefinedValue()
+		is(value.IsUndefined(), true)
+		is(value, UndefinedValue())
+		is(value, "undefined")
+
+		is(toValue(false), false)
+		is(toValue(1), 1)
+		is(toValue(1).float64(), float64(1))
+	})
+}
+
+func TestObject(t *testing.T) {
+	tt(t, func() {
+		is(emptyValue.isEmpty(), true)
+	})
+}
+
+type intAlias int
+
+func TestToValue(t *testing.T) {
+	tt(t, func() {
+		_, tester2 := test()
+		vm := tester2.vm
+
+		value, _ := vm.ToValue(nil)
+		is(value, "undefined")
+
+		value, _ = vm.ToValue((*byte)(nil))
+		is(value, "undefined")
+
+		value, _ = vm.ToValue(intAlias(5))
+		is(value, 5)
+
+		{
+			tmp := new(int)
+
+			value, _ = vm.ToValue(&tmp)
+			is(value, 0)
+
+			*tmp = 1
+
+			value, _ = vm.ToValue(&tmp)
+			is(value, 1)
+
+			tmp = nil
+
+			value, _ = vm.ToValue(&tmp)
+			is(value, "undefined")
+		}
+
+		{
+			tmp0 := new(int)
+			tmp1 := &tmp0
+			tmp2 := &tmp1
+
+			value, _ = vm.ToValue(&tmp2)
+			is(value, 0)
+
+			*tmp0 = 1
+
+			value, _ = vm.ToValue(&tmp2)
+			is(value, 1)
+
+			tmp0 = nil
+
+			value, _ = vm.ToValue(&tmp2)
+			is(value, "undefined")
+		}
+
+		{
+			m := map[int64]string{0: "foo", 1: "bar"}
+			val, err := vm.ToValue(m)
+			is(err, nil)
+			v0, err := val.Object().Get("0")
+			is(err, nil)
+			is(v0, m[0])
+			v1, err := val.Object().Get("1")
+			is(err, nil)
+			is(v1, m[1])
+			missing, err := val.Object().Get("2")
+			is(err, nil)
+			is(missing, UndefinedValue())
+			invalid, err := val.Object().Get("xxx")
+			is(err, nil)
+			is(invalid, UndefinedValue())
+		}
+
+		{
+			m := map[uint64]string{0: "foo", 1: "bar"}
+			val, err := vm.ToValue(m)
+			is(err, nil)
+			v0, err := val.Object().Get("0")
+			is(err, nil)
+			is(v0, m[0])
+			v1, err := val.Object().Get("1")
+			is(err, nil)
+			is(v1, m[1])
+			missing, err := val.Object().Get("2")
+			is(err, nil)
+			is(missing, UndefinedValue())
+			invalid, err := val.Object().Get("xxx")
+			is(err, nil)
+			is(invalid, UndefinedValue())
+		}
+	})
+}
+
+func TestToBoolean(t *testing.T) {
+	tt(t, func() {
+		is := func(left interface{}, right bool) {
+			is(toValue(left).bool(), right)
+		}
+
+		is("", false)
+		is("xyzzy", true)
+		is(1, true)
+		is(0, false)
+
+		is(UndefinedValue(), false)
+		is(NullValue(), false)
+		is([]uint16{}, false)
+		is([]uint16{0x68, 0x65, 0x6c, 0x6c, 0x6f}, true)
+	})
+}
+
+func TestToFloat(t *testing.T) {
+	tt(t, func() {
+		{
+			is := func(left interface{}, right float64) {
+				is(toValue(left).float64(), right)
+			}
+			is("", 0)
+			is("xyzzy", math.NaN())
+			is("2", 2)
+			is(1, 1)
+			is(0, 0)
+			is(NullValue(), 0)
+		}
+		is(math.IsNaN(UndefinedValue().float64()), true)
+	})
+}
+
+func TestToString(t *testing.T) {
+	tt(t, func() {
+		is("undefined", UndefinedValue().string())
+		is("null", NullValue().string())
+		is("true", toValue(true).string())
+		is("false", toValue(false).string())
+
+		is(UndefinedValue(), "undefined")
+		is(NullValue(), "null")
+		is(toValue(true), true)
+		is(toValue(false), false)
+	})
+}
+
+func Test_toInt32(t *testing.T) {
+	tt(t, func() {
+		test := []interface{}{
+			0, int32(0),
+			1, int32(1),
+			-2147483649.0, int32(2147483647),
+			-4294967297.0, int32(-1),
+			-4294967296.0, int32(0),
+			-4294967295.0, int32(1),
+			math.Inf(+1), int32(0),
+			math.Inf(-1), int32(0),
+		}
+		for index := range len(test) / 2 {
+			// FIXME terst, Make strict again?
+			is(
+				toInt32(toValue(test[index*2])),
+				test[index*2+1].(int32),
+			)
+		}
+	})
+}
+
+func Test_toUint32(t *testing.T) {
+	tt(t, func() {
+		test := []interface{}{
+			0, uint32(0),
+			1, uint32(1),
+			-2147483649.0, uint32(2147483647),
+			-4294967297.0, uint32(4294967295),
+			-4294967296.0, uint32(0),
+			-4294967295.0, uint32(1),
+			math.Inf(+1), uint32(0),
+			math.Inf(-1), uint32(0),
+		}
+		for index := range len(test) / 2 {
+			// FIXME terst, Make strict again?
+			is(
+				toUint32(toValue(test[index*2])),
+				test[index*2+1].(uint32),
+			)
+		}
+	})
+}
+
+func Test_toUint16(t *testing.T) {
+	tt(t, func() {
+		test := []interface{}{
+			0, uint16(0),
+			1, uint16(1),
+			-2147483649.0, uint16(65535),
+			-4294967297.0, uint16(65535),
+			-4294967296.0, uint16(0),
+			-4294967295.0, uint16(1),
+			math.Inf(+1), uint16(0),
+			math.Inf(-1), uint16(0),
+		}
+		for index := range len(test) / 2 {
+			// FIXME terst, Make strict again?
+			is(
+				toUint16(toValue(test[index*2])),
+				test[index*2+1].(uint16),
+			)
+		}
+	})
+}
+
+func Test_sameValue(t *testing.T) {
+	tt(t, func() {
+		is(sameValue(positiveZeroValue(), negativeZeroValue()), false)
+		is(sameValue(positiveZeroValue(), toValue(0)), true)
+		is(sameValue(NaNValue(), NaNValue()), true)
+		is(sameValue(NaNValue(), toValue("Nothing happens.")), false)
+	})
+}
+
+func TestExport(t *testing.T) {
+	tt(t, func() {
+		test, vm := test()
+
+		is(test(`null;`).export(), nil)
+		is(test(`undefined;`).export(), nil)
+		is(test(`true;`).export(), true)
+		is(test(`false;`).export(), false)
+		is(test(`0;`).export(), 0)
+		is(test(`3.1459`).export(), 3.1459)
+		is(test(`"Nothing happens";`).export(), "Nothing happens")
+		is(test(`String.fromCharCode(97,98,99,100,101,102)`).export(), "abcdef")
+		{
+			value := test(`({ abc: 1, def: true, ghi: undefined });`).export().(map[string]interface{})
+			is(value["abc"], 1)
+			is(value["def"], true)
+			_, exists := value["ghi"]
+			is(exists, false)
+		}
+		{
+			value := test(`[ "abc", 1, "def", true, undefined, null ];`).export().([]interface{})
+			is(value[0], "abc")
+			is(value[1], 1)
+			is(value[2], "def")
+			is(value[3], true)
+			is(value[4], nil)
+			is(value[5], nil)
+			is(value[5], interface{}(nil))
+		}
+		{
+			value := test(`[ undefined, null ];`).export().([]interface{})
+			is(value[0], nil)
+			is(value[1], nil)
+			is(value[1], interface{}(nil))
+		}
+		{
+			value := test(`[[1, 2.1], [3, 4], ["a", "b"], [{c: 5, d: 6}]];`).export().([]interface{})
+			value0 := value[0].([]interface{})
+			is(value0[0], 1)
+			is(value0[1], 2.1)
+			value1 := value[1].([]int64)
+			is(value1[0], 3)
+			is(value1[1], 4)
+			value2 := value[2].([]string)
+			is(value2[0], "a")
+			is(value2[1], "b")
+			value3 := value[3].([]map[string]interface{})
+			is(value3[0]["c"], 5)
+			is(value3[0]["d"], 6)
+		}
+
+		roundtrip := []interface{}{
+			true,
+			false,
+			0,
+			3.1459,
+			[]interface{}{true, false, 0, 3.1459, "abc"},
+			map[string]interface{}{
+				classBooleanName: true,
+				classNumberName:  3.1459,
+				classStringName:  "abc",
+				classArrayName:   []interface{}{false, 0, "", nil},
+				classObjectName: map[string]interface{}{
+					classBooleanName: false,
+					classNumberName:  0,
+					classStringName:  "def",
+				},
+			},
+		}
+
+		for _, value := range roundtrip {
+			input, err := json.Marshal(value)
+			is(err, nil)
+
+			output, err := json.Marshal(test("(" + string(input) + ");").export())
+			is(err, nil)
+
+			is(string(input), string(output))
+		}
+
+		{
+			abc := struct {
+				ghi interface{}
+				def int
+				xyz float32
+			}{}
+			abc.def = 3
+			abc.xyz = 3.1459
+			vm.Set("abc", abc)
+			is(test(`abc;`).export(), abc)
+		}
+
+		{
+			abc := map[int64]string{0: "foo", 1: "bar"}
+			vm.Set("abc", abc)
+			is(test(`abc;`).export(), abc)
+		}
+
+		{
+			abc := map[uint64]string{0: "foo", 1: "bar"}
+			vm.Set("abc", abc)
+			is(test(`abc;`).export(), abc)
+		}
+	})
+}
+
+func Test_toReflectValue(t *testing.T) {
+	tt(t, func() {
+		value := toValue(0.0)
+		tmp, err := value.toReflectValue(reflect.TypeOf(0.0))
+		is(tmp.Float(), 0.0)
+		is(err, nil)
+	})
+}
+
+func TestJSONMarshaling(t *testing.T) {
+	tt(t, func() {
+		eval, tester2 := test()
+		toJSON := func(val interface{}) string {
+			j, err := json.Marshal(val)
+			is(err, nil)
+			return string(j)
+		}
+
+		is(toJSON(UndefinedValue()), `null`)
+		is(toJSON(NullValue()), `null`)
+		is(toJSON(FalseValue()), `false`)
+		is(toJSON(TrueValue()), `true`)
+
+		is(toJSON(toValue(0)), `0`)
+		is(toJSON(toValue(1234)), `1234`)
+		is(toJSON(toValue(1234.125)), `1234.125`)
+		is(toJSON(toValue(-1234)), `-1234`)
+		is(toJSON(toValue(-1234.125)), `-1234.125`)
+
+		is(toJSON(toValue("")), `""`)
+		is(toJSON(toValue("Otto")), `"Otto"`)
+		is(toJSON(eval(`String.fromCharCode(97,98,99,100,101,102)`)), `"abcdef"`)
+
+		is(toJSON(eval("[]")), `[]`)
+		is(toJSON(eval("[1, 2, 3]")), `[1,2,3]`)
+		is(toJSON(eval("new Array(1,2,3)")), `[1,2,3]`)
+
+		is(toJSON(eval(`({a:1, b:"hi", c:[true,false]})`)), `{"a":1,"b":"hi","c":[true,false]}`)
+
+		goArray := []string{"foo", "bar"}
+		val, _ := tester2.vm.ToValue(goArray)
+		is(toJSON(val), `["foo","bar"]`)
+
+		goMap := map[string]interface{}{
+			"bar": []int{1, 2, 3},
+			"foo": 17,
+		}
+		val, _ = tester2.vm.ToValue(goMap)
+		is(toJSON(val), `{"bar":[1,2,3],"foo":17}`)
+	})
+}
+
+func TestNestedJSONMarshaling(t *testing.T) {
+	tt(t, func() {
+		eval, _ := test()
+		toJSON := func(val interface{}) string {
+			j, err := json.Marshal(val)
+			is(err, nil)
+			return string(j)
+		}
+
+		goMap := map[string]interface{}{
+			"foo": 17,
+		}
+
+		fn := eval(`(function(obj) {obj.jsVal = "hi"; obj.jsArray = [17,true]; return obj;})`)
+		result, err := fn.Call(fn, goMap)
+		is(err, nil)
+		exported, err := result.Export()
+		is(err, nil)
+
+		is(toJSON(exported), `{"foo":17,"jsArray":[17,true],"jsVal":"hi"}`)
+
+		// Before MarshalJSON was implemented, this last assertion would fail:
+		// FAIL (==)
+		//      got: {"foo":17,"jsArray":{},"jsVal":"hi"}
+		// expected: {"foo":17,"jsArray":[17,true],"jsVal":"hi"}
+	})
+}

@@ -1,0 +1,18 @@
+# test log
+getenv PATH
+stat /root/projects/flowrunner/.tooling/go/bin/echo
+stat /root/.local/bin/echo
+stat /root/.local/bin/echo
+stat /usr/local/sbin/echo
+stat /usr/local/bin/echo
+stat /usr/sbin/echo
+stat /usr/bin/echo
+open /usr/bin/echo
+open /proc/sys/net/core/somaxconn
+getenv HTTP_PROXY
+getenv http_proxy
+getenv HTTPS_PROXY
+getenv https_proxy
+getenv NO_PROXY
+getenv no_proxy
+getenv REQUEST_METHOD

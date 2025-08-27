@@ -1,0 +1,17 @@
+# test log
+open ../../.env
+getenv FLOWRUNNER_POSTGRES_HOST
+getenv FLOWRUNNER_POSTGRES_HOST
+getenv FLOWRUNNER_POSTGRES_PORT
+getenv FLOWRUNNER_POSTGRES_USER
+getenv FLOWRUNNER_POSTGRES_PASSWORD
+getenv FLOWRUNNER_POSTGRES_DATABASE
+getenv FLOWRUNNER_POSTGRES_SSL_MODE
+open /proc/sys/net/core/somaxconn
+getenv HTTP_PROXY
+getenv http_proxy
+getenv HTTPS_PROXY
+getenv https_proxy
+getenv NO_PROXY
+getenv no_proxy
+getenv REQUEST_METHOD

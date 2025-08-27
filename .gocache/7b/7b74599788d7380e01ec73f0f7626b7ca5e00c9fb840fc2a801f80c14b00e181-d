@@ -1,0 +1,21 @@
+=== RUN   TestDynamoDBProvider
+--- PASS: TestDynamoDBProvider (0.00s)
+=== RUN   TestDynamoDBFlowStore
+--- PASS: TestDynamoDBFlowStore (0.00s)
+=== RUN   TestNewProvider
+--- PASS: TestNewProvider (0.01s)
+=== RUN   TestMemoryProvider
+--- PASS: TestMemoryProvider (0.00s)
+=== RUN   TestMemoryFlowStore
+--- PASS: TestMemoryFlowStore (0.00s)
+=== RUN   TestMemorySecretStore
+--- PASS: TestMemorySecretStore (0.00s)
+=== RUN   TestMemoryExecutionStore
+--- PASS: TestMemoryExecutionStore (0.00s)
+=== RUN   TestMemoryAccountStore
+--- PASS: TestMemoryAccountStore (0.00s)
+=== RUN   TestPostgreSQLProvider
+    postgres_provider_test.go:72: PostgreSQL test config: host=localhost, port=5432, user=flowrunner, database=flowrunner_db, sslmode=disable
+--- PASS: TestPostgreSQLProvider (0.04s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/storage	0.080s

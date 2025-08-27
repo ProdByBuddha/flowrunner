@@ -1,0 +1,74 @@
+=== RUN   TestJSExpressionEvaluator_Evaluate
+=== RUN   TestJSExpressionEvaluator_Evaluate/Simple_variable
+=== RUN   TestJSExpressionEvaluator_Evaluate/Nested_variable
+=== RUN   TestJSExpressionEvaluator_Evaluate/Non-existent_variable
+=== RUN   TestJSExpressionEvaluator_Evaluate/Not_an_expression
+=== RUN   TestJSExpressionEvaluator_Evaluate/Simple_addition
+=== RUN   TestJSExpressionEvaluator_Evaluate/Simple_subtraction
+=== RUN   TestJSExpressionEvaluator_Evaluate/Simple_multiplication
+=== RUN   TestJSExpressionEvaluator_Evaluate/Simple_division
+--- PASS: TestJSExpressionEvaluator_Evaluate (0.00s)
+    --- PASS: TestJSExpressionEvaluator_Evaluate/Simple_variable (0.00s)
+    --- PASS: TestJSExpressionEvaluator_Evaluate/Nested_variable (0.00s)
+    --- PASS: TestJSExpressionEvaluator_Evaluate/Non-existent_variable (0.00s)
+    --- PASS: TestJSExpressionEvaluator_Evaluate/Not_an_expression (0.00s)
+    --- PASS: TestJSExpressionEvaluator_Evaluate/Simple_addition (0.00s)
+    --- PASS: TestJSExpressionEvaluator_Evaluate/Simple_subtraction (0.00s)
+    --- PASS: TestJSExpressionEvaluator_Evaluate/Simple_multiplication (0.00s)
+    --- PASS: TestJSExpressionEvaluator_Evaluate/Simple_division (0.00s)
+=== RUN   TestJSExpressionEvaluator_EvaluateInObject
+=== RUN   TestJSExpressionEvaluator_EvaluateInObject/Simple_object
+=== RUN   TestJSExpressionEvaluator_EvaluateInObject/Nested_object
+=== RUN   TestJSExpressionEvaluator_EvaluateInObject/Array_in_object
+=== RUN   TestJSExpressionEvaluator_EvaluateInObject/Object_in_array
+=== RUN   TestJSExpressionEvaluator_EvaluateInObject/Expression_in_key
+=== RUN   TestJSExpressionEvaluator_EvaluateInObject/Missing_variable
+--- PASS: TestJSExpressionEvaluator_EvaluateInObject (0.00s)
+    --- PASS: TestJSExpressionEvaluator_EvaluateInObject/Simple_object (0.00s)
+    --- PASS: TestJSExpressionEvaluator_EvaluateInObject/Nested_object (0.00s)
+    --- PASS: TestJSExpressionEvaluator_EvaluateInObject/Array_in_object (0.00s)
+    --- PASS: TestJSExpressionEvaluator_EvaluateInObject/Object_in_array (0.00s)
+    --- PASS: TestJSExpressionEvaluator_EvaluateInObject/Expression_in_key (0.00s)
+    --- PASS: TestJSExpressionEvaluator_EvaluateInObject/Missing_variable (0.00s)
+=== RUN   TestJSExpressionEvaluator_JavaScript
+=== RUN   TestJSExpressionEvaluator_JavaScript/Math.random()
+=== RUN   TestJSExpressionEvaluator_JavaScript/Math.floor()
+=== RUN   TestJSExpressionEvaluator_JavaScript/String_manipulation
+=== RUN   TestJSExpressionEvaluator_JavaScript/Context_variable_in_JS_expression
+=== RUN   TestJSExpressionEvaluator_JavaScript/JavaScript_function
+=== RUN   TestJSExpressionEvaluator_JavaScript/JavaScript_object_creation
+=== RUN   TestJSExpressionEvaluator_JavaScript/JavaScript_date_manipulation
+--- PASS: TestJSExpressionEvaluator_JavaScript (0.00s)
+    --- PASS: TestJSExpressionEvaluator_JavaScript/Math.random() (0.00s)
+    --- PASS: TestJSExpressionEvaluator_JavaScript/Math.floor() (0.00s)
+    --- PASS: TestJSExpressionEvaluator_JavaScript/String_manipulation (0.00s)
+    --- PASS: TestJSExpressionEvaluator_JavaScript/Context_variable_in_JS_expression (0.00s)
+    --- PASS: TestJSExpressionEvaluator_JavaScript/JavaScript_function (0.00s)
+    --- PASS: TestJSExpressionEvaluator_JavaScript/JavaScript_object_creation (0.00s)
+    --- PASS: TestJSExpressionEvaluator_JavaScript/JavaScript_date_manipulation (0.00s)
+=== RUN   TestSecretAwareExpressionEvaluator_Evaluate
+=== RUN   TestSecretAwareExpressionEvaluator_Evaluate/Access_secret_directly
+=== RUN   TestSecretAwareExpressionEvaluator_Evaluate/Use_secret_in_string_concatenation
+=== RUN   TestSecretAwareExpressionEvaluator_Evaluate/Use_secret_in_object
+=== RUN   TestSecretAwareExpressionEvaluator_Evaluate/Access_non-existent_secret
+=== RUN   TestSecretAwareExpressionEvaluator_Evaluate/No_account_ID_provided
+=== RUN   TestSecretAwareExpressionEvaluator_Evaluate/Wrong_account_ID
+=== RUN   TestSecretAwareExpressionEvaluator_Evaluate/Use_secret_with_other_context_variables
+--- PASS: TestSecretAwareExpressionEvaluator_Evaluate (0.00s)
+    --- PASS: TestSecretAwareExpressionEvaluator_Evaluate/Access_secret_directly (0.00s)
+    --- PASS: TestSecretAwareExpressionEvaluator_Evaluate/Use_secret_in_string_concatenation (0.00s)
+    --- PASS: TestSecretAwareExpressionEvaluator_Evaluate/Use_secret_in_object (0.00s)
+    --- PASS: TestSecretAwareExpressionEvaluator_Evaluate/Access_non-existent_secret (0.00s)
+    --- PASS: TestSecretAwareExpressionEvaluator_Evaluate/No_account_ID_provided (0.00s)
+    --- PASS: TestSecretAwareExpressionEvaluator_Evaluate/Wrong_account_ID (0.00s)
+    --- PASS: TestSecretAwareExpressionEvaluator_Evaluate/Use_secret_with_other_context_variables (0.00s)
+=== RUN   TestSecretAwareExpressionEvaluator_EvaluateInObject
+=== RUN   TestSecretAwareExpressionEvaluator_EvaluateInObject/Object_with_secrets
+=== RUN   TestSecretAwareExpressionEvaluator_EvaluateInObject/Array_with_secrets
+=== RUN   TestSecretAwareExpressionEvaluator_EvaluateInObject/Mix_of_secrets_and_context_variables
+--- PASS: TestSecretAwareExpressionEvaluator_EvaluateInObject (0.00s)
+    --- PASS: TestSecretAwareExpressionEvaluator_EvaluateInObject/Object_with_secrets (0.00s)
+    --- PASS: TestSecretAwareExpressionEvaluator_EvaluateInObject/Array_with_secrets (0.00s)
+    --- PASS: TestSecretAwareExpressionEvaluator_EvaluateInObject/Mix_of_secrets_and_context_variables (0.00s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/scripting	0.013s

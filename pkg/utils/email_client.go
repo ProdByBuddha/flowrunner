@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -90,29 +91,30 @@ func NewEmailClient(smtpHost string, smtpPort int, imapHost string, imapPort int
 
 // Connect connects to the SMTP and IMAP servers
 func (c *EmailClient) Connect() error {
-	// For Gmail, we'll use the smtp.SendMail function directly when sending
-	// This is because Gmail requires TLS from the start
-	// We'll set up a dummy client for now
-	c.smtpClient = &smtp.Client{}
+    // For SMTP-only sending, we don't need to establish an SMTP client upfront;
+    // net/smtp.SendMail handles connection lifecycle. We keep a dummy to mark state.
+    c.smtpClient = &smtp.Client{}
 
-	// Connect to IMAP server
-	imapAddr := fmt.Sprintf("%s:%d", c.imapHost, c.imapPort)
-	imapClient, err := client.DialTLS(imapAddr, nil)
-	if err != nil {
-		return fmt.Errorf("failed to connect to IMAP server: %w", err)
-	}
+    // Only connect to IMAP if explicitly configured (host and port provided)
+    if c.imapHost != "" && c.imapPort > 0 {
+        imapAddr := fmt.Sprintf("%s:%d", c.imapHost, c.imapPort)
+        imapClient, err := client.DialTLS(imapAddr, nil)
+        if err != nil {
+            return fmt.Errorf("failed to connect to IMAP server: %w", err)
+        }
 
-	// Authenticate with IMAP server
-	if err := imapClient.Login(c.username, c.password); err != nil {
-		imapClient.Logout()
-		return fmt.Errorf("IMAP authentication failed: %w", err)
-	}
+        // Authenticate with IMAP server
+        if err := imapClient.Login(c.username, c.password); err != nil {
+            imapClient.Logout()
+            return fmt.Errorf("IMAP authentication failed: %w", err)
+        }
 
-	c.imapClient = imapClient
-	c.connected = true
-	c.lastActivity = time.Now()
+        c.imapClient = imapClient
+    }
 
-	return nil
+    c.connected = true
+    c.lastActivity = time.Now()
+    return nil
 }
 
 // Close closes the connections to the SMTP and IMAP servers
@@ -147,84 +149,111 @@ func (c *EmailClient) ensureConnected() error {
 
 // SendEmail sends an email
 func (c *EmailClient) SendEmail(message EmailMessage) error {
-	if err := c.ensureConnected(); err != nil {
-		return err
-	}
+    if err := c.ensureConnected(); err != nil {
+        return err
+    }
 
-	// Create the message
-	var buf bytes.Buffer
-	writer := multipart.NewWriter(&buf)
+    // Build a Message-ID using current time and sender domain
+    msgID := func() string {
+        addr := message.From
+        if parsed, err := mail.ParseAddress(message.From); err == nil && parsed != nil {
+            addr = parsed.Address
+        }
+        domain := "localhost"
+        if parts := strings.Split(addr, "@"); len(parts) == 2 && parts[1] != "" {
+            domain = parts[1]
+        }
+        return fmt.Sprintf("<%d.%d@%s>", time.Now().UnixNano(), time.Now().Unix()%100000, domain)
+    }()
 
-	// Add headers
-	fmt.Fprintf(&buf, "From: %s\r\n", message.From)
-	fmt.Fprintf(&buf, "To: %s\r\n", strings.Join(message.To, ", "))
-	if len(message.Cc) > 0 {
-		fmt.Fprintf(&buf, "Cc: %s\r\n", strings.Join(message.Cc, ", "))
-	}
-	fmt.Fprintf(&buf, "Subject: %s\r\n", message.Subject)
-	fmt.Fprintf(&buf, "MIME-Version: 1.0\r\n")
-	fmt.Fprintf(&buf, "Content-Type: multipart/mixed; boundary=%s\r\n", writer.Boundary())
-	fmt.Fprintf(&buf, "Date: %s\r\n", time.Now().Format(time.RFC1123Z))
+    // Create the message
+    var buf bytes.Buffer
 
-	// Add custom headers
-	for key, value := range message.Headers {
-		fmt.Fprintf(&buf, "%s: %s\r\n", key, value)
-	}
-	fmt.Fprintf(&buf, "\r\n")
+    // If no HTML and no attachments, send a simple text/plain message (avoids multipart)
+    if message.HTML == "" && len(message.Attachments) == 0 {
+        fmt.Fprintf(&buf, "From: %s\r\n", message.From)
+        fmt.Fprintf(&buf, "To: %s\r\n", strings.Join(message.To, ", "))
+        if len(message.Cc) > 0 {
+            fmt.Fprintf(&buf, "Cc: %s\r\n", strings.Join(message.Cc, ", "))
+        }
+        fmt.Fprintf(&buf, "Subject: %s\r\n", message.Subject)
+        fmt.Fprintf(&buf, "MIME-Version: 1.0\r\n")
+        fmt.Fprintf(&buf, "Message-ID: %s\r\n", msgID)
+        fmt.Fprintf(&buf, "Date: %s\r\n", time.Now().Format(time.RFC1123Z))
+        // Custom headers
+        for key, value := range message.Headers {
+            fmt.Fprintf(&buf, "%s: %s\r\n", key, value)
+        }
+        // Content headers
+        fmt.Fprintf(&buf, "Content-Type: text/plain; charset=UTF-8\r\n")
+        fmt.Fprintf(&buf, "Content-Transfer-Encoding: quoted-printable\r\n\r\n")
+        fmt.Fprintf(&buf, "%s", message.Body)
+    } else {
+        // Multipart/mixed for HTML and/or attachments
+        writer := multipart.NewWriter(&buf)
+        fmt.Fprintf(&buf, "From: %s\r\n", message.From)
+        fmt.Fprintf(&buf, "To: %s\r\n", strings.Join(message.To, ", "))
+        if len(message.Cc) > 0 {
+            fmt.Fprintf(&buf, "Cc: %s\r\n", strings.Join(message.Cc, ", "))
+        }
+        fmt.Fprintf(&buf, "Subject: %s\r\n", message.Subject)
+        fmt.Fprintf(&buf, "MIME-Version: 1.0\r\n")
+        fmt.Fprintf(&buf, "Content-Type: multipart/mixed; boundary=%s\r\n", writer.Boundary())
+        fmt.Fprintf(&buf, "Message-ID: %s\r\n", msgID)
+        fmt.Fprintf(&buf, "Date: %s\r\n", time.Now().Format(time.RFC1123Z))
+        for key, value := range message.Headers {
+            fmt.Fprintf(&buf, "%s: %s\r\n", key, value)
+        }
+        fmt.Fprintf(&buf, "\r\n")
 
-	// Add text body
-	if message.Body != "" {
-		textPart, err := writer.CreatePart(textproto.MIMEHeader{
-			"Content-Type":              {"text/plain; charset=UTF-8"},
-			"Content-Transfer-Encoding": {"quoted-printable"},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to create text part: %w", err)
-		}
-		fmt.Fprintf(textPart, "%s", message.Body)
-	}
+        if message.Body != "" {
+            textPart, err := writer.CreatePart(textproto.MIMEHeader{
+                "Content-Type":              {"text/plain; charset=UTF-8"},
+                "Content-Transfer-Encoding": {"quoted-printable"},
+            })
+            if err != nil {
+                return fmt.Errorf("failed to create text part: %w", err)
+            }
+            fmt.Fprintf(textPart, "%s", message.Body)
+        }
+        if message.HTML != "" {
+            htmlPart, err := writer.CreatePart(textproto.MIMEHeader{
+                "Content-Type":              {"text/html; charset=UTF-8"},
+                "Content-Transfer-Encoding": {"quoted-printable"},
+            })
+            if err != nil {
+                return fmt.Errorf("failed to create HTML part: %w", err)
+            }
+            fmt.Fprintf(htmlPart, "%s", message.HTML)
+        }
+        for _, attachment := range message.Attachments {
+            contentType := attachment.ContentType
+            if contentType == "" {
+                contentType = mime.TypeByExtension(filepath.Ext(attachment.Filename))
+                if contentType == "" {
+                    contentType = "application/octet-stream"
+                }
+            }
+            attachmentPart, err := writer.CreatePart(textproto.MIMEHeader{
+                "Content-Type":              {fmt.Sprintf("%s; name=%q", contentType, attachment.Filename)},
+                "Content-Disposition":       {fmt.Sprintf("attachment; filename=%q", attachment.Filename)},
+                "Content-Transfer-Encoding": {"base64"},
+            })
+            if err != nil {
+                return fmt.Errorf("failed to create attachment part: %w", err)
+            }
+            encoder := base64.NewEncoder(base64.StdEncoding, attachmentPart)
+            encoder.Write(attachment.Content)
+            encoder.Close()
+        }
+        writer.Close()
+    }
 
-	// Add HTML body
-	if message.HTML != "" {
-		htmlPart, err := writer.CreatePart(textproto.MIMEHeader{
-			"Content-Type":              {"text/html; charset=UTF-8"},
-			"Content-Transfer-Encoding": {"quoted-printable"},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to create HTML part: %w", err)
-		}
-		fmt.Fprintf(htmlPart, "%s", message.HTML)
-	}
+    // Log final envelope details
+    log.Printf("[EmailClient] Sending email: to=%v subject=%q msgid=%s", message.To, message.Subject, msgID)
 
-	// Add attachments
-	for _, attachment := range message.Attachments {
-		contentType := attachment.ContentType
-		if contentType == "" {
-			contentType = mime.TypeByExtension(filepath.Ext(attachment.Filename))
-			if contentType == "" {
-				contentType = "application/octet-stream"
-			}
-		}
-
-		attachmentPart, err := writer.CreatePart(textproto.MIMEHeader{
-			"Content-Type":              {fmt.Sprintf("%s; name=%q", contentType, attachment.Filename)},
-			"Content-Disposition":       {fmt.Sprintf("attachment; filename=%q", attachment.Filename)},
-			"Content-Transfer-Encoding": {"base64"},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to create attachment part: %w", err)
-		}
-
-		encoder := base64.NewEncoder(base64.StdEncoding, attachmentPart)
-		encoder.Write(attachment.Content)
-		encoder.Close()
-	}
-
-	// Close the writer
-	writer.Close()
-
-	// Create auth
-	auth := smtp.PlainAuth("", c.username, c.password, c.smtpHost)
+    // Create auth
+    auth := smtp.PlainAuth("", c.username, c.password, c.smtpHost)
 
 	// Create recipient list
 	recipients := make([]string, 0, len(message.To)+len(message.Cc)+len(message.Bcc))
@@ -232,12 +261,12 @@ func (c *EmailClient) SendEmail(message EmailMessage) error {
 	recipients = append(recipients, message.Cc...)
 	recipients = append(recipients, message.Bcc...)
 
-	// Send the email using smtp.SendMail
-	smtpAddr := fmt.Sprintf("%s:%d", c.smtpHost, c.smtpPort)
-	err := smtp.SendMail(smtpAddr, auth, message.From, recipients, buf.Bytes())
-	if err != nil {
-		return fmt.Errorf("failed to send email: %w", err)
-	}
+    // Send the email using smtp.SendMail
+    smtpAddr := fmt.Sprintf("%s:%d", c.smtpHost, c.smtpPort)
+    err := smtp.SendMail(smtpAddr, auth, message.From, recipients, buf.Bytes())
+    if err != nil {
+        return fmt.Errorf("failed to send email: %w", err)
+    }
 
 	c.lastActivity = time.Now()
 	return nil

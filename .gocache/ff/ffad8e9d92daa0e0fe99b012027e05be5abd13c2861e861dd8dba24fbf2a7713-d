@@ -1,0 +1,7 @@
+./converter.go
+./decode.go
+./doc.go
+./encode.go
+./field.go
+./fields_go1.9.go
+./tag.go

@@ -1,0 +1,53 @@
+=== RUN   TestEmailSmoke
+2025/08/27 09:30:32 Connecting node: send
+2025/08/27 09:30:32   Action: default -> END
+
+🔄 [NodeWrapper] PRE-EXECUTION SHARED STATE:
+
+📋 [NodeWrapper] Available shared context keys: [_execution _flow_context accountID _secret_vault]
+🎯 [NodeWrapper] TEMPLATE EVALUATION CONTEXT:
+{
+  "_flow_context": {
+    "node_results": {},
+    "shared_data": {}
+  },
+  "accountID": "email-smoke-account",
+  "execution": {
+    "flow_id": "email-smoke-1756287032151571819",
+    "id": "1c2e1954-3592-40f6-a9fe-1b3143e7d3e7"
+  },
+  "input": {},
+  "shared": {}
+}
+✅ [NodeWrapper] Template expressions processed successfully
+📝 [NodeWrapper] PROCESSED PARAMETERS:
+{
+  "body": "This is a deterministic email from FlowRunner tests.",
+  "from": "trevormartin@datastreamssolutions.com",
+  "imap_host": "imap.gmail.com",
+  "imap_port": 993,
+  "password": "***",
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "subject": "FlowRunner Email Smoke Test",
+  "to": "beatsbybuddha@gmail.com",
+  "username": "trevormartin@datastreamssolutions.com"
+}
+💾 [NodeWrapper] Stored result as 'email_result' and 'result' in shared context
+📊 [NodeWrapper] STORED RESULT:
+{
+  "bcc": null,
+  "cc": null,
+  "from": "trevormartin@datastreamssolutions.com",
+  "status": "sent",
+  "subject": "FlowRunner Email Smoke Test",
+  "to": [
+    "beatsbybuddha@gmail.com"
+  ]
+}
+
+🔄 [NodeWrapper] POST-EXECUTION SHARED STATE:
+
+--- PASS: TestEmailSmoke (2.00s)
+PASS
+ok  	github.com/tcmartin/flowrunner/pkg/api	2.016s
