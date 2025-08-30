@@ -585,6 +585,7 @@ func NewDelayNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 		exec: func(input interface{}) (interface{}, error) {
 			// Handle both old format (direct params) and new format (combined input)
 			var params map[string]interface{}
+			var originalInput interface{}
 			
 			if combinedInput, ok := input.(map[string]interface{}); ok {
 				if nodeParams, hasParams := combinedInput["params"]; hasParams {
@@ -594,9 +595,17 @@ func NewDelayNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 					} else {
 						return nil, fmt.Errorf("expected params to be map[string]interface{}")
 					}
+					
+					// Extract the original input to pass through
+					if inputField, hasInput := combinedInput["input"]; hasInput {
+						originalInput = inputField
+					} else {
+						originalInput = make(map[string]interface{})
+					}
 				} else {
 					// Old format: direct params (backwards compatibility)
 					params = combinedInput
+					originalInput = combinedInput
 				}
 			} else {
 				return nil, fmt.Errorf("expected map[string]interface{}, got %T", input)
@@ -636,7 +645,8 @@ func NewDelayNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 			// Wait
 			time.Sleep(duration)
 
-			return input, nil
+			// Return the original input to preserve the shared context
+			return originalInput, nil
 		},
 	}
 

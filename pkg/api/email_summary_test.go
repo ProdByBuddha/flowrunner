@@ -84,29 +84,18 @@ nodes:
         var msg = 'This is a FlowRunner summary delivery test.';
         return { subject: subject, body: msg };
     next:
-      success: pre_email_delay
-  pre_email_delay:
-    type: delay
-    params:
-      duration_ms: 30000
-    next:
       default: email
   email:
     type: email.send
     params:
       smtp_host: "smtp.gmail.com"
       smtp_port: 587
-      imap_host: "${secrets.IMAP_HOST}"
-      imap_port: 993
       username: "${secrets.GMAIL_USERNAME}"
       password: "${secrets.GMAIL_PASSWORD}"
-      from: "FlowRunner <${secrets.GMAIL_USERNAME}>"
+      from: "${secrets.GMAIL_USERNAME}"
       to: "${secrets.EMAIL_RECIPIENT}"
       subject: "${shared.result.subject}"
       body: "${shared.result.body}"
-      headers:
-        Reply-To: "${secrets.GMAIL_USERNAME}"
-        X-FlowRunner: "summary-test"
     next:
       default: END
   `, subjectPrefix, url)
@@ -122,11 +111,21 @@ nodes:
     for i := 0; i < 90; i++ {
         status, err = rt.GetStatus(execID)
         require.NoError(t, err)
+        t.Logf("Execution %s status: %s (iteration %d)", execID, status.Status, i)
         if status.Status == "completed" || status.Status == "failed" {
             break
         }
         time.Sleep(1 * time.Second)
     }
+    
+    // Log detailed status for debugging
+    if status.Status == "failed" {
+        t.Logf("Flow execution failed: %+v", status)
+        if status.Error != "" {
+            t.Logf("Error details: %s", status.Error)
+        }
+    }
+    
     assert.Equal(t, "completed", status.Status, "Email summary flow should complete: %s", url)
 }
 

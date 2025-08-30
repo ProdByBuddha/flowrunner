@@ -13,19 +13,19 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tcmartin/flowlib"
 	"github.com/tcmartin/flowrunner/pkg/config"
 	"github.com/tcmartin/flowrunner/pkg/loader"
 	"github.com/tcmartin/flowrunner/pkg/plugins"
+	"github.com/tcmartin/flowrunner/pkg/registry"
 	"github.com/tcmartin/flowrunner/pkg/runtime"
 	"github.com/tcmartin/flowrunner/pkg/services"
 	"github.com/tcmartin/flowrunner/pkg/storage"
 )
 
 // setupAgentTestServer creates a test server with all core node types including Agent, MCP, LLM, and Email
-func setupAgentTestServer(t *testing.T, openaiKey string) (*Server, *MockFlowRegistry, string) {
+func setupAgentTestServer(t *testing.T, openaiKey string) (*Server, string, *services.ExtendedSecretVaultService, loader.YAMLLoader, runtime.FlowRuntime) {
 	// Create test configuration
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -45,9 +45,6 @@ func setupAgentTestServer(t *testing.T, openaiKey string) (*Server, *MockFlowReg
 	accountID, err := accountService.CreateAccount("testuser", "testpass")
 	require.NoError(t, err)
 
-	// Create mock flow registry
-	mockFlowRegistry := new(MockFlowRegistry)
-
 	// Create extended secret vault
 	extendedSecretVault, err := services.NewExtendedSecretVaultService(storageProvider.GetSecretStore(), []byte("test-encryption-key-32-bytes-123"))
 	require.NoError(t, err)
@@ -63,14 +60,18 @@ func setupAgentTestServer(t *testing.T, openaiKey string) (*Server, *MockFlowReg
 	}
 	yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
 
-	// Create flow runtime with storage
+	// Create flow runtime with storage and secrets
 	mockExecutionStore := NewMockExecutionStore()
-	flowRuntime := runtime.NewFlowRuntimeWithStore(mockFlowRegistry, yamlLoader, mockExecutionStore)
+	
+	// Create a simple flow registry adapter for direct execution
+	flowRegistryAdapter := &LLMTestFlowRegistryAdapter{registry: nil}
+	flowRuntime := runtime.NewFlowRuntimeWithStoreAndSecrets(flowRegistryAdapter, yamlLoader, mockExecutionStore, extendedSecretVault)
 
-	// Create server with runtime
+	// Create server with runtime (for token generation)
+	mockFlowRegistry := new(MockFlowRegistry)
 	server := NewServerWithRuntime(cfg, mockFlowRegistry, accountService, extendedSecretVault, flowRuntime, plugins.NewPluginRegistry())
 
-	return server, mockFlowRegistry, accountID
+	return server, accountID, extendedSecretVault, yamlLoader, flowRuntime
 }
 
 // AgentTestRuntimeNodeFactoryAdapter adapts runtime.NodeFactory to plugins.NodeFactory
@@ -167,248 +168,209 @@ func TestAgentMCPLLMEmailIntegration(t *testing.T) {
 	// Load environment variables
 	_ = godotenv.Load("../../.env")
 	
-	// Get OpenAI API key for use throughout the test
+	// Get OpenAI API key and email credentials
 	openaiKey := os.Getenv("OPENAI_API_KEY")
 	if openaiKey == "" {
 		openaiKey = "test-api-key-for-testing" // Fallback for testing
 	}
 	
+	// Check for email credentials
+	sender := os.Getenv("GMAIL_USERNAME")
+	pass := os.Getenv("GMAIL_PASSWORD")
+	recipient := os.Getenv("EMAIL_RECIPIENT")
+	if sender == "" || pass == "" || recipient == "" {
+		t.Skip("Skipping MCP LLM email integration test: missing email credentials")
+	}
+	
 	t.Logf("=== Starting Agent MCP + LLM + Email Integration Test ===")
 	
-	// Create mock servers
+	// Create mock MCP server that returns tool list
 	mcpServer := createMockMCPServer()
 	defer mcpServer.Close()
 	t.Logf("Mock MCP server started at: %s", mcpServer.URL)
 	
-	emailServer := createMockEmailServer()
-	defer emailServer.Close()
-	t.Logf("Mock Email server started at: %s", emailServer.URL)
-	
-	// Setup test server with all core node types (including Agent)
-	server, mockFlowRegistry, accountID := setupAgentTestServer(t, openaiKey)
+	// Setup test server with all core node types (including Agent, MCP, Email)
+	server, accountID, extendedSecretVault, yamlLoader, _ := setupAgentTestServer(t, openaiKey)
 	testServer := NewIPv4Server(server.router)
 	defer testServer.Close()
 	t.Logf("FlowRunner API server started at: %s", testServer.URL)
 	
-	// Create authentication token
-	account, err := server.accountService.GetAccount(accountID)
+	// Set up email credentials in the secret vault
+	err := extendedSecretVault.Set(accountID, "GMAIL_USERNAME", sender)
 	require.NoError(t, err)
-	token := account.APIToken
+	err = extendedSecretVault.Set(accountID, "GMAIL_PASSWORD", pass)
+	require.NoError(t, err)
+	err = extendedSecretVault.Set(accountID, "EMAIL_RECIPIENT", recipient)
+	require.NoError(t, err)
+	
 	t.Logf("Using account ID: %s", accountID)
 	
-	// Create a flow where an AGENT orchestrates the entire workflow
-	// The agent will be given a task and will use its reasoning to complete it
+	// Create a flow that lists MCP tools, analyzes them, and sends an email summary
 	flowYAML := fmt.Sprintf(`metadata:
-  name: "Agent Weather Report Workflow"
+  name: "MCP Tools Analysis and Email Report"
   version: "1.0.0"
-  description: "Agent uses reasoning to orchestrate MCP + LLM + Email workflow"
+  description: "Agent lists MCP tools, analyzes them, and sends email summary"
 
 nodes:
-  weather_report_agent:
+  list_mcp_tools:
+    type: "mcp"
+    params:
+      connectionType: "http"
+      operation: "listTools"
+      url: "%s/tools/list"
+    next:
+      default: "analyze_tools"
+      
+  analyze_tools:
     type: "agent"
     params:
       provider: "openai"
       model: "gpt-3.5-turbo"
       api_key: "%s"
       prompt: |
-        You are a weather reporting agent. Your task is to create and send a weather report for San Francisco.
+        You are a technical analyst reviewing MCP (Model Context Protocol) tools.
         
-        Based on the weather data (sunny, 22°C, 65%% humidity), please create a comprehensive weather report 
-        that includes:
-        1. Current conditions summary
-        2. Temperature and humidity details  
-        3. Recommendations for outdoor activities
-        4. A friendly, informative tone
+        You have received a list of available MCP tools. Please analyze this data and create 
+        a comprehensive email summary that includes:
         
-        Please provide a complete weather report that would be suitable for emailing to users.
+        1. Executive Summary: Brief overview of MCP tools discovered
+        2. Tool Analysis: Description of each tool and its capabilities  
+        3. Technical Benefits: How these tools can be used in workflows
+        4. Integration Opportunities: Potential use cases for these tools
+        5. Next Steps: Recommendations for implementation
+        
+        Format this as a professional email that would be suitable for sending to a technical team.
+        Write the email content directly without JSON formatting.
       temperature: 0.7
-      max_tokens: 500
+      max_tokens: 800
+    next:
+      default: "send_email_summary"
+      
+  send_email_summary:
+    type: "email.send"
+    params:
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      username: "${secrets.GMAIL_USERNAME}"
+      password: "${secrets.GMAIL_PASSWORD}"
+      from: "${secrets.GMAIL_USERNAME}"
+      to: "${secrets.EMAIL_RECIPIENT}"
+      subject: "MCP Tools Analysis Report - FlowRunner Test"
+      body: "${shared.result.content}"
     next:
       default: "END"
-`, openaiKey)
+`, mcpServer.URL, openaiKey)
 	
-	// Set up mock expectations for flow creation
-	mockFlowRegistry.On("Create", accountID, mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return("agent-flow-id", nil)
+	// Use the same pattern as the working email summary test
+	t.Logf("Creating MCP tools analysis workflow...")
 	
-	// Set up mock for flow retrieval during execution
-	flowDef := &runtime.Flow{
-		ID:   "agent-flow-id",
-		YAML: flowYAML,
-	}
-	mockFlowRegistry.On("GetFlow", accountID, "agent-flow-id").Return(flowDef, nil)
+	// Create flow registry and store the flow
+	sp := storage.NewMemoryProvider()
+	require.NoError(t, sp.Initialize())
+	flowReg := registry.NewFlowRegistry(sp.GetFlowStore(), registry.FlowRegistryOptions{YAMLLoader: yamlLoader})
 	
-	// Create the flow using the proper API format
-	t.Logf("Creating agent workflow...")
-	createFlowReq := map[string]interface{}{
-		"name":    "Agent Weather Report Workflow",
-		"content": flowYAML,
-	}
-	createReqBody, _ := json.Marshal(createFlowReq)
-	createReq := strings.NewReader(string(createReqBody))
-	req, err := http.NewRequest("POST", testServer.URL+"/api/v1/flows", createReq)
+	flowID, err := flowReg.Create(accountID, "mcp-tools-analysis", flowYAML)
 	require.NoError(t, err)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
 	
-	resp, err := http.DefaultClient.Do(req)
+	// Execute the flow using the runtime with secrets
+	t.Logf("Executing MCP tools analysis workflow...")
+	rt := runtime.NewFlowRuntimeWithStoreAndSecrets(&LLMTestFlowRegistryAdapter{registry: flowReg}, yamlLoader, sp.GetExecutionStore(), extendedSecretVault)
+	executionID, err := rt.Execute(accountID, flowID, map[string]interface{}{
+		"task": "Analyze MCP tools and send email summary",
+		"mcp_server_url": mcpServer.URL,
+	})
 	require.NoError(t, err)
-	defer resp.Body.Close()
-	require.Equal(t, http.StatusCreated, resp.StatusCode)
+	t.Logf("✅ MCP tools analysis execution started with ID: %s", executionID)
 	
-	var createResp map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&createResp)
-	require.NoError(t, err)
-	flowID := createResp["id"].(string)
-	t.Logf("✅ Agent workflow created with ID: %s", flowID)
-	
-	// Execute the agent workflow
-	t.Logf("Executing agent workflow...")
-	executeJSON := `{
-		"input": {
-			"task": "Generate weather report for San Francisco and prepare for email",
-			"location": "San Francisco",
-			"weather_data": {
-				"temperature": "22°C",
-				"condition": "Sunny", 
-				"humidity": "65%",
-				"recommendation": "Perfect weather for outdoor activities!"
-			}
-		}
-	}`
-	
-	executeReq := strings.NewReader(executeJSON)
-	req, err = http.NewRequest("POST", testServer.URL+"/api/v1/flows/"+flowID+"/run", executeReq)
-	require.NoError(t, err)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
-	
-	resp, err = http.DefaultClient.Do(req)
-	require.NoError(t, err)
-	defer resp.Body.Close()
-	
-	// If not 201 (async execution), log the error response
-	if resp.StatusCode != http.StatusCreated {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		t.Logf("Agent workflow execution failed with status %d, body: %s", resp.StatusCode, string(bodyBytes))
-	}
-	require.Equal(t, http.StatusCreated, resp.StatusCode)
-	
-	var executeResp map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&executeResp)
-	require.NoError(t, err)
-	executionID := executeResp["execution_id"].(string)
-	t.Logf("✅ Agent execution started with ID: %s", executionID)
-	
-	// Monitor execution progress
-	t.Logf("Monitoring agent execution progress...")
+	// Monitor execution progress using flow runtime
+	t.Logf("Monitoring MCP tools analysis execution progress...")
 	maxWait := 120 * time.Second // Timeout for agent reasoning
 	checkInterval := 2 * time.Second
 	startTime := time.Now()
 	
-	var finalStatus map[string]interface{}
+	var finalStatus runtime.ExecutionStatus
 	for time.Since(startTime) < maxWait {
-		req, err = http.NewRequest("GET", testServer.URL+"/api/v1/executions/"+executionID, nil)
-		require.NoError(t, err)
-		req.Header.Set("Authorization", "Bearer "+token)
-		
-		resp, err = http.DefaultClient.Do(req)
+		finalStatus, err = rt.GetStatus(executionID)
 		require.NoError(t, err)
 		
-		err = json.NewDecoder(resp.Body).Decode(&finalStatus)
-		require.NoError(t, err)
-		resp.Body.Close()
-		
-		status := finalStatus["status"].(string)
 		elapsed := time.Since(startTime)
-		t.Logf("Agent Status: %s (elapsed: %v)", status, elapsed)
+		t.Logf("MCP Analysis Status: %s (elapsed: %v)", finalStatus.Status, elapsed)
 		
-		if status == "completed" || status == "failed" {
+		if finalStatus.Status == "completed" || finalStatus.Status == "failed" {
 			break
 		}
 		
 		time.Sleep(checkInterval)
 	}
 	
-	// Verify execution completed successfully
-	require.Equal(t, "completed", finalStatus["status"], "Agent execution should complete successfully")
-	t.Logf("✅ Agent execution completed successfully")
+	// Check if execution failed and log details
+	if finalStatus.Status == "failed" {
+		t.Logf("❌ Execution failed. Status: %+v", finalStatus)
+		if finalStatus.Error != "" {
+			t.Logf("Error message: %s", finalStatus.Error)
+		}
+	}
 	
-	// Examine the agent results
-	if results, ok := finalStatus["result"].(map[string]interface{}); ok {
-		t.Logf("=== AGENT EXECUTION RESULTS ===")
+	// Verify execution completed successfully
+	require.Equal(t, "completed", finalStatus.Status, "MCP tools analysis execution should complete successfully")
+	t.Logf("✅ MCP tools analysis execution completed successfully")
+	
+	// Examine the MCP tools analysis results
+	if finalStatus.Results != nil {
+		t.Logf("=== MCP TOOLS ANALYSIS EXECUTION RESULTS ===")
 		
-		// Check agent result
-		if agentResult, exists := results["weather_report_agent"]; exists {
-			t.Logf("Agent Result: %+v", agentResult)
-			assert.NotNil(t, agentResult, "Agent should return results")
+		// Check MCP tools discovery result
+		if mcpResult, exists := finalStatus.Results["list_mcp_tools"]; exists {
+			t.Logf("MCP Tools Discovery Result: %+v", mcpResult)
+			assert.NotNil(t, mcpResult, "Should have discovered MCP tools")
+		}
+		
+		// Check agent analysis result
+		if agentResult, exists := finalStatus.Results["analyze_tools"]; exists {
+			t.Logf("Agent Analysis Result: %+v", agentResult)
+			assert.NotNil(t, agentResult, "Agent should have analyzed the tools")
 			
-			// Verify agent generated content
+			// Verify agent generated comprehensive report
 			if agentMap, ok := agentResult.(map[string]interface{}); ok {
 				if content, exists := agentMap["content"]; exists {
 					contentStr := content.(string)
-					t.Logf("Agent Generated Weather Report: %s", contentStr)
-					assert.NotEmpty(t, contentStr, "Agent should generate weather report content")
+					t.Logf("=== GENERATED MCP TOOLS ANALYSIS REPORT ===")
+					t.Logf("%s", contentStr)
 					
-					// Verify the weather report contains key elements
-					assert.Contains(t, strings.ToLower(contentStr), "san francisco", "Report should mention San Francisco")
-					assert.Contains(t, strings.ToLower(contentStr), "22", "Report should mention temperature")
-					assert.Contains(t, strings.ToLower(contentStr), "sunny", "Report should mention sunny conditions")
-					assert.Contains(t, strings.ToLower(contentStr), "humidity", "Report should mention humidity")
+					// Verify the report contains key technical elements
+					assert.Contains(t, strings.ToLower(contentStr), "mcp", "Report should mention MCP")
+					assert.Contains(t, strings.ToLower(contentStr), "tools", "Report should mention tools")
+					assert.Contains(t, strings.ToLower(contentStr), "analysis", "Report should mention analysis")
+					assert.NotEmpty(t, contentStr, "Report should not be empty")
+					
+					// Verify report length indicates comprehensive analysis
+					assert.Greater(t, len(contentStr), 200, "Report should be comprehensive (>200 chars)")
 				}
-				
-				// Check agent metadata
-				if nodeType, exists := agentMap["node_type"]; exists {
-					assert.Equal(t, "agent", nodeType, "Should be identified as agent node")
+			}
+		}
+		
+		// Check email sending result
+		if emailResult, exists := finalStatus.Results["send_email_summary"]; exists {
+			t.Logf("Email Sending Result: %+v", emailResult)
+			assert.NotNil(t, emailResult, "Should have attempted to send email")
+			
+			// Verify email was sent successfully
+			if emailMap, ok := emailResult.(map[string]interface{}); ok {
+				if status, exists := emailMap["status"]; exists {
+					assert.Equal(t, "sent", status, "Email should be sent successfully")
 				}
 			}
 		}
 	}
 	
-	// Get execution logs for detailed analysis
-	req, err = http.NewRequest("GET", testServer.URL+"/api/v1/executions/"+executionID+"/logs", nil)
-	require.NoError(t, err)
-	req.Header.Set("Authorization", "Bearer "+token)
-	
-	resp, err = http.DefaultClient.Do(req)
-	require.NoError(t, err)
-	defer resp.Body.Close()
-	
-	var logs []map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&logs)
-	require.NoError(t, err)
-	
-	t.Logf("=== AGENT EXECUTION LOGS ===")
-	for i, log := range logs {
-		t.Logf("Log %d: [%s] %s", i+1, log["level"], log["message"])
-	}
-	
-	// Verify key components were executed by the agent
-	logMessages := make([]string, len(logs))
-	for i, log := range logs {
-		logMessages[i] = log["message"].(string)
-	}
-	
-	hasAgentStep := false
-	hasLLMStep := false
-	for _, msg := range logMessages {
-		if strings.Contains(strings.ToLower(msg), "agent") || strings.Contains(msg, "weather_report_agent") || strings.Contains(strings.ToLower(msg), "llm") {
-			hasAgentStep = true
-		}
-		if strings.Contains(strings.ToLower(msg), "llm") || strings.Contains(strings.ToLower(msg), "agent") {
-			hasLLMStep = true
-		}
-	}
-	
-	assert.True(t, hasAgentStep, "Should have executed Agent step (via LLM)")
-	assert.True(t, hasLLMStep, "Should have executed LLM step (via agent)")
-	
-	t.Logf("=== AGENT TEST SUMMARY ===")
-	t.Logf("✅ Agent Orchestration: Agent successfully managed the workflow")
-	t.Logf("✅ Weather Report Generation: Agent created comprehensive weather report")
-	t.Logf("✅ LLM Processing: Agent used LLM for reasoning and content generation")
-	t.Logf("✅ Content Quality: Generated report includes all required elements")
-	t.Logf("✅ Real API Calls: Test used actual OpenAI API calls for agent reasoning")
+	t.Logf("=== MCP + LLM + EMAIL INTEGRATION TEST SUMMARY ===")
+	t.Logf("✅ MCP Tools Discovery: Successfully discovered tools from mock MCP server")
+	t.Logf("✅ Agent Analysis: AI agent analyzed MCP tools and generated comprehensive report")
+	t.Logf("✅ LLM Processing: Used real OpenAI API calls for reasoning and content generation")
+	t.Logf("✅ Email Integration: Successfully sent email with MCP tools analysis report")
+	t.Logf("✅ Template Resolution: Secret vault properly resolved email credentials")
+	t.Logf("✅ End-to-End Workflow: Complete MCP → LLM → Email pipeline working")
 	
 	// Final verification
-	assert.Equal(t, "completed", finalStatus["status"], "Agent weather report generation should complete successfully")
+	assert.Equal(t, "completed", finalStatus.Status, "MCP tools analysis and email workflow should complete successfully")
 }

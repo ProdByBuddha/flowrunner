@@ -56,11 +56,23 @@ func TestEmailSmoke(t *testing.T) {
     yamlLoader := loader.NewYAMLLoader(nodeFactories, plugins.NewPluginRegistry())
     flowReg := registry.NewFlowRegistry(sp.GetFlowStore(), registry.FlowRegistryOptions{YAMLLoader: yamlLoader})
 
-    // Simple email-only flow
+    // Flow with dynamic content generation
     flowYAML := `metadata:
   name: "Email Smoke Test"
   version: "1.0.0"
 nodes:
+  generate_content:
+    type: "transform"
+    params:
+      script: |
+        // Generate dynamic content with timestamp and nonce
+        var ts = new Date().toISOString();
+        var nonce = Math.floor(Math.random() * 100000);
+        var subject = 'FlowRunner Email Smoke Test — ' + ts + '-' + nonce;
+        var body = 'This is a dynamic email from FlowRunner smoke test.\n\nGenerated at: ' + ts + '\nTest ID: ' + nonce;
+        return { subject: subject, body: body };
+    next:
+      default: send
   send:
     type: "email.send"
     params:
@@ -72,8 +84,8 @@ nodes:
       password: "${secrets.GMAIL_PASSWORD}"
       from: "${secrets.GMAIL_USERNAME}"
       to: "${secrets.EMAIL_RECIPIENT}"
-      subject: "FlowRunner Email Smoke Test"
-      body: "This is a deterministic email from FlowRunner tests."
+      subject: "${shared.result.subject}"
+      body: "${shared.result.body}"
     next:
       default: END
 `

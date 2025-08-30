@@ -53,12 +53,16 @@ func (l *DefaultYAMLLoader) Parse(yamlContent string) (*flowlib.Flow, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to create node '%s' from plugin: %w", nodeName, err)
 			}
+			// Store the node parameters for later template evaluation
+			node.SetParams(nodeDef.Params)
 			nodes[nodeName] = node
 		} else {
 			node, err := factory.CreateNode(nodeDef)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create node '%s': %w", nodeName, err)
 			}
+			// Store the node parameters for later template evaluation
+			node.SetParams(nodeDef.Params)
 			nodes[nodeName] = node
 		}
 	}
