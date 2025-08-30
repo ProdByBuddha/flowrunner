@@ -1,0 +1,18 @@
+{
+  "$schema": "../schemas/services-config-schema.json",
+  "description": "n8n service configuration template",
+  "services": [
+    {
+      "name": "n8n",
+      "type": "openapi",
+      "specFile": "../specs/n8n-api.json",
+      "baseUrl": "https://your-n8n-instance.com/api/v1",
+      "auth": {
+        "kind": "header",
+        "name": "X-API-KEY",
+        "env": "N8N_API_KEY"
+      },
+      "filters": {}
+    }
+  ]
+}

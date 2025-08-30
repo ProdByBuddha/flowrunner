@@ -26,3 +26,11 @@ test_results.txt
 
 .kiro
 
+# Development caches and artifacts
+.gocache/
+.gopath/
+bin/
+testlogs/
+*.out
+
+flowrunner.code-workspace

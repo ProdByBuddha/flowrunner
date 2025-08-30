@@ -1,0 +1,14 @@
+{
+  "$schema": "../schemas/services-config-schema.json",
+  "description": "Adobe PDF Services service configuration template",
+  "services": [
+    {
+      "name": "adobe_pdf",
+      "type": "openapi",
+      "specFile": "../specs/adobe_pdf-api.json",
+      "baseUrl": "https://api.example.com",
+      "auth": {},
+      "filters": {}
+    }
+  ]
+}

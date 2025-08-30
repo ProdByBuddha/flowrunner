@@ -1,0 +1,26 @@
+{
+  "$schema": "../schemas/services-config-schema.json",
+  "description": "Development configuration template - includes debugging and local services",
+  "services": [
+    {
+      "name": "local-api",
+      "type": "openapi",
+      "specFile": "./specs/local-api.json",
+      "baseUrl": "http://localhost:3000",
+      "auth": {},
+      "filters": {}
+    },
+    {
+      "name": "docker-local",
+      "type": "openapi",
+      "specUrl": "https://docs.docker.com/reference/api/engine/version/v1.51.yaml",
+      "baseUrl": "http://localhost:2375",
+      "auth": {},
+      "filters": {
+        "includeOpsRe": [
+          "^(get|post).*container.*"
+        ]
+      }
+    }
+  ]
+}

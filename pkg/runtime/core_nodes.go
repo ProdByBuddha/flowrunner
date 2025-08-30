@@ -12,21 +12,22 @@ import (
 
 // CoreNodeTypes returns a map of built-in node types
 func CoreNodeTypes() map[string]NodeFactory {
-	return map[string]NodeFactory{
-		"http.request":  NewHTTPRequestNodeWrapper,
-		"store":         NewStoreNodeWrapper,
-		"transform":     NewTransformNodeWrapper,
-		"condition":     NewConditionNodeWrapper,
-		"router":        NewRouterNodeWrapper,        // Enhanced condition node with tool call support
-		"delay":         NewDelayNodeWrapper,
-		"wait":          NewWaitNodeWrapper,
-		"cron":          NewCronNodeWrapper,
-		"llm":           NewLLMNodeWrapper,
-		"email.send":    NewSMTPNodeWrapper,
-		"email.receive": NewIMAPNodeWrapper,
-		"agent":         NewAgentNodeWrapper,
-		"webhook":       NewWebhookNodeWrapper,
-		"dynamodb":      NewDynamoDBNodeWrapper,
+    return map[string]NodeFactory{
+        "http.request":  NewHTTPRequestNodeWrapper,
+        "store":         NewStoreNodeWrapper,
+        "transform":     NewTransformNodeWrapper,
+        "condition":     NewConditionNodeWrapper,
+        "router":        NewRouterNodeWrapper,        // Enhanced condition node with tool call support
+        "delay":         NewDelayNodeWrapper,
+        "wait":          NewWaitNodeWrapper,
+        "cron":          NewCronNodeWrapper,
+        "llm":           NewLLMNodeWrapper,
+        "mcp":           NewMCPNodeWrapper,
+        "email.send":    NewSMTPNodeWrapper,
+        "email.receive": NewIMAPNodeWrapper,
+        "agent":         NewAgentNodeWrapper,
+        "webhook":       NewWebhookNodeWrapper,
+        "dynamodb":      NewDynamoDBNodeWrapper,
 		"postgres":      NewPostgresNodeWrapper,
 		"format":        NewResponseFormatterNodeWrapper, // Response formatting for tool results
 		"split":         NewSplitNodeWrapper,             // Split execution for parallel processing

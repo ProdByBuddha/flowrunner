@@ -28,18 +28,36 @@ func (h *ToolExecutionHelper) ExtractToolCallParameters(toolCall utils.ToolCall,
 	log.Printf("[Tool Helper] Raw arguments: %s", toolCall.Function.Arguments)
 
 	// Map tool calls to node parameters based on tool name and node type
-	switch toolCall.Function.Name {
-	case "get_website", "fetch_url", "scrape_text":
-		return h.mapToHTTPRequest(args)
-	case "search_web", "google_search", "search_google":
-		return h.mapToWebSearch(args)
-	case "send_email", "send_email_summary":
-		return h.mapToEmailSend(args)
-	default:
-		// For unknown tools, pass through the arguments as-is
-		log.Printf("[Tool Helper] Unknown tool '%s', passing arguments through", toolCall.Function.Name)
-		return args, nil
-	}
+    switch toolCall.Function.Name {
+    case "get_website", "fetch_url", "scrape_text":
+        return h.mapToHTTPRequest(args)
+    case "search_web", "google_search", "search_google":
+        return h.mapToWebSearch(args)
+    case "send_email", "send_email_summary":
+        return h.mapToEmailSend(args)
+    case "list_tools", "mcp_list_tools":
+        return h.mapToMCPList(args)
+    default:
+        // For unknown tools, pass through the arguments as-is
+        log.Printf("[Tool Helper] Unknown tool '%s', passing arguments through", toolCall.Function.Name)
+        return args, nil
+    }
+}
+
+// mapToMCPList maps tool arguments to MCP list tools node parameters
+func (h *ToolExecutionHelper) mapToMCPList(args map[string]interface{}) (map[string]interface{}, error) {
+    params := make(map[string]interface{})
+    url := "http://127.0.0.1:3005/mcp"
+    if u, ok := args["url"].(string); ok && u != "" {
+        url = u
+    }
+    params["connectionType"] = "http"
+    params["url"] = url
+    params["rawBody"] = map[string]interface{}{
+        "method": "tools/list",
+        "params": map[string]interface{}{},
+    }
+    return params, nil
 }
 
 // mapToHTTPRequest maps tool arguments to http.request node parameters

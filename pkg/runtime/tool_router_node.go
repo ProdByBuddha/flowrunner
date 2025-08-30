@@ -90,15 +90,20 @@ func NewRouterNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 						foundLocation = "input.tool_calls"
 					}
 				}
-				// Check input.result.tool_calls
-				if len(toolCalls) == 0 {
-					if result, ok := inputToCheck["result"].(map[string]interface{}); ok {
-						if tc, ok := result["tool_calls"].([]interface{}); ok && len(tc) > 0 {
-							toolCalls = convertToToolCalls(tc)
-							foundLocation = "input.result.tool_calls"
-						}
-					}
-				}
+                // Check input.result.tool_calls
+                if len(toolCalls) == 0 {
+                    if result, ok := inputToCheck["result"].(map[string]interface{}); ok {
+                        if tc, ok := result["tool_calls"].([]interface{}); ok && len(tc) > 0 {
+                            toolCalls = convertToToolCalls(tc)
+                            foundLocation = "input.result.tool_calls"
+                        } else if tcMapSlice, ok := result["tool_calls"].([]map[string]interface{}); ok && len(tcMapSlice) > 0 {
+                            tmp := make([]interface{}, 0, len(tcMapSlice))
+                            for _, m := range tcMapSlice { tmp = append(tmp, m) }
+                            toolCalls = convertToToolCalls(tmp)
+                            foundLocation = "input.result.tool_calls"
+                        }
+                    }
+                }
 				// Check input.choices[0].message.tool_calls (OpenAI format)
 				if len(toolCalls) == 0 {
 					if choices, ok := inputToCheck["choices"].([]interface{}); ok && len(choices) > 0 {
@@ -112,29 +117,44 @@ func NewRouterNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 						}
 					}
 				}
-				// Check input.message.tool_calls
-				if len(toolCalls) == 0 {
-					if message, ok := inputToCheck["message"].(map[string]interface{}); ok {
-						if tc, ok := message["tool_calls"].([]interface{}); ok && len(tc) > 0 {
-							toolCalls = convertToToolCalls(tc)
-							foundLocation = "input.message.tool_calls"
-						}
-					}
-				}
+                // Check input.message.tool_calls
+                if len(toolCalls) == 0 {
+                    if message, ok := inputToCheck["message"].(map[string]interface{}); ok {
+                        if tc, ok := message["tool_calls"].([]interface{}); ok && len(tc) > 0 {
+                            toolCalls = convertToToolCalls(tc)
+                            foundLocation = "input.message.tool_calls"
+                        } else if tcMapSlice, ok := message["tool_calls"].([]map[string]interface{}); ok && len(tcMapSlice) > 0 {
+                            tmp := make([]interface{}, 0, len(tcMapSlice))
+                            for _, m := range tcMapSlice { tmp = append(tmp, m) }
+                            toolCalls = convertToToolCalls(tmp)
+                            foundLocation = "input.message.tool_calls"
+                        }
+                    }
+                }
 				// Check input.llm_result.tool_calls
 				if len(toolCalls) == 0 {
 					if llmResult, ok := inputToCheck["llm_result"].(map[string]interface{}); ok {
-						if tc, ok := llmResult["tool_calls"].([]interface{}); ok && len(tc) > 0 {
-							toolCalls = convertToToolCalls(tc)
-							foundLocation = "input.llm_result.tool_calls"
-						}
+                        if tc, ok := llmResult["tool_calls"].([]interface{}); ok && len(tc) > 0 {
+                            toolCalls = convertToToolCalls(tc)
+                            foundLocation = "input.llm_result.tool_calls"
+                        } else if tcMapSlice, ok := llmResult["tool_calls"].([]map[string]interface{}); ok && len(tcMapSlice) > 0 {
+                            tmp := make([]interface{}, 0, len(tcMapSlice))
+                            for _, m := range tcMapSlice { tmp = append(tmp, m) }
+                            toolCalls = convertToToolCalls(tmp)
+                            foundLocation = "input.llm_result.tool_calls"
+                        }
 						// Also check input.llm_result.message.tool_calls
 						if len(toolCalls) == 0 {
 							if message, ok := llmResult["message"].(map[string]interface{}); ok {
-								if tc, ok := message["tool_calls"].([]interface{}); ok && len(tc) > 0 {
-									toolCalls = convertToToolCalls(tc)
-									foundLocation = "input.llm_result.message.tool_calls"
-								}
+                                if tc, ok := message["tool_calls"].([]interface{}); ok && len(tc) > 0 {
+                                    toolCalls = convertToToolCalls(tc)
+                                    foundLocation = "input.llm_result.message.tool_calls"
+                                } else if tcMapSlice, ok := message["tool_calls"].([]map[string]interface{}); ok && len(tcMapSlice) > 0 {
+                                    tmp := make([]interface{}, 0, len(tcMapSlice))
+                                    for _, m := range tcMapSlice { tmp = append(tmp, m) }
+                                    toolCalls = convertToToolCalls(tmp)
+                                    foundLocation = "input.llm_result.message.tool_calls"
+                                }
 							}
 						}
 						// Also check input.llm_result.choices[0].message.tool_calls
@@ -142,10 +162,15 @@ func NewRouterNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 							if choices, ok := llmResult["choices"].([]interface{}); ok && len(choices) > 0 {
 								if choice, ok := choices[0].(map[string]interface{}); ok {
 									if message, ok := choice["message"].(map[string]interface{}); ok {
-										if tc, ok := message["tool_calls"].([]interface{}); ok && len(tc) > 0 {
-											toolCalls = convertToToolCalls(tc)
-											foundLocation = "input.llm_result.choices[0].message.tool_calls"
-										}
+                                        if tc, ok := message["tool_calls"].([]interface{}); ok && len(tc) > 0 {
+                                            toolCalls = convertToToolCalls(tc)
+                                            foundLocation = "input.llm_result.choices[0].message.tool_calls"
+                                        } else if tcMapSlice, ok := message["tool_calls"].([]map[string]interface{}); ok && len(tcMapSlice) > 0 {
+                                            tmp := make([]interface{}, 0, len(tcMapSlice))
+                                            for _, m := range tcMapSlice { tmp = append(tmp, m) }
+                                            toolCalls = convertToToolCalls(tmp)
+                                            foundLocation = "input.llm_result.choices[0].message.tool_calls"
+                                        }
 									}
 								}
 							}
@@ -258,71 +283,87 @@ func NewRouterNodeWrapper(params map[string]interface{}) (flowlib.Node, error) {
 
 // convertToToolCalls converts interface{} tool calls to utils.ToolCall structs
 func convertToToolCalls(toolCallsInterface []interface{}) []utils.ToolCall {
-	var toolCalls []utils.ToolCall
-	
-	for _, tcInterface := range toolCallsInterface {
-		if tcMap, ok := tcInterface.(map[string]interface{}); ok {
-			var toolCall utils.ToolCall
-			
-			// Extract ID
-			if id, ok := tcMap["id"].(string); ok {
-				toolCall.ID = id
-			}
-			
-			// Extract type
-			if tcType, ok := tcMap["type"].(string); ok {
-				toolCall.Type = tcType
-			}
-			
-			// Extract function
-			if function, ok := tcMap["function"].(map[string]interface{}); ok {
-				if name, ok := function["name"].(string); ok {
-					toolCall.Function.Name = name
-				}
-				if args, ok := function["arguments"].(string); ok {
-					toolCall.Function.Arguments = args
-				}
-			} else if function, ok := tcMap["Function"].(map[string]interface{}); ok {
-				// Handle capitalized version
-				if name, ok := function["Name"].(string); ok {
-					toolCall.Function.Name = name
-				}
-				if args, ok := function["Arguments"].(string); ok {
-					toolCall.Function.Arguments = args
-				}
-			}
-			
-			toolCalls = append(toolCalls, toolCall)
-		}
-	}
-	
-	return toolCalls
+    var toolCalls []utils.ToolCall
+    
+    for _, tcInterface := range toolCallsInterface {
+        switch tc := tcInterface.(type) {
+        case map[string]interface{}:
+            toolCalls = append(toolCalls, convertOneToolCall(tc))
+        case map[interface{}]interface{}:
+            // Convert keys to strings
+            m := make(map[string]interface{}, len(tc))
+            for k, v := range tc {
+                m[fmt.Sprintf("%v", k)] = v
+            }
+            toolCalls = append(toolCalls, convertOneToolCall(m))
+        }
+    }
+    
+    return toolCalls
+}
+
+func convertOneToolCall(tcMap map[string]interface{}) utils.ToolCall {
+    var toolCall utils.ToolCall
+    if id, ok := tcMap["id"].(string); ok {
+        toolCall.ID = id
+    }
+    if tcType, ok := tcMap["type"].(string); ok {
+        toolCall.Type = tcType
+    }
+    // function can be map[string]interface{} or map[interface{}]interface{}
+    if fn, ok := tcMap["function"].(map[string]interface{}); ok {
+        if name, ok := fn["name"].(string); ok {
+            toolCall.Function.Name = name
+        }
+        if args, ok := fn["arguments"].(string); ok {
+            toolCall.Function.Arguments = args
+        }
+    } else if fnAny, ok := tcMap["function"].(map[interface{}]interface{}); ok {
+        if name, ok := fnAny["name"].(string); ok {
+            toolCall.Function.Name = name
+        }
+        if args, ok := fnAny["arguments"].(string); ok {
+            toolCall.Function.Arguments = args
+        }
+    } else if fn2, ok := tcMap["Function"].(map[string]interface{}); ok {
+        if name, ok := fn2["Name"].(string); ok {
+            toolCall.Function.Name = name
+        }
+        if args, ok := fn2["Arguments"].(string); ok {
+            toolCall.Function.Arguments = args
+        }
+    }
+    return toolCall
 }
 
 // determineRouteForTool determines the route name based on tool name
 func determineRouteForTool(toolName string) string {
-	switch toolName {
-	case "get_website", "fetch_url", "scrape_text":
-		return "http_tool"
-	case "search_web", "google_search", "search_google":
-		return "search_tool"
-	case "send_email", "send_email_summary":
-		return "email_tool"
-	default:
-		return "unknown_tool"
-	}
+    switch toolName {
+    case "get_website", "fetch_url", "scrape_text":
+        return "http_tool"
+    case "search_web", "google_search", "search_google":
+        return "search_tool"
+    case "send_email", "send_email_summary":
+        return "email_tool"
+    case "list_tools", "mcp_list_tools":
+        return "mcp_tool"
+    default:
+        return "unknown_tool"
+    }
 }
 
 // getNodeTypeForRoute returns the node type for a given route
 func getNodeTypeForRoute(route string) string {
-	switch route {
-	case "http_tool", "search_tool":
-		return "http.request"
-	case "email_tool":
-		return "email.send"
-	default:
-		return "transform"
-	}
+    switch route {
+    case "http_tool", "search_tool":
+        return "http.request"
+    case "email_tool":
+        return "email.send"
+    case "mcp_tool":
+        return "mcp"
+    default:
+        return "transform"
+    }
 }
 
 // executeConditionScript executes a custom JavaScript condition script

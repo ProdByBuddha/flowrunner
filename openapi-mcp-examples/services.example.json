@@ -1,0 +1,71 @@
+{
+  "services": [
+    {
+      "name": "n8n",
+      "type": "openapi",
+      "specFile": "../specs/n8n-api.json",
+      "baseUrl": "https://your-n8n/api/v1",
+      "auth": {
+        "kind": "header",
+        "name": "X-N8N-API-KEY",
+        "env": "N8N_API_KEY"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "Workflows|Executions"
+        ]
+      }
+    },
+    {
+      "name": "hostinger",
+      "type": "openapi",
+      "specFile": "./examples/specs/hostinger-api.json",
+      "baseUrl": "https://developers.hostinger.com",
+      "auth": {
+        "kind": "bearer",
+        "env": "HOSTINGER_API_TOKEN"
+      },
+      "filters": {
+        "excludeTagsRe": [
+          "Deprecated|Internal"
+        ]
+      }
+    },
+    {
+      "name": "third",
+      "type": "openapi",
+      "specUrl": "https://api.example.com/openapi.json",
+      "baseUrl": "https://api.example.com/v1",
+      "auth": {
+        "kind": "apiKey",
+        "in": "query",
+        "name": "api_key",
+        "env": "THIRD_API_KEY"
+      },
+      "filters": {
+        "includeOpsRe": [
+          "^get.*"
+        ]
+      }
+    },
+    {
+      "name": "docker",
+      "type": "openapi",
+      "specUrl": "https://docs.docker.com/reference/api/engine/version/v1.51.yaml",
+      "baseUrl": "http://localhost:2375",
+      "auth": {},
+      "filters": {}
+    },
+    {
+      "name": "vendorA",
+      "type": "openapi",
+      "specFile": "./specs/your-api.yaml",
+      "baseUrl": "https://api.vendor-a.com/v1",
+      "auth": {
+        "kind": "bearer",
+        "env": "VENDOR_A_TOKEN"
+      },
+      "filters": {}
+    }
+  ]
+}

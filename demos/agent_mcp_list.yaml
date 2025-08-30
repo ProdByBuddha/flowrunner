@@ -1,0 +1,43 @@
+metadata:
+  name: "Agent -> Router -> MCP (List Tools)"
+  description: "Demonstrates routing a tool call to the MCP client to list tools"
+  version: "1.0.0"
+
+nodes:
+  seed:
+    type: "transform"
+    params:
+      script: |
+        // Simulate an agent producing a tool call named 'list_tools'
+        return {
+          tool_calls: [
+            {
+              id: "tc_list_1",
+              type: "function",
+              function: {
+                name: "list_tools",
+                arguments: JSON.stringify({ url: "http://127.0.0.1:3005/mcp" })
+              }
+            }
+          ]
+        };
+    next:
+      default: "route"
+
+  route:
+    type: "router"
+    params: {}
+    next:
+      list_tools: "mcpList"
+      default: "END"
+
+  mcpList:
+    type: "mcp"
+    params:
+      operation: "listTools" # placeholder for older binaries; rawBody drives the request
+      # Pull parameters prepared by the router's ToolExecutionHelper
+      connectionType: "${input.tool_params.connectionType}"
+      url: "${input.tool_params.url}"
+      rawBody: ${input.tool_params.rawBody}
+    next:
+      default: "END"

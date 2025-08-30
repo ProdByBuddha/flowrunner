@@ -1,0 +1,1730 @@
+{
+  "generatedAt": "2025-08-23T09:55:44.212Z",
+  "tools": [
+    {
+      "name": "generateAudit",
+      "description": "Generate an audit",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "additionalOptions": {
+                "type": "object",
+                "properties": {
+                  "daysAbandonedWorkflow": {
+                    "type": "integer",
+                    "description": "Days for a workflow to be considered abandoned if not executed"
+                  },
+                  "categories": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "credentials",
+                        "database",
+                        "nodes",
+                        "filesystem",
+                        "instance"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": []
+      },
+      "method": "POST",
+      "pathTemplate": "/audit"
+    },
+    {
+      "name": "createCredential",
+      "description": "Create a credential",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "R2DjclaysHbqn778"
+              },
+              "name": {
+                "type": "string",
+                "example": "Joe's Github Credentials"
+              },
+              "type": {
+                "type": "string",
+                "example": "github"
+              },
+              "data": {
+                "type": "object",
+                "example": {
+                  "token": "ada612vad6fa5df4adf5a5dsf4389adsf76da7s"
+                }
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2022-04-29T11:02:29.842Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2022-04-29T11:02:29.842Z"
+              }
+            },
+            "required": [
+              "name",
+              "type",
+              "data"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/credentials"
+    },
+    {
+      "name": "deleteCredential",
+      "description": "Delete credential by ID",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The credential ID that needs to be deleted"
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/credentials/{id}"
+    },
+    {
+      "name": "getCredentialType",
+      "description": "Show credential data schema",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "credentialTypeName": {
+            "type": "string",
+            "description": "The credential type name that you want to get the schema for"
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "credentialTypeName"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/credentials/schema/{credentialTypeName}"
+    },
+    {
+      "name": "getExecutions",
+      "description": "Retrieve all executions",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "includeData": {
+            "type": "boolean",
+            "description": "Whether or not to include the execution's detailed data."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "error",
+              "success",
+              "waiting"
+            ],
+            "description": "Status to filter the executions by."
+          },
+          "workflowId": {
+            "type": "string",
+            "example": "1000",
+            "description": "Workflow to filter the executions by."
+          },
+          "projectId": {
+            "type": "string",
+            "example": "VmwOO9HeTEj20kxM"
+          },
+          "limit": {
+            "type": "number",
+            "default": 100,
+            "example": 100,
+            "maximum": 250,
+            "description": "The maximum number of items to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Paginate by setting the cursor parameter to the nextCursor attribute returned by the previous request's response. Default value fetches the first \"page\" of the collection. See pagination for more detail."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": []
+      },
+      "method": "GET",
+      "pathTemplate": "/executions"
+    },
+    {
+      "name": "getExecution",
+      "description": "Retrieve an execution",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "The ID of the execution."
+          },
+          "includeData": {
+            "type": "boolean",
+            "description": "Whether or not to include the execution's detailed data."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/executions/{id}"
+    },
+    {
+      "name": "deleteExecution",
+      "description": "Delete an execution",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "The ID of the execution."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/executions/{id}"
+    },
+    {
+      "name": "createTag",
+      "description": "Create a tag",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "2tUt1wbLX592XDdX"
+              },
+              "name": {
+                "type": "string",
+                "example": "Production"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/tags"
+    },
+    {
+      "name": "getTags",
+      "description": "Retrieve all tags",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "default": 100,
+            "example": 100,
+            "maximum": 250,
+            "description": "The maximum number of items to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Paginate by setting the cursor parameter to the nextCursor attribute returned by the previous request's response. Default value fetches the first \"page\" of the collection. See pagination for more detail."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": []
+      },
+      "method": "GET",
+      "pathTemplate": "/tags"
+    },
+    {
+      "name": "getTag",
+      "description": "Retrieves a tag",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the tag."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/tags/{id}"
+    },
+    {
+      "name": "deleteTag",
+      "description": "Delete a tag",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the tag."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/tags/{id}"
+    },
+    {
+      "name": "updateTag",
+      "description": "Update a tag",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the tag."
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "2tUt1wbLX592XDdX"
+              },
+              "name": {
+                "type": "string",
+                "example": "Production"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id",
+          "body"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/tags/{id}"
+    },
+    {
+      "name": "createWorkflow",
+      "description": "Create a workflow",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "2tUt1wbLX592XDdX"
+              },
+              "name": {
+                "type": "string",
+                "example": "Workflow 1"
+              },
+              "active": {
+                "type": "boolean"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "nodes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "0f5532f9-36ba-4bef-86c7-30d607400b15"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Jira"
+                    },
+                    "webhookId": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    },
+                    "notesInFlow": {
+                      "type": "boolean"
+                    },
+                    "notes": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "n8n-nodes-base.Jira"
+                    },
+                    "typeVersion": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "executeOnce": {
+                      "type": "boolean"
+                    },
+                    "alwaysOutputData": {
+                      "type": "boolean"
+                    },
+                    "retryOnFail": {
+                      "type": "boolean"
+                    },
+                    "maxTries": {
+                      "type": "number"
+                    },
+                    "waitBetweenTries": {
+                      "type": "number"
+                    },
+                    "continueOnFail": {
+                      "type": "boolean",
+                      "description": "use onError instead"
+                    },
+                    "onError": {
+                      "type": "string",
+                      "example": "stopWorkflow"
+                    },
+                    "position": {
+                      "type": "array",
+                      "example": [
+                        -100,
+                        80
+                      ],
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "parameters": {
+                      "type": "object",
+                      "example": {
+                        "additionalProperties": {}
+                      }
+                    },
+                    "credentials": {
+                      "type": "object",
+                      "example": {
+                        "jiraSoftwareCloudApi": {
+                          "id": "35",
+                          "name": "jiraApi"
+                        }
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "connections": {
+                "type": "object",
+                "example": {
+                  "main": [
+                    {
+                      "node": "Jira",
+                      "type": "main",
+                      "index": 0
+                    }
+                  ]
+                }
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "saveExecutionProgress": {
+                    "type": "boolean"
+                  },
+                  "saveManualExecutions": {
+                    "type": "boolean"
+                  },
+                  "saveDataErrorExecution": {
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "none"
+                    ]
+                  },
+                  "saveDataSuccessExecution": {
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "none"
+                    ]
+                  },
+                  "executionTimeout": {
+                    "type": "number",
+                    "example": 3600,
+                    "maxLength": 3600
+                  },
+                  "errorWorkflow": {
+                    "type": "string",
+                    "description": "The ID of the workflow that contains the error trigger node.",
+                    "example": "VzqKEW0ShTXA5vPj"
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "example": "America/New_York"
+                  },
+                  "executionOrder": {
+                    "type": "string",
+                    "example": "v1"
+                  }
+                }
+              },
+              "staticData": {
+                "example": {
+                  "lastId": 1
+                },
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "jsonString"
+                  },
+                  {
+                    "type": "object"
+                  }
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "2tUt1wbLX592XDdX"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Production"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "nodes",
+              "connections",
+              "settings"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/workflows"
+    },
+    {
+      "name": "getWorkflows",
+      "description": "Retrieve all workflows",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "example": true
+          },
+          "tags": {
+            "type": "string",
+            "example": "test,production"
+          },
+          "name": {
+            "type": "string",
+            "example": "My Workflow"
+          },
+          "projectId": {
+            "type": "string",
+            "example": "VmwOO9HeTEj20kxM"
+          },
+          "excludePinnedData": {
+            "type": "boolean",
+            "example": true,
+            "description": "Set this to avoid retrieving pinned data"
+          },
+          "limit": {
+            "type": "number",
+            "default": 100,
+            "example": 100,
+            "maximum": 250,
+            "description": "The maximum number of items to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Paginate by setting the cursor parameter to the nextCursor attribute returned by the previous request's response. Default value fetches the first \"page\" of the collection. See pagination for more detail."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": []
+      },
+      "method": "GET",
+      "pathTemplate": "/workflows"
+    },
+    {
+      "name": "getWorkflow",
+      "description": "Retrieves a workflow",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "excludePinnedData": {
+            "type": "boolean",
+            "example": true,
+            "description": "Set this to avoid retrieving pinned data"
+          },
+          "id": {
+            "type": "string",
+            "description": "The ID of the workflow."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/workflows/{id}"
+    },
+    {
+      "name": "deleteWorkflow",
+      "description": "Delete a workflow",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the workflow."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/workflows/{id}"
+    },
+    {
+      "name": "updateWorkflow",
+      "description": "Update a workflow",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the workflow."
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "2tUt1wbLX592XDdX"
+              },
+              "name": {
+                "type": "string",
+                "example": "Workflow 1"
+              },
+              "active": {
+                "type": "boolean"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "nodes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "0f5532f9-36ba-4bef-86c7-30d607400b15"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Jira"
+                    },
+                    "webhookId": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "boolean"
+                    },
+                    "notesInFlow": {
+                      "type": "boolean"
+                    },
+                    "notes": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "n8n-nodes-base.Jira"
+                    },
+                    "typeVersion": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "executeOnce": {
+                      "type": "boolean"
+                    },
+                    "alwaysOutputData": {
+                      "type": "boolean"
+                    },
+                    "retryOnFail": {
+                      "type": "boolean"
+                    },
+                    "maxTries": {
+                      "type": "number"
+                    },
+                    "waitBetweenTries": {
+                      "type": "number"
+                    },
+                    "continueOnFail": {
+                      "type": "boolean",
+                      "description": "use onError instead"
+                    },
+                    "onError": {
+                      "type": "string",
+                      "example": "stopWorkflow"
+                    },
+                    "position": {
+                      "type": "array",
+                      "example": [
+                        -100,
+                        80
+                      ],
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "parameters": {
+                      "type": "object",
+                      "example": {
+                        "additionalProperties": {}
+                      }
+                    },
+                    "credentials": {
+                      "type": "object",
+                      "example": {
+                        "jiraSoftwareCloudApi": {
+                          "id": "35",
+                          "name": "jiraApi"
+                        }
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "connections": {
+                "type": "object",
+                "example": {
+                  "main": [
+                    {
+                      "node": "Jira",
+                      "type": "main",
+                      "index": 0
+                    }
+                  ]
+                }
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "saveExecutionProgress": {
+                    "type": "boolean"
+                  },
+                  "saveManualExecutions": {
+                    "type": "boolean"
+                  },
+                  "saveDataErrorExecution": {
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "none"
+                    ]
+                  },
+                  "saveDataSuccessExecution": {
+                    "type": "string",
+                    "enum": [
+                      "all",
+                      "none"
+                    ]
+                  },
+                  "executionTimeout": {
+                    "type": "number",
+                    "example": 3600,
+                    "maxLength": 3600
+                  },
+                  "errorWorkflow": {
+                    "type": "string",
+                    "description": "The ID of the workflow that contains the error trigger node.",
+                    "example": "VzqKEW0ShTXA5vPj"
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "example": "America/New_York"
+                  },
+                  "executionOrder": {
+                    "type": "string",
+                    "example": "v1"
+                  }
+                }
+              },
+              "staticData": {
+                "example": {
+                  "lastId": 1
+                },
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "jsonString"
+                  },
+                  {
+                    "type": "object"
+                  }
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "2tUt1wbLX592XDdX"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Production"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "nodes",
+              "connections",
+              "settings"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id",
+          "body"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/workflows/{id}"
+    },
+    {
+      "name": "activateWorkflow",
+      "description": "Activate a workflow",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the workflow."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/workflows/{id}/activate"
+    },
+    {
+      "name": "deactivateWorkflow",
+      "description": "Deactivate a workflow",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the workflow."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/workflows/{id}/deactivate"
+    },
+    {
+      "name": "transferWorkflow",
+      "description": "Transfer a workflow to another project.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the workflow."
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "destinationProjectId": {
+                "type": "string",
+                "description": "The ID of the project to transfer the workflow to."
+              }
+            },
+            "required": [
+              "destinationProjectId"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id",
+          "body"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/workflows/{id}/transfer"
+    },
+    {
+      "name": "transferCredential",
+      "description": "Transfer a credential to another project.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the credential."
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "destinationProjectId": {
+                "type": "string",
+                "description": "The ID of the project to transfer the credential to."
+              }
+            },
+            "required": [
+              "destinationProjectId"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id",
+          "body"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/credentials/{id}/transfer"
+    },
+    {
+      "name": "getWorkflowTags",
+      "description": "Get workflow tags",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the workflow."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/workflows/{id}/tags"
+    },
+    {
+      "name": "updateWorkflowTags",
+      "description": "Update tags of a workflow",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the workflow."
+          },
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "2tUt1wbLX592XDdX"
+                }
+              },
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id",
+          "body"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/workflows/{id}/tags"
+    },
+    {
+      "name": "getUsers",
+      "description": "Retrieve all users",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "default": 100,
+            "example": 100,
+            "maximum": 250,
+            "description": "The maximum number of items to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Paginate by setting the cursor parameter to the nextCursor attribute returned by the previous request's response. Default value fetches the first \"page\" of the collection. See pagination for more detail."
+          },
+          "includeRole": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether to include the user's role or not."
+          },
+          "projectId": {
+            "type": "string",
+            "example": "VmwOO9HeTEj20kxM"
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": []
+      },
+      "method": "GET",
+      "pathTemplate": "/users"
+    },
+    {
+      "name": "createUser",
+      "description": "Create multiple users",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "global:admin",
+                    "global:member"
+                  ]
+                }
+              },
+              "required": [
+                "email"
+              ]
+            }
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/users"
+    },
+    {
+      "name": "getUser",
+      "description": "Get user by ID/Email",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "identifier",
+            "description": "The ID or email of the user."
+          },
+          "includeRole": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether to include the user's role or not."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/users/{id}"
+    },
+    {
+      "name": "deleteUser",
+      "description": "Delete a user",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "identifier",
+            "description": "The ID or email of the user."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/users/{id}"
+    },
+    {
+      "name": "changeRole",
+      "description": "Change a user's global role",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "identifier",
+            "description": "The ID or email of the user."
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "newRoleName": {
+                "type": "string",
+                "enum": [
+                  "global:admin",
+                  "global:member"
+                ]
+              }
+            },
+            "required": [
+              "newRoleName"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id",
+          "body"
+        ]
+      },
+      "method": "PATCH",
+      "pathTemplate": "/users/{id}/role"
+    },
+    {
+      "name": "pull",
+      "description": "Pull changes from the remote repository",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "force": {
+                "type": "boolean",
+                "example": true
+              },
+              "variables": {
+                "type": "object",
+                "example": {
+                  "foo": "bar"
+                }
+              }
+            }
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/source-control/pull"
+    },
+    {
+      "name": "createVariable",
+      "description": "Create a variable",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string",
+                "example": "test"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "key",
+              "value"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/variables"
+    },
+    {
+      "name": "getVariables",
+      "description": "Retrieve variables",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "default": 100,
+            "example": 100,
+            "maximum": 250,
+            "description": "The maximum number of items to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Paginate by setting the cursor parameter to the nextCursor attribute returned by the previous request's response. Default value fetches the first \"page\" of the collection. See pagination for more detail."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": []
+      },
+      "method": "GET",
+      "pathTemplate": "/variables"
+    },
+    {
+      "name": "deleteVariable",
+      "description": "Delete a variable",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the variable."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/variables/{id}"
+    },
+    {
+      "name": "updateVariable",
+      "description": "Update a variable",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Path parameter: id"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string",
+                "example": "test"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "key",
+              "value"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "id",
+          "body"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/variables/{id}"
+    },
+    {
+      "name": "createProject",
+      "description": "Create a project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/projects"
+    },
+    {
+      "name": "getProjects",
+      "description": "Retrieve projects",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "default": 100,
+            "example": 100,
+            "maximum": 250,
+            "description": "The maximum number of items to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Paginate by setting the cursor parameter to the nextCursor attribute returned by the previous request's response. Default value fetches the first \"page\" of the collection. See pagination for more detail."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": []
+      },
+      "method": "GET",
+      "pathTemplate": "/projects"
+    },
+    {
+      "name": "deleteProject",
+      "description": "Delete a project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "The ID of the project."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "projectId"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/projects/{projectId}"
+    },
+    {
+      "name": "updateProject",
+      "description": "Update a project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "The ID of the project."
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "projectId",
+          "body"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/projects/{projectId}"
+    },
+    {
+      "name": "addUsersToProject",
+      "description": "Add one or more users to a project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "The ID of the project."
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "relations": {
+                "type": "array",
+                "description": "A list of userIds and roles to add to the project.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "description": "The unique identifier of the user.",
+                      "example": "91765f0d-3b29-45df-adb9-35b23937eb92"
+                    },
+                    "role": {
+                      "type": "string",
+                      "description": "The role assigned to the user in the project.",
+                      "example": "project:viewer"
+                    }
+                  },
+                  "required": [
+                    "userId",
+                    "role"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "relations"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "projectId"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/projects/{projectId}/users"
+    },
+    {
+      "name": "deleteUserFromProject",
+      "description": "Delete a user from a project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "The ID of the project."
+          },
+          "userId": {
+            "type": "string",
+            "description": "The ID of the user."
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "projectId",
+          "userId"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/projects/{projectId}/users/{userId}"
+    },
+    {
+      "name": "changeUserRoleInProject",
+      "description": "Change a user's role in a project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "The ID of the project."
+          },
+          "userId": {
+            "type": "string",
+            "description": "The ID of the user."
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "description": "The role assigned to the user in the project.",
+                "example": "project:viewer"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "X-N8N-API-KEY": {
+            "type": "string",
+            "description": "API Key for ApiKeyAuth"
+          }
+        },
+        "required": [
+          "projectId",
+          "userId"
+        ]
+      },
+      "method": "PATCH",
+      "pathTemplate": "/projects/{projectId}/users/{userId}"
+    }
+  ]
+}

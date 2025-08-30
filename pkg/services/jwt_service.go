@@ -1,11 +1,11 @@
 package services
 
 import (
-	"fmt"
-	"time"
+    "fmt"
+    "time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/tcmartin/flowrunner/pkg/auth"
+    "github.com/golang-jwt/jwt/v5"
+    "github.com/tcmartin/flowrunner/pkg/auth"
 )
 
 // JWTService handles JWT token generation and validation

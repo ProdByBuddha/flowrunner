@@ -1,0 +1,135 @@
+{
+  "metadata": {
+    "name": "MCP: Dynamic Tool Discovery and Execution",
+    "description": "Dynamically lists MCP tools and executes multiple tools based on input criteria",
+    "version": "1.0.0"
+  },
+  "variables": {
+    "mcp_url": "http://127.0.0.1:3005/mcp",
+    "connection_type": "http"
+  },
+  "nodes": {
+    "listTools": {
+      "type": "mcp",
+      "description": "List all available MCP tools",
+      "params": {
+        "connectionType": "http",
+        "operation": "listTools",
+        "url": "http://127.0.0.1:3005/mcp",
+        "rawBody": "{\"method\":\"tools/list\",\"params\":{}}"
+      },
+      "next": {
+        "default": "analyzeTools",
+        "error": "handleError"
+      }
+    },
+    "analyzeTools": {
+      "type": "transform",
+      "description": "Analyze available tools and determine execution strategy",
+      "params": {
+        "script": "// Extract tools from MCP response\nconst mcpResult = input.result;\nlet tools = [];\n\nif (mcpResult && mcpResult.result && mcpResult.result.tools) {\n  tools = mcpResult.result.tools;\n} else if (mcpResult && mcpResult.tools) {\n  tools = mcpResult.tools;\n}\n\nconsole.log(\"Available tools:\", JSON.stringify(tools, null, 2));\n\n// Get execution strategy from input\nconst strategy = input.strategy || 'single'; // 'single', 'multiple', 'all', 'filter'\nconst targetTools = input.targetTools || input.toolNames || [];\nconst toolFilter = input.toolFilter || input.filter; // regex or substring\nconst maxExecutions = input.maxExecutions || 5;\n\nlet toolsToExecute = [];\n\nswitch (strategy) {\n  case 'single':\n    const singleTool = input.targetTool || input.toolName;\n    if (singleTool) {\n      const tool = tools.find(t => t.name === singleTool);\n      if (tool) toolsToExecute = [tool];\n    }\n    break;\n    \n  case 'multiple':\n    toolsToExecute = tools.filter(t => targetTools.includes(t.name));\n    break;\n    \n  case 'all':\n    toolsToExecute = tools.slice(0, maxExecutions);\n    break;\n    \n  case 'filter':\n    if (toolFilter) {\n      const regex = new RegExp(toolFilter, 'i');\n      toolsToExecute = tools.filter(t => \n        regex.test(t.name) || \n        (t.description && regex.test(t.description))\n      ).slice(0, maxExecutions);\n    }\n    break;\n}\n\nif (toolsToExecute.length === 0) {\n  return {\n    error: \"No tools selected for execution\",\n    availableTools: tools,\n    strategy: strategy,\n    criteria: { targetTools, toolFilter, maxExecutions }\n  };\n}\n\nreturn {\n  availableTools: tools,\n  toolsToExecute: toolsToExecute,\n  executionPlan: {\n    strategy: strategy,\n    totalTools: tools.length,\n    selectedCount: toolsToExecute.length,\n    toolNames: toolsToExecute.map(t => t.name)\n  },\n  currentIndex: 0,\n  executionResults: [],\n  ready: true\n};"
+      },
+      "next": {
+        "default": "checkExecution"
+      }
+    },
+    "checkExecution": {
+      "type": "condition",
+      "description": "Check if we have tools to execute",
+      "params": {
+        "condition": "${input.ready == true && input.toolsToExecute.length > 0}"
+      },
+      "next": {
+        "true": "prepareExecution",
+        "false": "reportNoExecution",
+        "default": "reportNoExecution"
+      }
+    },
+    "prepareExecution": {
+      "type": "transform",
+      "description": "Prepare the current tool for execution",
+      "params": {
+        "script": "const currentIndex = input.currentIndex || 0;\nconst toolsToExecute = input.toolsToExecute || [];\n\nif (currentIndex >= toolsToExecute.length) {\n  return {\n    ...input,\n    allComplete: true,\n    message: \"All tools executed successfully\"\n  };\n}\n\nconst currentTool = toolsToExecute[currentIndex];\nconst toolParams = input.toolParameters || input.toolParams || {};\n\n// Allow per-tool parameters\nconst perToolParams = input.perToolParams || {};\nconst currentParams = perToolParams[currentTool.name] || toolParams;\n\nreturn {\n  ...input,\n  currentTool: currentTool,\n  toolName: currentTool.name,\n  toolParameters: JSON.stringify(currentParams),\n  executionReady: true\n};"
+      },
+      "next": {
+        "default": "checkComplete"
+      }
+    },
+    "checkComplete": {
+      "type": "condition",
+      "description": "Check if all executions are complete",
+      "params": {
+        "condition": "${input.allComplete == true}"
+      },
+      "next": {
+        "true": "formatFinalResult",
+        "false": "executeTool",
+        "default": "executeTool"
+      }
+    },
+    "executeTool": {
+      "type": "mcp",
+      "description": "Execute the current MCP tool",
+      "params": {
+        "connectionType": "http",
+        "operation": "executeTool",
+        "url": "http://127.0.0.1:3005/mcp",
+        "rawBodyTemplate": "{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"{{.input.toolName}}\",\n    \"arguments\": {{.input.toolParameters}}\n  }\n}"
+      },
+      "next": {
+        "default": "recordResult",
+        "error": "recordError"
+      }
+    },
+    "recordResult": {
+      "type": "transform",
+      "description": "Record successful execution result",
+      "params": {
+        "script": "const currentIndex = input.currentIndex || 0;\nconst executionResults = input.executionResults || [];\n\n// Record this execution\nconst result = {\n  toolName: input.toolName,\n  success: true,\n  result: input.result,\n  executedAt: new Date().toISOString(),\n  index: currentIndex\n};\n\nexecutionResults.push(result);\n\n// Prepare for next iteration\nconst nextIndex = currentIndex + 1;\nconst toolsToExecute = input.toolsToExecute || [];\n\nreturn {\n  ...input,\n  executionResults: executionResults,\n  currentIndex: nextIndex,\n  lastResult: result\n};"
+      },
+      "next": {
+        "default": "prepareExecution"
+      }
+    },
+    "recordError": {
+      "type": "transform",
+      "description": "Record failed execution result",
+      "params": {
+        "script": "const currentIndex = input.currentIndex || 0;\nconst executionResults = input.executionResults || [];\n\n// Record this execution failure\nconst result = {\n  toolName: input.toolName,\n  success: false,\n  error: input.error || \"Execution failed\",\n  executedAt: new Date().toISOString(),\n  index: currentIndex\n};\n\nexecutionResults.push(result);\n\n// Prepare for next iteration (continue despite error)\nconst nextIndex = currentIndex + 1;\n\nreturn {\n  ...input,\n  executionResults: executionResults,\n  currentIndex: nextIndex,\n  lastResult: result\n};"
+      },
+      "next": {
+        "default": "prepareExecution"
+      }
+    },
+    "formatFinalResult": {
+      "type": "transform",
+      "description": "Format the final execution summary",
+      "params": {
+        "script": "const executionResults = input.executionResults || [];\nconst successful = executionResults.filter(r => r.success);\nconst failed = executionResults.filter(r => !r.success);\n\nreturn {\n  success: true,\n  summary: {\n    totalExecutions: executionResults.length,\n    successful: successful.length,\n    failed: failed.length,\n    executionPlan: input.executionPlan\n  },\n  results: executionResults,\n  availableTools: input.availableTools,\n  completedAt: new Date().toISOString()\n};"
+      },
+      "next": {
+        "default": "END"
+      }
+    },
+    "reportNoExecution": {
+      "type": "transform",
+      "description": "Report when no tools are selected for execution",
+      "params": {
+        "script": "return {\n  success: false,\n  error: input.error || \"No tools selected for execution\",\n  availableTools: input.availableTools || [],\n  criteria: input.criteria || {},\n  timestamp: new Date().toISOString()\n};"
+      },
+      "next": {
+        "default": "END"
+      }
+    },
+    "handleError": {
+      "type": "transform",
+      "description": "Handle MCP operation errors",
+      "params": {
+        "script": "return {\n  success: false,\n  error: \"MCP operation failed: \" + (input.error || \"Unknown error\"),\n  timestamp: new Date().toISOString()\n};"
+      },
+      "next": {
+        "default": "END"
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "services": [
+    {
+      "name": "sample",
+      "type": "openapi",
+      "specFile": "specs/sample-openapi.json",
+      "baseUrl": "https://api.example.com/v1",
+      "auth": {},
+      "filters": {}
+    }
+  ]
+}

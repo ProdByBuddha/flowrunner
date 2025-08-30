@@ -1,0 +1,18 @@
+metadata:
+  name: "MCP: List Tools"
+  description: "Lists available tools from openapi-mcp-server"
+  version: "1.0.0"
+
+nodes:
+  listTools:
+    type: "mcp"
+    params:
+      connectionType: "cmd"
+      operation: "listTools"
+      # Uses your server command via npx; inherits OS environment
+      command: "npx"
+      # JSON array string is supported for args
+      args: '["@prodbybuddha/openapi-mcp-server@latest","--config","/root/projects/flowrunner/services.dynamic.json"]'
+    next:
+      default: "END"
+

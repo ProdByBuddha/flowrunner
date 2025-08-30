@@ -1,0 +1,14 @@
+{
+  "$schema": "../schemas/services-config-schema.json",
+  "description": "Generic OpenAPI service configuration template",
+  "services": [
+    {
+      "name": "openapi",
+      "type": "openapi",
+      "specFile": "../specs/openapi-api.json",
+      "baseUrl": "https://api.example.com",
+      "auth": {},
+      "filters": {}
+    }
+  ]
+}

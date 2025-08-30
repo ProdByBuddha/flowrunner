@@ -1,0 +1,25 @@
+{
+    "metadata": {
+        "name": "MCP List Tools (http)",
+        "version": "1.0.0"
+    },
+    "nodes": {
+        "list": {
+            "type": "mcp",
+            "params": {
+                "connectionType": "http",
+                "operation": "listTools",
+                "url": "http://127.0.0.1:3005/mcp",
+                "headersTemplate": {
+                    "X-Flow": "{{.params.tag}}"
+                },
+                "tag": "mcp-list",
+                "rawBodyTemplate": "{\n  \"method\": \"tools/list\",\n  \"params\": {}\n}",
+                "rawBody": "{\"method\":\"tools/list\",\"params\":{}}"
+            },
+            "next": {
+                "default": "END"
+            }
+        }
+    }
+}

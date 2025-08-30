@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "name": "MCP: List Then Execute Tool",
+    "description": "Lists available MCP tools, then executes a specified tool from the list",
+    "version": "1.0.0"
+  },
+  "variables": {
+    "mcp_url": "http://127.0.0.1:3005/mcp",
+    "connection_type": "http"
+  },
+  "nodes": {
+    "listTools": {
+      "type": "mcp",
+      "description": "List all available MCP tools",
+      "params": {
+        "connectionType": "http",
+        "operation": "listTools",
+        "url": "http://127.0.0.1:3005/mcp",
+        "rawBody": "{\"method\":\"tools/list\",\"params\":{}}"
+      },
+      "next": {
+        "default": "parseTools",
+        "error": "handleError"
+      }
+    },
+    "parseTools": {
+      "type": "transform",
+      "description": "Parse the tools list and prepare for execution",
+      "params": {
+        "script": "// Extract tools from MCP response\nconst mcpResult = input.result;\nlet tools = [];\n\nif (mcpResult && mcpResult.result && mcpResult.result.tools) {\n  tools = mcpResult.result.tools;\n} else if (mcpResult && mcpResult.tools) {\n  tools = mcpResult.tools;\n}\n\nconsole.log(\"Available tools:\", JSON.stringify(tools, null, 2));\n\n// Check if we have a specific tool to execute from input\nconst targetTool = input.targetTool || input.toolName;\n\nif (!targetTool) {\n  return {\n    error: \"No target tool specified. Available tools: \" + \n           tools.map(t => t.name).join(\", \"),\n    availableTools: tools\n  };\n}\n\n// Find the target tool\nconst tool = tools.find(t => t.name === targetTool);\nif (!tool) {\n  return {\n    error: `Tool '${targetTool}' not found. Available tools: ` + \n           tools.map(t => t.name).join(\", \"),\n    availableTools: tools\n  };\n}\n\n// Prepare execution parameters\nconst toolParams = input.toolParameters || input.toolParams || {};\n\nreturn {\n  selectedTool: tool,\n  toolName: tool.name,\n  toolParameters: toolParams,\n  availableTools: tools,\n  executionReady: true\n};"
+      },
+      "next": {
+        "default": "checkExecution"
+      }
+    },
+    "checkExecution": {
+      "type": "condition",
+      "description": "Check if we should proceed with execution",
+      "params": {
+        "condition": "${input.executionReady == true}"
+      },
+      "next": {
+        "true": "executeTool",
+        "false": "reportError",
+        "default": "reportError"
+      }
+    },
+    "executeTool": {
+      "type": "mcp",
+      "description": "Execute the selected MCP tool",
+      "params": {
+        "connectionType": "http",
+        "operation": "executeTool",
+        "url": "http://127.0.0.1:3005/mcp",
+        "rawBodyTemplate": "{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"{{.input.toolName}}\",\n    \"arguments\": {{.input.toolParameters}}\n  }\n}"
+      },
+      "next": {
+        "default": "formatResult",
+        "error": "handleError"
+      }
+    },
+    "formatResult": {
+      "type": "transform",
+      "description": "Format the final result",
+      "params": {
+        "script": "return {\n  success: true,\n  toolName: input.toolName,\n  toolResult: input.result,\n  availableTools: input.availableTools,\n  executedAt: new Date().toISOString()\n};"
+      },
+      "next": {
+        "default": "END"
+      }
+    },
+    "reportError": {
+      "type": "transform",
+      "description": "Report execution error",
+      "params": {
+        "script": "return {\n  success: false,\n  error: input.error || \"Execution conditions not met\",\n  availableTools: input.availableTools || [],\n  timestamp: new Date().toISOString()\n};"
+      },
+      "next": {
+        "default": "END"
+      }
+    },
+    "handleError": {
+      "type": "transform",
+      "description": "Handle MCP operation errors",
+      "params": {
+        "script": "return {\n  success: false,\n  error: \"MCP operation failed: \" + (input.error || \"Unknown error\"),\n  timestamp: new Date().toISOString()\n};"
+      },
+      "next": {
+        "default": "END"
+      }
+    }
+  }
+}

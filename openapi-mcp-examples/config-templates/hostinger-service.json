@@ -1,0 +1,17 @@
+{
+  "$schema": "../schemas/services-config-schema.json",
+  "description": "Hostinger service configuration template",
+  "services": [
+    {
+      "name": "hostinger",
+      "type": "openapi",
+      "specFile": "../specs/hostinger-api.json",
+      "baseUrl": "https://api.example.com",
+      "auth": {
+        "kind": "bearer",
+        "env": "HOSTINGER_API_TOKEN"
+      },
+      "filters": {}
+    }
+  ]
+}

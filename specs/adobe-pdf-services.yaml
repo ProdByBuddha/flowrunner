@@ -1,0 +1,231 @@
+openapi: 3.0.3
+info:
+  title: Adobe PDF Services (Minimal)
+  version: 0.1.0
+  description: |
+    Minimal subset of Adobe PDF Services REST API used for SPC workflows.
+    NOTE: Replace with official spec when available. Operations require `Authorization: Bearer` and `x-api-key` headers.
+servers:
+  - url: https://pdf-services.adobe.io
+paths:
+  /assets:
+    post:
+      summary: Create an asset placeholder for upload
+      operationId: createAsset
+      tags: [Assets]
+      parameters:
+        - $ref: '#/components/parameters/XApiKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mediaType:
+                  type: string
+                  example: application/pdf
+      responses:
+        '201':
+          description: Asset created with upload URI
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created asset
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assetID:
+                    type: string
+                  uploadUri:
+                    type: string
+  /operation/combine-pdf:
+    post:
+      summary: Combine multiple PDF assets into one PDF
+      operationId: combinePDF
+      tags: [Operations]
+      parameters:
+        - $ref: '#/components/parameters/XApiKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                inputs:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      assetID:
+                        type: string
+                options:
+                  type: object
+              required: [inputs]
+      responses:
+        '201':
+          description: Operation accepted
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Job status URL
+  /operation/ocr-pdf:
+    post:
+      summary: OCR a PDF asset
+      operationId: ocrPDF
+      tags: [Operations]
+      parameters:
+        - $ref: '#/components/parameters/XApiKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: object
+                  properties:
+                    assetID:
+                      type: string
+      responses:
+        '201':
+          description: Operation accepted
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Job status URL
+  /operation/protect-pdf:
+    post:
+      summary: Protect a PDF with a password
+      operationId: protectPDF
+      tags: [Operations]
+      parameters:
+        - $ref: '#/components/parameters/XApiKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: object
+                  properties:
+                    assetID:
+                      type: string
+                options:
+                  type: object
+      responses:
+        '201':
+          description: Operation accepted
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Job status URL
+  /operation/extract-pdf:
+    post:
+      summary: Extract content/structure from a PDF
+      operationId: extractPDF
+      tags: [Operations]
+      parameters:
+        - $ref: '#/components/parameters/XApiKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: object
+                  properties:
+                    assetID:
+                      type: string
+      responses:
+        '201':
+          description: Operation accepted
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Job status URL
+  /operation/documentgeneration:
+    post:
+      summary: Generate PDF from template and JSON data
+      operationId: documentGeneration
+      tags: [Operations]
+      parameters:
+        - $ref: '#/components/parameters/XApiKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                template:
+                  type: object
+                  properties:
+                    assetID:
+                      type: string
+                data:
+                  type: object
+              required: [template, data]
+      responses:
+        '201':
+          description: Operation accepted
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Job status URL
+  /jobs/{jobId}:
+    get:
+      summary: Get job status and result location
+      operationId: getJob
+      tags: [Jobs]
+      parameters:
+        - $ref: '#/components/parameters/XApiKey'
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job status response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  result:
+                    type: object
+                    properties:
+                      assetID:
+                        type: string
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    XApiKey:
+      in: header
+      name: x-api-key
+      required: true
+      schema:
+        type: string
+security:
+  - bearerAuth: []

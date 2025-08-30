@@ -1,0 +1,15 @@
+{
+  "services": [
+    {
+      "name": "hostinger",
+      "type": "openapi", 
+      "specFile": "./specs/hostinger-api.json",
+      "baseUrl": "https://developers.hostinger.com",
+      "auth": {
+        "kind": "bearer",
+        "env": "HOSTINGER_API_TOKEN"
+      },
+      "filters": {}
+    }
+  ]
+}

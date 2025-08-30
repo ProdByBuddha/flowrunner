@@ -1,0 +1,145 @@
+metadata:
+  name: "MCP: List Then Execute Tool"
+  description: "Lists available MCP tools, then executes a specified tool from the list"
+  version: "1.0.0"
+
+variables:
+  mcp_url: "http://127.0.0.1:3005/mcp"
+  connection_type: "http"
+
+nodes:
+  listTools:
+    type: "mcp"
+    description: "List all available MCP tools"
+    params:
+      connectionType: "${variables.connection_type}"
+      operation: "listTools"
+      url: "${variables.mcp_url}"
+      rawBody: '{"method":"tools/list","params":{}}'
+    next:
+      default: "parseTools"
+      error: "handleError"
+
+  parseTools:
+    type: "transform"
+    description: "Parse the tools list and prepare for execution"
+    params:
+      script: |
+        // Extract tools from MCP response
+        const mcpResult = input.result;
+        let tools = [];
+        
+        if (mcpResult && mcpResult.result && mcpResult.result.tools) {
+          tools = mcpResult.result.tools;
+        } else if (mcpResult && mcpResult.tools) {
+          tools = mcpResult.tools;
+        }
+        
+        console.log("Available tools:", JSON.stringify(tools, null, 2));
+        
+        // Check if we have a specific tool to execute from input
+        const targetTool = input.targetTool || input.toolName;
+        
+        if (!targetTool) {
+          return {
+            error: "No target tool specified. Available tools: " + 
+                   tools.map(t => t.name).join(", "),
+            availableTools: tools
+          };
+        }
+        
+        // Find the target tool
+        const tool = tools.find(t => t.name === targetTool);
+        if (!tool) {
+          return {
+            error: `Tool '${targetTool}' not found. Available tools: ` + 
+                   tools.map(t => t.name).join(", "),
+            availableTools: tools
+          };
+        }
+        
+        // Prepare execution parameters
+        const toolParams = input.toolParameters || input.toolParams || {};
+        
+        return {
+          selectedTool: tool,
+          toolName: tool.name,
+          toolParameters: toolParams,
+          availableTools: tools,
+          executionReady: true
+        };
+    next:
+      default: "checkExecution"
+
+  checkExecution:
+    type: "condition"
+    description: "Check if we should proceed with execution"
+    params:
+      condition: "${input.executionReady == true}"
+    next:
+      true: "executeTool"
+      false: "reportError"
+      default: "reportError"
+
+  executeTool:
+    type: "mcp"
+    description: "Execute the selected MCP tool"
+    params:
+      connectionType: "${variables.connection_type}"
+      operation: "executeTool"
+      url: "${variables.mcp_url}"
+      toolName: "${input.toolName}"
+      toolParameters: "${input.toolParameters}"
+      rawBodyTemplate: |
+        {
+          "method": "tools/call",
+          "params": {
+            "name": "{{.input.toolName}}",
+            "arguments": {{.input.toolParameters}}
+          }
+        }
+    next:
+      default: "formatResult"
+      error: "handleError"
+
+  formatResult:
+    type: "transform"
+    description: "Format the final result"
+    params:
+      script: |
+        return {
+          success: true,
+          toolName: input.toolName,
+          toolResult: input.result,
+          availableTools: input.availableTools,
+          executedAt: new Date().toISOString()
+        };
+    next:
+      default: "END"
+
+  reportError:
+    type: "transform"
+    description: "Report execution error"
+    params:
+      script: |
+        return {
+          success: false,
+          error: input.error || "Execution conditions not met",
+          availableTools: input.availableTools || [],
+          timestamp: new Date().toISOString()
+        };
+    next:
+      default: "END"
+
+  handleError:
+    type: "transform"
+    description: "Handle MCP operation errors"
+    params:
+      script: |
+        return {
+          success: false,
+          error: "MCP operation failed: " + (input.error || "Unknown error"),
+          timestamp: new Date().toISOString()
+        };
+    next:
+      default: "END"

@@ -1,0 +1,29 @@
+{
+  "$schema": "../schemas/services-config-schema.json",
+  "description": "Multi-service configuration template - supports multiple APIs",
+  "services": [
+    {
+      "name": "n8n",
+      "type": "openapi",
+      "specFile": "../specs/n8n-api.json",
+      "baseUrl": "${N8N_API_URL}",
+      "auth": {
+        "kind": "header",
+        "name": "X-N8N-API-KEY",
+        "env": "N8N_API_KEY"
+      },
+      "filters": {}
+    },
+    {
+      "name": "hostinger",
+      "type": "openapi",
+      "specFile": "../specs/hostinger-api.json",
+      "baseUrl": "https://developers.hostinger.com",
+      "auth": {
+        "kind": "bearer",
+        "env": "HOSTINGER_API_TOKEN"
+      },
+      "filters": {}
+    }
+  ]
+}

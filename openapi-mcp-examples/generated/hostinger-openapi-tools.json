@@ -1,0 +1,3324 @@
+{
+  "generatedAt": "2025-08-20T00:23:25.038Z",
+  "tools": [
+    {
+      "name": "billing_getCatalogItemListV1",
+      "description": "Get catalog item list",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "DOMAIN",
+              "VPS"
+            ],
+            "example": "VPS",
+            "description": "Filter catalog items by category"
+          },
+          "name": {
+            "type": "string",
+            "example": ".COM*",
+            "description": "Filter catalog items by name. Use `*` for wildcard search, e.g. `.COM*` to find .com domain"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/billing/v1/catalog"
+    },
+    {
+      "name": "billing_createServiceOrderV1",
+      "description": "Create service order",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "payment_method_id": {
+                "type": "integer",
+                "description": "Payment method ID",
+                "example": 517244
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "item_id": {
+                      "type": "string",
+                      "description": "Price Item ID",
+                      "example": "hostingercom-vps-kvm2-usd-1m"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "example": 1
+                    }
+                  },
+                  "required": [
+                    "item_id",
+                    "quantity"
+                  ]
+                }
+              },
+              "coupons": {
+                "type": "array",
+                "description": "Discount coupon codes",
+                "items": {
+                  "example": [
+                    "Coupon 3"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "payment_method_id",
+              "items"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/billing/v1/orders"
+    },
+    {
+      "name": "billing_setDefaultPaymentMethodV1",
+      "description": "Set default payment method",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "paymentMethodId": {
+            "type": "integer",
+            "example": 9693613,
+            "description": "Payment method ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "paymentMethodId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/billing/v1/payment-methods/{paymentMethodId}"
+    },
+    {
+      "name": "billing_deletePaymentMethodV1",
+      "description": "Delete payment method",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "paymentMethodId": {
+            "type": "integer",
+            "example": 9693613,
+            "description": "Payment method ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "paymentMethodId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/billing/v1/payment-methods/{paymentMethodId}"
+    },
+    {
+      "name": "billing_getPaymentMethodListV1",
+      "description": "Get payment method list",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/billing/v1/payment-methods"
+    },
+    {
+      "name": "billing_cancelSubscriptionV1",
+      "description": "Cancel subscription",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "subscriptionId": {
+            "type": "string",
+            "example": "Cxy353Uhl1xC54pG6",
+            "description": "Subscription ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "reason_code": {
+                "type": "string",
+                "description": "Cancellation reason code",
+                "enum": [
+                  "other"
+                ],
+                "example": "other"
+              },
+              "cancel_option": {
+                "type": "string",
+                "description": "Cancellation option",
+                "enum": [
+                  "immediately"
+                ],
+                "example": "immediately"
+              }
+            }
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "subscriptionId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/billing/v1/subscriptions/{subscriptionId}"
+    },
+    {
+      "name": "billing_getSubscriptionListV1",
+      "description": "Get subscription list",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/billing/v1/subscriptions"
+    },
+    {
+      "name": "DNS_getDNSSnapshotV1",
+      "description": "Get DNS snapshot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "snapshotId": {
+            "type": "integer",
+            "example": 53513053,
+            "description": "Snapshot ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "snapshotId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/dns/v1/snapshots/{domain}/{snapshotId}"
+    },
+    {
+      "name": "DNS_getDNSSnapshotListV1",
+      "description": "Get DNS snapshot list",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/dns/v1/snapshots/{domain}"
+    },
+    {
+      "name": "DNS_restoreDNSSnapshotV1",
+      "description": "Restore DNS snapshot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "snapshotId": {
+            "type": "integer",
+            "example": 53513053,
+            "description": "Snapshot ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "snapshotId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/dns/v1/snapshots/{domain}/{snapshotId}/restore"
+    },
+    {
+      "name": "DNS_getDNSRecordsV1",
+      "description": "Get DNS records",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/dns/v1/zones/{domain}"
+    },
+    {
+      "name": "DNS_updateDNSRecordsV1",
+      "description": "Update DNS records",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "overwrite": {
+                "type": "boolean",
+                "description": "If `true`, resource records (RRs) matching name and type will be deleted and new RRs will be created, otherwise resource records' ttl's are updated and new records are appended. If no matching RRs are found, they are created.",
+                "default": true,
+                "example": true
+              },
+              "zone": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Name of the record (use `@` for wildcard name)",
+                      "example": "www"
+                    },
+                    "records": {
+                      "type": "array",
+                      "description": "Records assigned to the name",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "content": {
+                            "type": "string",
+                            "description": "Content of the name record",
+                            "example": "mydomain.tld."
+                          }
+                        },
+                        "required": [
+                          "content"
+                        ]
+                      }
+                    },
+                    "ttl": {
+                      "type": "integer",
+                      "description": "TTL (Time-To-Live) of the record",
+                      "example": 14400
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Type of the record",
+                      "enum": [
+                        "A",
+                        "AAAA",
+                        "CNAME",
+                        "ALIAS",
+                        "MX",
+                        "TXT",
+                        "NS",
+                        "SOA",
+                        "SRV",
+                        "CAA"
+                      ],
+                      "example": "A"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "records",
+                    "type"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "zone"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/api/dns/v1/zones/{domain}"
+    },
+    {
+      "name": "DNS_deleteDNSRecordsV1",
+      "description": "Delete DNS records",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "filters": {
+                "type": "array",
+                "description": "Filter records for deletion",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Name of the record",
+                      "example": "@"
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Type of the record",
+                      "enum": [
+                        "A",
+                        "AAAA",
+                        "CNAME",
+                        "ALIAS",
+                        "MX",
+                        "TXT",
+                        "NS",
+                        "SOA",
+                        "SRV",
+                        "CAA"
+                      ],
+                      "example": "A"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "type"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "filters"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/dns/v1/zones/{domain}"
+    },
+    {
+      "name": "DNS_resetDNSRecordsV1",
+      "description": "Reset DNS records",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "sync": {
+                "type": "boolean",
+                "description": "Determines if operation should be run synchronously",
+                "default": true,
+                "example": true
+              },
+              "reset_email_records": {
+                "type": "boolean",
+                "description": "Determines if email records should be reset",
+                "default": true,
+                "example": true
+              },
+              "whitelisted_record_types": {
+                "type": "array",
+                "description": "Specifies which record types to not reset",
+                "example": [
+                  "MX",
+                  "TXT"
+                ],
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/dns/v1/zones/{domain}/reset"
+    },
+    {
+      "name": "DNS_validateDNSRecordsV1",
+      "description": "Validate DNS records",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "overwrite": {
+                "type": "boolean",
+                "description": "If `true`, resource records (RRs) matching name and type will be deleted and new RRs will be created, otherwise resource records' ttl's are updated and new records are appended. If no matching RRs are found, they are created.",
+                "default": true,
+                "example": true
+              },
+              "zone": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Name of the record (use `@` for wildcard name)",
+                      "example": "www"
+                    },
+                    "records": {
+                      "type": "array",
+                      "description": "Records assigned to the name",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "content": {
+                            "type": "string",
+                            "description": "Content of the name record",
+                            "example": "mydomain.tld."
+                          }
+                        },
+                        "required": [
+                          "content"
+                        ]
+                      }
+                    },
+                    "ttl": {
+                      "type": "integer",
+                      "description": "TTL (Time-To-Live) of the record",
+                      "example": 14400
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Type of the record",
+                      "enum": [
+                        "A",
+                        "AAAA",
+                        "CNAME",
+                        "ALIAS",
+                        "MX",
+                        "TXT",
+                        "NS",
+                        "SOA",
+                        "SRV",
+                        "CAA"
+                      ],
+                      "example": "A"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "records",
+                    "type"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "zone"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/dns/v1/zones/{domain}/validate"
+    },
+    {
+      "name": "domains_checkDomainAvailabilityV1",
+      "description": "Check domain availability",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "string",
+                "description": "Domain name (without TLD)",
+                "example": "mydomain"
+              },
+              "tlds": {
+                "type": "array",
+                "description": "TLDs list",
+                "example": [
+                  "com",
+                  "net",
+                  "org"
+                ],
+                "items": {
+                  "type": "string",
+                  "description": "TLD without leading dot"
+                }
+              },
+              "with_alternatives": {
+                "type": "boolean",
+                "description": "Should response include alternatives",
+                "example": true
+              }
+            },
+            "required": [
+              "domain",
+              "tlds"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/domains/v1/availability"
+    },
+    {
+      "name": "domains_getDomainForwardingV1",
+      "description": "Get domain forwarding",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/domains/v1/forwarding/{domain}"
+    },
+    {
+      "name": "domains_deleteDomainForwardingV1",
+      "description": "Delete domain forwarding",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/domains/v1/forwarding/{domain}"
+    },
+    {
+      "name": "domains_createDomainForwardingV1",
+      "description": "Create domain forwarding",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "string",
+                "description": "Domain name",
+                "example": "mydomain.tld"
+              },
+              "redirect_type": {
+                "type": "string",
+                "description": "Redirect type",
+                "enum": [
+                  "301",
+                  "302"
+                ],
+                "example": "301"
+              },
+              "redirect_url": {
+                "type": "string",
+                "description": "URL to forward domain to",
+                "example": "https://forward.to.my.url"
+              }
+            },
+            "required": [
+              "domain",
+              "redirect_type",
+              "redirect_url"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/domains/v1/forwarding"
+    },
+    {
+      "name": "domains_enableDomainLockV1",
+      "description": "Enable domain lock",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "bearerToken"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/api/domains/v1/portfolio/{domain}/domain-lock"
+    },
+    {
+      "name": "domains_disableDomainLockV1",
+      "description": "Disable domain lock",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/domains/v1/portfolio/{domain}/domain-lock"
+    },
+    {
+      "name": "domains_getDomainDetailsV1",
+      "description": "Get domain details",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/domains/v1/portfolio/{domain}"
+    },
+    {
+      "name": "domains_getDomainListV1",
+      "description": "Get domain list",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/domains/v1/portfolio"
+    },
+    {
+      "name": "domains_purchaseNewDomainV1",
+      "description": "Purchase new domain",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "string",
+                "description": "Domain name",
+                "example": "my-new-domain.tld"
+              },
+              "item_id": {
+                "type": "string",
+                "description": "Catalog price item ID",
+                "example": "hostingercom-domain-com-usd-1y"
+              },
+              "payment_method_id": {
+                "type": "integer",
+                "description": "Payment method ID, default will be used if not provided",
+                "example": 1327362
+              },
+              "domain_contacts": {
+                "type": "object",
+                "description": "Domain contact information",
+                "properties": {
+                  "owner_id": {
+                    "type": "integer",
+                    "description": "Owner contact WHOIS record ID",
+                    "example": 741288
+                  },
+                  "admin_id": {
+                    "type": "integer",
+                    "description": "Administrative contact WHOIS record ID",
+                    "example": 546123
+                  },
+                  "billing_id": {
+                    "type": "integer",
+                    "description": "Billing contact WHOIS record ID",
+                    "example": 741288
+                  },
+                  "tech_id": {
+                    "type": "integer",
+                    "description": "Technical contact WHOIS record ID",
+                    "example": 741288
+                  }
+                }
+              },
+              "additional_details": {
+                "type": "object",
+                "description": "Additional registration data, possible values depends on TLD"
+              },
+              "coupons": {
+                "type": "array",
+                "description": "Discount coupon codes",
+                "items": {
+                  "example": [
+                    "Coupon 3"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "domain",
+              "item_id"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/domains/v1/portfolio"
+    },
+    {
+      "name": "domains_enablePrivacyProtectionV1",
+      "description": "Enable privacy protection",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "bearerToken"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/api/domains/v1/portfolio/{domain}/privacy-protection"
+    },
+    {
+      "name": "domains_disablePrivacyProtectionV1",
+      "description": "Disable privacy protection",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/domains/v1/portfolio/{domain}/privacy-protection"
+    },
+    {
+      "name": "domains_updateDomainNameserversV1",
+      "description": "Update domain nameservers",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "example": "mydomain.tld",
+            "description": "Domain name"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "ns1": {
+                "type": "string",
+                "description": "First name server",
+                "example": "ns1.some-nameserver.tld"
+              },
+              "ns2": {
+                "type": "string",
+                "description": "Second name server",
+                "example": "ns2.some-nameserver.tld"
+              },
+              "ns3": {
+                "type": "string",
+                "description": "Third name server",
+                "example": "ns3.some-nameserver.tld"
+              },
+              "ns4": {
+                "type": "string",
+                "description": "Fourth name server",
+                "example": "ns4.some-nameserver.tld"
+              }
+            },
+            "required": [
+              "ns1",
+              "ns2"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "domain",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/api/domains/v1/portfolio/{domain}/nameservers"
+    },
+    {
+      "name": "domains_getWHOISProfileV1",
+      "description": "Get WHOIS profile",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "whoisId": {
+            "type": "integer",
+            "example": 564651,
+            "description": "WHOIS ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "whoisId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/domains/v1/whois/{whoisId}"
+    },
+    {
+      "name": "domains_deleteWHOISProfileV1",
+      "description": "Delete WHOIS profile",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "whoisId": {
+            "type": "integer",
+            "example": 564651,
+            "description": "WHOIS ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "whoisId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/domains/v1/whois/{whoisId}"
+    },
+    {
+      "name": "domains_getWHOISProfileListV1",
+      "description": "Get WHOIS profile list",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tld": {
+            "type": "string",
+            "example": "com",
+            "description": "Filter by TLD (without leading dot)"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/domains/v1/whois"
+    },
+    {
+      "name": "domains_createWHOISProfileV1",
+      "description": "Create WHOIS profile",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "tld": {
+                "type": "string",
+                "description": "TLD of the domain (without leading dot)",
+                "example": "com"
+              },
+              "country": {
+                "type": "string",
+                "description": "ISO 3166 2-letter country code",
+                "example": "NL"
+              },
+              "entity_type": {
+                "type": "string",
+                "description": "Legal entity type",
+                "enum": [
+                  "individual",
+                  "organization"
+                ],
+                "example": "individual"
+              },
+              "tld_details": {
+                "type": "object",
+                "description": "TLD details"
+              },
+              "whois_details": {
+                "type": "object",
+                "description": "WHOIS details"
+              }
+            },
+            "required": [
+              "tld",
+              "entity_type",
+              "country",
+              "whois_details"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/domains/v1/whois"
+    },
+    {
+      "name": "domains_getWHOISProfileUsageV1",
+      "description": "Get WHOIS profile usage",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "whoisId": {
+            "type": "integer",
+            "example": 564651,
+            "description": "WHOIS ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "whoisId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/domains/v1/whois/{whoisId}/usage"
+    },
+    {
+      "name": "VPS_getDataCenterListV1",
+      "description": "Get data center list",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/data-centers"
+    },
+    {
+      "name": "VPS_getProjectContainersV1",
+      "description": "Get project containers",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "projectName": {
+            "type": "string",
+            "example": "my-docker-project",
+            "minLength": 3,
+            "maxLength": 64,
+            "description": "Docker Compose project name using alphanumeric characters, dashes, and underscores only"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "projectName",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/docker/{projectName}/containers"
+    },
+    {
+      "name": "VPS_getProjectContentsV1",
+      "description": "Get project contents",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "projectName": {
+            "type": "string",
+            "example": "my-docker-project",
+            "minLength": 3,
+            "maxLength": 64,
+            "description": "Docker Compose project name using alphanumeric characters, dashes, and underscores only"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "projectName",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/docker/{projectName}"
+    },
+    {
+      "name": "VPS_deleteProjectV1",
+      "description": "Delete project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "projectName": {
+            "type": "string",
+            "example": "my-docker-project",
+            "minLength": 3,
+            "maxLength": 64,
+            "description": "Docker Compose project name using alphanumeric characters, dashes, and underscores only"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "projectName",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/docker/{projectName}/down"
+    },
+    {
+      "name": "VPS_getProjectListV1",
+      "description": "Get project list",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/docker"
+    },
+    {
+      "name": "VPS_createNewProjectV1",
+      "description": "Create new project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "project_name": {
+                "type": "string",
+                "description": "Docker Compose project name using alphanumeric characters, dashes, and underscores only",
+                "example": "my-project-1",
+                "minLength": 3,
+                "maxLength": 64
+              },
+              "content": {
+                "type": "string",
+                "description": "URL pointing to docker-compose.yaml file, Github repository or raw YAML content of the compose file",
+                "maxLength": 8192
+              }
+            },
+            "required": [
+              "project_name",
+              "content"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/docker"
+    },
+    {
+      "name": "VPS_getProjectLogsV1",
+      "description": "Get project logs",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "projectName": {
+            "type": "string",
+            "example": "my-docker-project",
+            "minLength": 3,
+            "maxLength": 64,
+            "description": "Docker Compose project name using alphanumeric characters, dashes, and underscores only"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "projectName",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/docker/{projectName}/logs"
+    },
+    {
+      "name": "VPS_restartProjectV1",
+      "description": "Restart project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "projectName": {
+            "type": "string",
+            "example": "my-docker-project",
+            "minLength": 3,
+            "maxLength": 64,
+            "description": "Docker Compose project name using alphanumeric characters, dashes, and underscores only"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "projectName",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/docker/{projectName}/restart"
+    },
+    {
+      "name": "VPS_startProjectV1",
+      "description": "Start project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "projectName": {
+            "type": "string",
+            "example": "my-docker-project",
+            "minLength": 3,
+            "maxLength": 64,
+            "description": "Docker Compose project name using alphanumeric characters, dashes, and underscores only"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "projectName",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/docker/{projectName}/start"
+    },
+    {
+      "name": "VPS_stopProjectV1",
+      "description": "Stop project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "projectName": {
+            "type": "string",
+            "example": "my-docker-project",
+            "minLength": 3,
+            "maxLength": 64,
+            "description": "Docker Compose project name using alphanumeric characters, dashes, and underscores only"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "projectName",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/docker/{projectName}/stop"
+    },
+    {
+      "name": "VPS_updateProjectV1",
+      "description": "Update project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "projectName": {
+            "type": "string",
+            "example": "my-docker-project",
+            "minLength": 3,
+            "maxLength": 64,
+            "description": "Docker Compose project name using alphanumeric characters, dashes, and underscores only"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "projectName",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/docker/{projectName}/update"
+    },
+    {
+      "name": "VPS_activateFirewallV1",
+      "description": "Activate firewall",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "firewallId": {
+            "type": "integer",
+            "example": 9449049,
+            "description": "Firewall ID"
+          },
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "firewallId",
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/firewall/{firewallId}/activate/{virtualMachineId}"
+    },
+    {
+      "name": "VPS_deactivateFirewallV1",
+      "description": "Deactivate firewall",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "firewallId": {
+            "type": "integer",
+            "example": 9449049,
+            "description": "Firewall ID"
+          },
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "firewallId",
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/firewall/{firewallId}/deactivate/{virtualMachineId}"
+    },
+    {
+      "name": "VPS_getFirewallDetailsV1",
+      "description": "Get firewall details",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "firewallId": {
+            "type": "integer",
+            "example": 9449049,
+            "description": "Firewall ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "firewallId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/firewall/{firewallId}"
+    },
+    {
+      "name": "VPS_deleteFirewallV1",
+      "description": "Delete firewall",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "firewallId": {
+            "type": "integer",
+            "example": 9449049,
+            "description": "Firewall ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "firewallId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/vps/v1/firewall/{firewallId}"
+    },
+    {
+      "name": "VPS_getFirewallListV1",
+      "description": "Get firewall list",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "example": 1,
+            "description": "Page number"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/firewall"
+    },
+    {
+      "name": "VPS_createNewFirewallV1",
+      "description": "Create new firewall",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "My Firewall Group"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/firewall"
+    },
+    {
+      "name": "VPS_updateFirewallRuleV1",
+      "description": "Update firewall rule",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "firewallId": {
+            "type": "integer",
+            "example": 9449049,
+            "description": "Firewall ID"
+          },
+          "ruleId": {
+            "type": "integer",
+            "example": 8941182,
+            "description": "Firewall Rule ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "protocol": {
+                "type": "string",
+                "enum": [
+                  "TCP",
+                  "UDP",
+                  "ICMP",
+                  "GRE",
+                  "any",
+                  "ESP",
+                  "AH",
+                  "ICMPv6",
+                  "SSH",
+                  "HTTP",
+                  "HTTPS",
+                  "MySQL",
+                  "PostgreSQL"
+                ],
+                "example": "TCP"
+              },
+              "port": {
+                "type": "string",
+                "description": "Port or port range, ex: 1024:2048",
+                "example": "443"
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "any",
+                  "custom"
+                ],
+                "example": "any"
+              },
+              "source_detail": {
+                "type": "string",
+                "description": "IP range, CIDR, single IP or `any`",
+                "example": "351.15.24.0/24"
+              }
+            },
+            "required": [
+              "protocol",
+              "port",
+              "source",
+              "source_detail"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "firewallId",
+          "ruleId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/api/vps/v1/firewall/{firewallId}/rules/{ruleId}"
+    },
+    {
+      "name": "VPS_deleteFirewallRuleV1",
+      "description": "Delete firewall rule",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "firewallId": {
+            "type": "integer",
+            "example": 9449049,
+            "description": "Firewall ID"
+          },
+          "ruleId": {
+            "type": "integer",
+            "example": 8941182,
+            "description": "Firewall Rule ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "firewallId",
+          "ruleId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/vps/v1/firewall/{firewallId}/rules/{ruleId}"
+    },
+    {
+      "name": "VPS_createFirewallRuleV1",
+      "description": "Create firewall rule",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "firewallId": {
+            "type": "integer",
+            "example": 9449049,
+            "description": "Firewall ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "protocol": {
+                "type": "string",
+                "enum": [
+                  "TCP",
+                  "UDP",
+                  "ICMP",
+                  "GRE",
+                  "any",
+                  "ESP",
+                  "AH",
+                  "ICMPv6",
+                  "SSH",
+                  "HTTP",
+                  "HTTPS",
+                  "MySQL",
+                  "PostgreSQL"
+                ],
+                "example": "TCP"
+              },
+              "port": {
+                "type": "string",
+                "description": "Port or port range, ex: 1024:2048",
+                "example": "443"
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "any",
+                  "custom"
+                ],
+                "example": "any"
+              },
+              "source_detail": {
+                "type": "string",
+                "description": "IP range, CIDR, single IP or `any`",
+                "example": "351.15.24.0/24"
+              }
+            },
+            "required": [
+              "protocol",
+              "port",
+              "source",
+              "source_detail"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "firewallId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/firewall/{firewallId}/rules"
+    },
+    {
+      "name": "VPS_syncFirewallV1",
+      "description": "Sync firewall",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "firewallId": {
+            "type": "integer",
+            "example": 9449049,
+            "description": "Firewall ID"
+          },
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "firewallId",
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/firewall/{firewallId}/sync/{virtualMachineId}"
+    },
+    {
+      "name": "VPS_getPostInstallScriptV1",
+      "description": "Get post-install script",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "postInstallScriptId": {
+            "type": "integer",
+            "example": 9568314,
+            "description": "Post-install script ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "postInstallScriptId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/post-install-scripts/{postInstallScriptId}"
+    },
+    {
+      "name": "VPS_updatePostInstallScriptV1",
+      "description": "Update post-install script",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "postInstallScriptId": {
+            "type": "integer",
+            "example": 9568314,
+            "description": "Post-install script ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the script",
+                "example": "My Script"
+              },
+              "content": {
+                "type": "string",
+                "description": "Content of the script",
+                "example": "#!/bin/bash\n\necho 'Hello, World!'"
+              }
+            },
+            "required": [
+              "name",
+              "content"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "postInstallScriptId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/api/vps/v1/post-install-scripts/{postInstallScriptId}"
+    },
+    {
+      "name": "VPS_deletePostInstallScriptV1",
+      "description": "Delete post-install script",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "postInstallScriptId": {
+            "type": "integer",
+            "example": 9568314,
+            "description": "Post-install script ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "postInstallScriptId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/vps/v1/post-install-scripts/{postInstallScriptId}"
+    },
+    {
+      "name": "VPS_getPostInstallScriptsV1",
+      "description": "Get post-install scripts",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "example": 1,
+            "description": "Page number"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/post-install-scripts"
+    },
+    {
+      "name": "VPS_createPostInstallScriptV1",
+      "description": "Create post-install script",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the script",
+                "example": "My Script"
+              },
+              "content": {
+                "type": "string",
+                "description": "Content of the script",
+                "example": "#!/bin/bash\n\necho 'Hello, World!'"
+              }
+            },
+            "required": [
+              "name",
+              "content"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/post-install-scripts"
+    },
+    {
+      "name": "VPS_attachPublicKeyV1",
+      "description": "Attach public key",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "ids": {
+                "type": "array",
+                "description": "Public Key IDs to attach",
+                "example": [
+                  18232,
+                  10230230
+                ],
+                "items": {
+                  "type": "integer"
+                }
+              }
+            },
+            "required": [
+              "ids"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/public-keys/attach/{virtualMachineId}"
+    },
+    {
+      "name": "VPS_deletePublicKeyV1",
+      "description": "Delete public key",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "publicKeyId": {
+            "type": "integer",
+            "example": 6672861,
+            "description": "Public Key ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "publicKeyId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/vps/v1/public-keys/{publicKeyId}"
+    },
+    {
+      "name": "VPS_getPublicKeysV1",
+      "description": "Get public keys",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "example": 1,
+            "description": "Page number"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/public-keys"
+    },
+    {
+      "name": "VPS_createPublicKeyV1",
+      "description": "Create public key",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "My Public Key"
+              },
+              "key": {
+                "type": "string",
+                "example": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD..."
+              }
+            },
+            "required": [
+              "name",
+              "key"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/public-keys"
+    },
+    {
+      "name": "VPS_getTemplateDetailsV1",
+      "description": "Get template details",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "templateId": {
+            "type": "integer",
+            "example": 2868928,
+            "description": "Template ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "templateId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/templates/{templateId}"
+    },
+    {
+      "name": "VPS_getTemplatesV1",
+      "description": "Get templates",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/templates"
+    },
+    {
+      "name": "VPS_getActionDetailsV1",
+      "description": "Get action details",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "actionId": {
+            "type": "integer",
+            "example": 8123712,
+            "description": "Action ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "actionId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/actions/{actionId}"
+    },
+    {
+      "name": "VPS_getActionsV1",
+      "description": "Get actions",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "page": {
+            "type": "integer",
+            "example": 1,
+            "description": "Page number"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/actions"
+    },
+    {
+      "name": "VPS_getAttachedPublicKeysV1",
+      "description": "Get attached public keys",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "page": {
+            "type": "integer",
+            "example": 1,
+            "description": "Page number"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/public-keys"
+    },
+    {
+      "name": "VPS_getBackupsV1",
+      "description": "Get backups",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "page": {
+            "type": "integer",
+            "example": 1,
+            "description": "Page number"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/backups"
+    },
+    {
+      "name": "VPS_restoreBackupV1",
+      "description": "Restore backup",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "backupId": {
+            "type": "integer",
+            "example": 8676502,
+            "description": "Backup ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "backupId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/backups/{backupId}/restore"
+    },
+    {
+      "name": "VPS_setHostnameV1",
+      "description": "Set hostname",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "hostname": {
+                "type": "string",
+                "example": "my.server.tld"
+              }
+            },
+            "required": [
+              "hostname"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/hostname"
+    },
+    {
+      "name": "VPS_resetHostnameV1",
+      "description": "Reset hostname",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/hostname"
+    },
+    {
+      "name": "VPS_getVirtualMachineDetailsV1",
+      "description": "Get virtual machine details",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}"
+    },
+    {
+      "name": "VPS_getVirtualMachinesV1",
+      "description": "Get virtual machines",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines"
+    },
+    {
+      "name": "VPS_purchaseNewVirtualMachineV1",
+      "description": "Purchase new virtual machine",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "item_id": {
+                "type": "string",
+                "description": "Catalog price item ID",
+                "example": "hostingercom-vps-kvm2-usd-1m"
+              },
+              "payment_method_id": {
+                "type": "integer",
+                "description": "Payment method ID, default will be used if not provided",
+                "example": 1327362
+              },
+              "setup": {
+                "type": "object",
+                "properties": {
+                  "template_id": {
+                    "type": "integer",
+                    "description": "Template ID",
+                    "example": 1130
+                  },
+                  "data_center_id": {
+                    "type": "integer",
+                    "description": "Data center ID",
+                    "example": 19
+                  },
+                  "post_install_script_id": {
+                    "type": "integer",
+                    "description": "Post-install script ID",
+                    "example": 6324
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "description": "Password for the virtual machine. If not provided, random password will be generated. Password will not be shown in the response.",
+                    "example": "oMeNRustosIO",
+                    "minLength": 12
+                  },
+                  "hostname": {
+                    "type": "string",
+                    "description": "Override default hostname of the virtual machine",
+                    "example": "my.server.tld"
+                  },
+                  "install_monarx": {
+                    "type": "boolean",
+                    "description": "Install Monarx malware scanner (if supported)"
+                  },
+                  "enable_backups": {
+                    "type": "boolean",
+                    "description": "Enable weekly backup schedule",
+                    "default": true,
+                    "example": true
+                  },
+                  "ns1": {
+                    "type": "string",
+                    "description": "Name server 1",
+                    "example": "4.3.2.1"
+                  },
+                  "ns2": {
+                    "type": "string",
+                    "description": "Name server 2",
+                    "example": "1.2.3.4"
+                  },
+                  "public_key": {
+                    "type": "object",
+                    "description": "Use SSH key",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the SSH key",
+                        "example": "my-key"
+                      },
+                      "key": {
+                        "type": "string",
+                        "description": "Contents of the SSH key",
+                        "example": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC2X..."
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "data_center_id",
+                  "template_id"
+                ]
+              },
+              "coupons": {
+                "type": "array",
+                "description": "Discount coupon codes",
+                "items": {
+                  "example": [
+                    "Coupon 3"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "item_id",
+              "setup"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines"
+    },
+    {
+      "name": "VPS_getScanMetricsV1",
+      "description": "Get scan metrics",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/monarx"
+    },
+    {
+      "name": "VPS_installMonarxV1",
+      "description": "Install Monarx",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/monarx"
+    },
+    {
+      "name": "VPS_uninstallMonarxV1",
+      "description": "Uninstall Monarx",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/monarx"
+    },
+    {
+      "name": "VPS_getMetricsV1",
+      "description": "Get metrics",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-05-01T00:00:00Z"
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-01T00:00:00Z"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "date_from",
+          "date_to",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/metrics"
+    },
+    {
+      "name": "VPS_setNameserversV1",
+      "description": "Set nameservers",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "ns1": {
+                "type": "string",
+                "example": "4.3.2.1"
+              },
+              "ns2": {
+                "type": "string",
+                "example": "1.2.3.4"
+              },
+              "ns3": {
+                "type": "string",
+                "example": "5.2.3.4"
+              }
+            },
+            "required": [
+              "ns1"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/nameservers"
+    },
+    {
+      "name": "VPS_createPTRRecordV1",
+      "description": "Create PTR record",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "ipAddressId": {
+            "type": "integer",
+            "example": 246547,
+            "description": "IP Address ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "string",
+                "description": "Pointer record domain",
+                "example": "example.tld"
+              }
+            },
+            "required": [
+              "domain"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "ipAddressId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/ptr/{ipAddressId}"
+    },
+    {
+      "name": "VPS_deletePTRRecordV1",
+      "description": "Delete PTR record",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "ipAddressId": {
+            "type": "integer",
+            "example": 246547,
+            "description": "IP Address ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "ipAddressId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/ptr/{ipAddressId}"
+    },
+    {
+      "name": "VPS_setPanelPasswordV1",
+      "description": "Set panel password",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "password": {
+                "type": "string",
+                "format": "password",
+                "description": "Panel password for the virtual machine",
+                "example": "oMeNRustosIO",
+                "minLength": 8
+              }
+            },
+            "required": [
+              "password"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/panel-password"
+    },
+    {
+      "name": "VPS_startRecoveryModeV1",
+      "description": "Start recovery mode",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "root_password": {
+                "type": "string",
+                "description": "Temporary root password for recovery mode",
+                "example": "oMeNRustosIO"
+              }
+            },
+            "required": [
+              "root_password"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/recovery"
+    },
+    {
+      "name": "VPS_stopRecoveryModeV1",
+      "description": "Stop recovery mode",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/recovery"
+    },
+    {
+      "name": "VPS_recreateVirtualMachineV1",
+      "description": "Recreate virtual machine",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "template_id": {
+                "type": "integer",
+                "description": "Template ID",
+                "example": 1130
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "description": "Root password for the virtual machine. If not provided, random password will be generated. Password will not be shown in the response.",
+                "example": "oMeNRustosIO",
+                "minLength": 12
+              },
+              "panel_password": {
+                "type": "string",
+                "format": "password",
+                "description": "Panel password for the panel-based OS template. If not provided, random password will be generated. If OS does not support panel_password this field will be ignored. Password will not be shown in the response.",
+                "example": "Mna58c17a4d",
+                "minLength": 12
+              },
+              "post_install_script_id": {
+                "type": "integer",
+                "description": "Post-install script to execute after virtual machine was recreated",
+                "example": 6324
+              }
+            },
+            "required": [
+              "template_id"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/recreate"
+    },
+    {
+      "name": "VPS_restartVirtualMachineV1",
+      "description": "Restart virtual machine",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/restart"
+    },
+    {
+      "name": "VPS_setRootPasswordV1",
+      "description": "Set root password",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "password": {
+                "type": "string",
+                "format": "password",
+                "description": "Root password for the virtual machine",
+                "example": "oMeNRustosIO",
+                "minLength": 12
+              }
+            },
+            "required": [
+              "password"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "PUT",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/root-password"
+    },
+    {
+      "name": "VPS_setupPurchasedVirtualMachineV1",
+      "description": "Setup purchased virtual machine",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "template_id": {
+                "type": "integer",
+                "description": "Template ID",
+                "example": 1130
+              },
+              "data_center_id": {
+                "type": "integer",
+                "description": "Data center ID",
+                "example": 19
+              },
+              "post_install_script_id": {
+                "type": "integer",
+                "description": "Post-install script ID",
+                "example": 6324
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "description": "Password for the virtual machine. If not provided, random password will be generated. Password will not be shown in the response.",
+                "example": "oMeNRustosIO",
+                "minLength": 12
+              },
+              "hostname": {
+                "type": "string",
+                "description": "Override default hostname of the virtual machine",
+                "example": "my.server.tld"
+              },
+              "install_monarx": {
+                "type": "boolean",
+                "description": "Install Monarx malware scanner (if supported)"
+              },
+              "enable_backups": {
+                "type": "boolean",
+                "description": "Enable weekly backup schedule",
+                "default": true,
+                "example": true
+              },
+              "ns1": {
+                "type": "string",
+                "description": "Name server 1",
+                "example": "4.3.2.1"
+              },
+              "ns2": {
+                "type": "string",
+                "description": "Name server 2",
+                "example": "1.2.3.4"
+              },
+              "public_key": {
+                "type": "object",
+                "description": "Use SSH key",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the SSH key",
+                    "example": "my-key"
+                  },
+                  "key": {
+                    "type": "string",
+                    "description": "Contents of the SSH key",
+                    "example": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC2X..."
+                  }
+                }
+              }
+            },
+            "required": [
+              "data_center_id",
+              "template_id"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "body",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/setup"
+    },
+    {
+      "name": "VPS_getSnapshotV1",
+      "description": "Get snapshot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "GET",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/snapshot"
+    },
+    {
+      "name": "VPS_createSnapshotV1",
+      "description": "Create snapshot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/snapshot"
+    },
+    {
+      "name": "VPS_deleteSnapshotV1",
+      "description": "Delete snapshot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "DELETE",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/snapshot"
+    },
+    {
+      "name": "VPS_restoreSnapshotV1",
+      "description": "Restore snapshot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/snapshot/restore"
+    },
+    {
+      "name": "VPS_startVirtualMachineV1",
+      "description": "Start virtual machine",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/start"
+    },
+    {
+      "name": "VPS_stopVirtualMachineV1",
+      "description": "Stop virtual machine",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "virtualMachineId": {
+            "type": "integer",
+            "example": 1268054,
+            "description": "Virtual Machine ID"
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "Bearer token for apiToken"
+          }
+        },
+        "required": [
+          "virtualMachineId",
+          "bearerToken"
+        ]
+      },
+      "method": "POST",
+      "pathTemplate": "/api/vps/v1/virtual-machines/{virtualMachineId}/stop"
+    }
+  ]
+}

@@ -252,6 +252,47 @@ llm_structured_node:
     parse_structured: true
 ```
 
+### MCP Node
+
+```yaml
+mcp_cmd_node:
+  type: "mcp"
+  params:
+    connectionType: "cmd"
+    operation: "listTools"   # or executeTool, readResource, listResources, listPrompts, getPrompt
+    command: "my-mcp-server" # executable that speaks MCP over stdio
+    args: "--flag value"
+    env: |
+      PATH=/usr/local/bin:${PATH}
+      SOME_VAR=some_value
+
+mcp_http_node:
+  type: "mcp"
+  params:
+    connectionType: "http"
+    operation: "executeTool"
+    url: "https://mcp.example.com/messages"
+    headers:
+      Authorization: "Bearer ${secrets.MCP_TOKEN}"
+    timeout: 60000
+    toolName: "search"
+    toolParameters:
+      query: "${input.query}"
+```
+
+Notes:
+- For `cmd`, Flowrunner launches the MCP server command and exchanges JSON via stdin/stdout.
+- For `http`, Flowrunner POSTs the MCP request JSON to `url` and expects a JSON response.
+- For `sse`, set `connectionType: sse`, and optionally use `messagesPostEndpoint` for the initial request, then the node will await a single SSE message from `url`.
+- Dotenvx: By default, the `mcp` node will wrap your command with `dotenvx run` so `.env` files are loaded automatically for better DX. You can customize:
+  - `dotenvx`: true|false (default: true)
+  - `dotenvxCommand`: string (default: `dotenvx`; set to `npx` when using `npx dotenvx@latest`)
+  - `dotenvxUseNpx`: true|false (default: false)
+  - `dotenvxPackage`: string (default: `dotenvx@latest` when using npx)
+  - `dotenvxFiles`: list of files or JSON array string to pass with `-f` (e.g., `[".env", ".env.local"]`)
+  - `dotenvxArgs`: extra args before `--`
+  - `argsExtra`: extra arguments appended to your command's `args` (e.g., `["--port","33007"]`)
+
 ### Email Nodes
 
 SMTP (Send):
@@ -344,6 +385,25 @@ go run cmd/test_nodes/main.go openai anthropic template structured email
 - **[Contributors Guide](CONTRIBUTORS.md)** - How to contribute and contributor recognition
 - **[Development Guidelines](docs/development_guidelines.md)** - Guidelines for development
 - **[Implementation Tasks](/.kiro/specs/flowrunner-implementation/tasks.md)** - Detailed task breakdown and requirements
+
+### Archive and Examples
+
+- For legacy summaries and task reports, see `docs/archive/`.
+- Minimal MCP examples and demos live under `demos/` and `examples/`.
+
+### Integration Test Quickstart
+
+- MCP (HTTP/SSE):
+  - `bash scripts/test_mcp.sh` (see script header for flags). Common cases:
+    - HTTP-only: `MCP_TRANSPORT=http MCP_SSE_POST=http://127.0.0.1:3005/mcp bash scripts/test_mcp.sh`
+    - SSE+POST: `MCP_TRANSPORT=sse MCP_SSE_URL=http://127.0.0.1:33106/mcp-sse MCP_SSE_POST=http://127.0.0.1:3005/mcp bash scripts/test_mcp.sh`
+- PostgreSQL integration:
+  - Setup: `bash scripts/setup_postgres_integration_test.sh`
+  - Run: `bash scripts/test_postgres_integration.sh`
+- DynamoDB integration:
+  - Setup: `bash scripts/setup_dynamodb_integration_test.sh`
+  - Run: `bash scripts/test_dynamodb_integration.sh`
+
 
 ## License
 

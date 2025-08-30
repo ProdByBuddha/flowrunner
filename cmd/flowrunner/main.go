@@ -2,28 +2,29 @@
 package main
 
 import (
-	"context"
-	"crypto/rand"
-	"encoding/hex"
-	"flag"
-	"fmt"
-	"log"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"strconv"
-	"syscall"
-	"time"
+    "context"
+    "crypto/rand"
+    "encoding/hex"
+    "flag"
+    "fmt"
+    "log"
+    "os"
+    "os/signal"
+    "path/filepath"
+    "strconv"
+    "syscall"
+    "time"
 
-	"github.com/joho/godotenv"
-	"github.com/tcmartin/flowrunner/pkg/api"
-	"github.com/tcmartin/flowrunner/pkg/auth"
-	"github.com/tcmartin/flowrunner/pkg/config"
-	"github.com/tcmartin/flowrunner/pkg/loader"
-	"github.com/tcmartin/flowrunner/pkg/plugins"
-	"github.com/tcmartin/flowrunner/pkg/registry"
-	"github.com/tcmartin/flowrunner/pkg/services"
-	"github.com/tcmartin/flowrunner/pkg/storage"
+    "github.com/joho/godotenv"
+    "github.com/tcmartin/flowrunner/pkg/api"
+    "github.com/tcmartin/flowrunner/pkg/auth"
+    "github.com/tcmartin/flowrunner/pkg/config"
+    "github.com/tcmartin/flowrunner/pkg/loader"
+    "github.com/tcmartin/flowrunner/pkg/plugins"
+    "github.com/tcmartin/flowrunner/pkg/registry"
+    "github.com/tcmartin/flowrunner/pkg/runtime"
+    "github.com/tcmartin/flowrunner/pkg/services"
+    "github.com/tcmartin/flowrunner/pkg/storage"
 )
 
 var (
@@ -293,15 +294,19 @@ func NewApp(cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("failed to initialize storage: %w", err)
 	}
 
-	// Create YAML loader with empty dependencies (stub implementation)
+	// Create YAML loader with core node factories and plugin registry
 	pluginRegistry := plugins.NewPluginRegistry()
 
-	// Register the mcp plugin
+	// Register the mcp plugin (available alongside core wrapper)
 	if err := pluginRegistry.Register("mcp", &plugins.MCPPlugin{}); err != nil {
 		log.Fatalf("Failed to register mcp plugin: %v", err)
 	}
 
-	nodeFactories := make(map[string]plugins.NodeFactory)
+    nodeFactories := make(map[string]plugins.NodeFactory)
+    for name, fn := range runtime.CoreNodeTypes() {
+        nodeFactories[name] = runtimeFactoryAdapter{fn: fn}
+    }
+
 	yamlLoader := loader.NewYAMLLoader(nodeFactories, pluginRegistry)
 
 	// Create flow registry
@@ -335,8 +340,11 @@ func NewApp(cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("encryption key is required for secret vault")
 	}
 
-	// Create API server
-	server := api.NewServer(cfg, flowRegistry, accountService, secretVault, pluginRegistry)
+    // Create flow runtime with execution store and secrets
+    flowRuntime := runtime.NewFlowRuntimeWithStoreAndSecrets(runtimeRegistryAdapter{registry: flowRegistry}, yamlLoader, storageProvider.GetExecutionStore(), secretVault)
+
+    // Create API server with runtime attached (enables /run and websocket updates)
+    server := api.NewServerWithRuntime(cfg, flowRegistry, accountService, secretVault, flowRuntime, pluginRegistry)
 
 	return &App{
 		config:          cfg,

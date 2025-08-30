@@ -1,0 +1,17 @@
+{
+  "$schema": "../schemas/services-config-schema.json",
+  "description": "Single service configuration template - ideal for simple integrations",
+  "services": [
+    {
+      "name": "my-service",
+      "type": "openapi",
+      "specUrl": "https://api.example.com/openapi.json",
+      "baseUrl": "https://api.example.com",
+      "auth": {
+        "kind": "bearer",
+        "env": "MY_SERVICE_API_TOKEN"
+      },
+      "filters": {}
+    }
+  ]
+}

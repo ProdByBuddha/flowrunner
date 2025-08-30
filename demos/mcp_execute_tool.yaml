@@ -1,0 +1,19 @@
+metadata:
+  name: "MCP: Execute Tool"
+  description: "Executes a specified tool on openapi-mcp-server using run input"
+  version: "1.0.0"
+
+nodes:
+  execTool:
+    type: "mcp"
+    params:
+      connectionType: "cmd"
+      operation: "executeTool"
+      command: "npx"
+      args: '["@prodbybuddha/openapi-mcp-server@latest","--config","/root/projects/flowrunner/services.dynamic.json"]'
+      # Drive tool selection and parameters from the execution input
+      toolName: "${input.toolName}"
+      toolParameters: ${input.toolParams}
+    next:
+      default: "END"
+

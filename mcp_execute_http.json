@@ -1,0 +1,26 @@
+{
+    "metadata": {
+      "name": "MCP Execute Tool (http)",
+      "version": "1.0.0"
+    },
+    "nodes": {
+      "exec": {
+        "type": "mcp",
+        "params": {
+          "connectionType": "http",
+          "url": "http://127.0.0.1:3005/mcp",
+          "headersTemplate": {
+            "X-Flow": "{{.params.tag}}"
+          },
+          "tag": "mcp-exec",
+          "toolName": "TOOL_NAME",
+          "toolParameters": "{}",
+          "rawBodyTemplate": "{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"{{.params.toolName}}\",\n    \"arguments\": {{.params.toolParameters}}\n  }\n}"
+        },
+        "next": {
+          "default": "END"
+        }
+      }
+    }
+  }
+  

@@ -1,0 +1,242 @@
+{
+  "services": [
+    {
+      "name": "github",
+      "type": "openapi",
+      "specUrl": "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json",
+      "baseUrl": "https://api.github.com",
+      "auth": {
+        "kind": "header",
+        "env": "GITHUB_TOKEN"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "repos|issues|pulls|actions|search"
+        ]
+      }
+    },
+    {
+      "name": "slack",
+      "type": "openapi",
+      "specUrl": "https://raw.githubusercontent.com/slackapi/slack-api-specs/master/web-api/slack_web_openapi_v2.json",
+      "baseUrl": "https://slack.com/api",
+      "auth": {
+        "kind": "header",
+        "env": "SLACK_BOT_TOKEN"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "chat|channels|users|files"
+        ]
+      }
+    },
+    {
+      "name": "notion",
+      "type": "openapi",
+      "specUrl": "https://raw.githubusercontent.com/ramnes/notion-sdk-py/main/notion_client/openapi.json",
+      "baseUrl": "https://api.notion.com/v1",
+      "auth": {
+        "kind": "header",
+        "env": "NOTION_TOKEN"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "pages|databases|blocks|search"
+        ]
+      }
+    },
+    {
+      "name": "stripe",
+      "type": "openapi",
+      "specUrl": "https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json",
+      "baseUrl": "https://api.stripe.com/v1",
+      "auth": {
+        "kind": "header",
+        "env": "STRIPE_SECRET_KEY"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "customers|payments|subscriptions|invoices"
+        ]
+      }
+    },
+    {
+      "name": "sendgrid",
+      "type": "openapi",
+      "specUrl": "https://raw.githubusercontent.com/sendgrid/sendgrid-oai/main/oai.json",
+      "baseUrl": "https://api.sendgrid.com/v3",
+      "auth": {
+        "kind": "header",
+        "env": "SENDGRID_API_KEY"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "mail|contacts|templates"
+        ]
+      }
+    },
+    {
+      "name": "airtable",
+      "type": "openapi",
+      "specUrl": "https://raw.githubusercontent.com/Airtable/airtable.js/master/lib/airtable_api.json",
+      "baseUrl": "https://api.airtable.com/v0",
+      "auth": {
+        "kind": "header",
+        "env": "AIRTABLE_API_KEY"
+      },
+      "filters": {}
+    },
+    {
+      "name": "docker",
+      "type": "openapi",
+      "specUrl": "https://docs.docker.com/reference/api/engine/version/v1.51.yaml",
+      "baseUrl": "http://localhost:2375",
+      "auth": {},
+      "filters": {
+        "includeTagsRe": [
+          "Container|Image|System|Network"
+        ]
+      }
+    },
+    {
+      "name": "n8n",
+      "type": "openapi",
+      "specFile": "specs/n8n-api.json",
+      "baseUrl": "https://n8n.readmyfineprint.com/api/v1",
+      "auth": {
+        "kind": "header",
+        "name": "X-N8N-API-KEY",
+        "env": "N8N_API_KEY"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "Workflow|Execution|Credential|User|Variables|Audit|Tags|SourceControl|Projects"
+        ]
+      }
+    },
+    {
+      "name": "hostinger",
+      "type": "openapi",
+      "specFile": "./specs/hostinger-api.json",
+      "baseUrl": "https://developers.hostinger.com",
+      "auth": {
+        "kind": "header",
+        "env": "HOSTINGER_API_TOKEN"
+      },
+      "filters": {
+        "excludeTagsRe": [
+          "Deprecated|Internal"
+        ]
+      }
+    },
+    {
+      "name": "usps",
+      "type": "openapi",
+      "specUrl": "https://raw.githubusercontent.com/lob/usps-webtools-api/main/usps-webtools-api.yml",
+      "baseUrl": "https://secure.shippingapis.com/ShippingAPI.dll",
+      "auth": {
+        "kind": "query",
+        "name": "USERID",
+        "env": "USPS_USER_ID"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "Address|Tracking|Rate|Label"
+        ]
+      }
+    },
+    {
+      "name": "lob",
+      "type": "openapi",
+      "specUrl": "https://raw.githubusercontent.com/lob/lob-openapi/main/lob-api-public.yml",
+      "baseUrl": "https://api.lob.com/v1",
+      "auth": {
+        "kind": "basic",
+        "username_env": "LOB_API_KEY",
+        "password": ""
+      },
+      "filters": {
+        "includeTagsRe": [
+          "Letters|Postcards|Checks|US-Verifications|Addresses|Certified|Tracking"
+        ]
+      }
+    },
+    {
+      "name": "proof",
+      "type": "openapi",
+      "specUrl": "https://dev.proof.com/openapi.json",
+      "baseUrl": "https://dev.proof.com/api/v1",
+      "auth": {
+        "kind": "header",
+        "env": "PROOF_API_KEY"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "documents|templates|signatures|workflows"
+        ]
+      }
+    },
+    {
+      "name": "wix",
+      "type": "openapi",
+      "specUrl": "https://www.wix.com/_api/rest-docs/wix-rest-docs/openapi3_0.json",
+      "baseUrl": "https://www.wixapis.com",
+      "auth": {
+        "kind": "header",
+        "env": "WIX_API_KEY"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "sites|members|forms|contacts|stores|bookings|events|blog|portfolio"
+        ]
+      }
+    },
+    {
+      "name": "irs",
+      "type": "openapi",
+      "specUrl": "https://www.irs.gov/pub/irs-pdf/mef-openapi-spec.json",
+      "baseUrl": "https://testbed.irs.gov/mef",
+      "auth": {
+        "kind": "header",
+        "env": "IRS_API_KEY"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "filing|forms|status|validation|acknowledgment|taxpayer"
+        ]
+      }
+    },
+    {
+      "name": "adobe_pdf",
+      "type": "openapi",
+      "specUrl": "specs/adobe-pdf-services.yaml",
+      "baseUrl": "https://pdf-services.adobe.io",
+      "auth": {
+        "kind": "header",
+        "env": "ADOBE_ACCESS_TOKEN"
+      },
+      "filters": {
+        "includeTagsRe": []
+      }
+    },
+    {
+      "name": "unipile",
+      "type": "openapi",
+      "specUrl": "https://api15.unipile.com:14501/api-json",
+      "baseUrl": "https://api15.unipile.com:14501",
+      "auth": {
+        "kind": "header",
+        "name": "X-API-KEY",
+        "env": "UNIPILE_API_KEY"
+      },
+      "filters": {
+        "includeTagsRe": [
+          "accounts|messaging|users|posts|linkedin|emails|webhooks|calendar"
+        ],
+        "includeOpsRe": [
+          ".*search.*|.*profile.*|.*post.*|.*account.*|.*linkedin.*"
+        ]
+      }
+    }
+  ]
+}

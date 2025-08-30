@@ -1,0 +1,135 @@
+{
+  "metadata": {
+    "name": "MCP: Intelligent Agent Flow",
+    "description": "An agent that lists MCP tools and intelligently selects and executes them based on user requests",
+    "version": "1.0.0"
+  },
+  "variables": {
+    "mcp_url": "http://127.0.0.1:3005/mcp",
+    "connection_type": "http"
+  },
+  "nodes": {
+    "listTools": {
+      "type": "mcp",
+      "description": "List all available MCP tools",
+      "params": {
+        "connectionType": "http",
+        "operation": "listTools",
+        "url": "http://127.0.0.1:3005/mcp",
+        "rawBody": "{\"method\":\"tools/list\",\"params\":{}}"
+      },
+      "next": {
+        "default": "analyzeRequest",
+        "error": "handleError"
+      }
+    },
+    "analyzeRequest": {
+      "type": "transform",
+      "description": "Analyze user request and available tools to create execution plan",
+      "params": {
+        "script": "// Extract tools from MCP response\nconst mcpResult = input.result;\nlet tools = [];\n\nif (mcpResult && mcpResult.result && mcpResult.result.tools) {\n  tools = mcpResult.result.tools;\n} else if (mcpResult && mcpResult.tools) {\n  tools = mcpResult.tools;\n}\n\nconsole.log(\"Available tools:\", tools.map(t => t.name).join(', '));\n\n// Get user request\nconst userRequest = input.request || input.query || input.task || '';\nconst userParams = input.parameters || input.params || {};\n\nif (!userRequest) {\n  return {\n    error: \"No user request provided\",\n    availableTools: tools,\n    usage: \"Provide a 'request' field describing what you want to accomplish\"\n  };\n}\n\nconsole.log(\"User request:\", userRequest);\n\n// Simple keyword-based tool selection\n// In a real implementation, you might use an LLM here\nconst requestLower = userRequest.toLowerCase();\nlet selectedTools = [];\nlet executionPlan = [];\n\n// Tool selection logic based on keywords\ntools.forEach(tool => {\n  const toolName = tool.name.toLowerCase();\n  const toolDesc = (tool.description || '').toLowerCase();\n  \n  // Check if tool name or description matches request keywords\n  const keywords = [\n    toolName,\n    ...toolName.split('_'),\n    ...toolDesc.split(' ')\n  ].filter(k => k.length > 2);\n  \n  const relevanceScore = keywords.reduce((score, keyword) => {\n    if (requestLower.includes(keyword)) {\n      return score + 1;\n    }\n    return score;\n  }, 0);\n  \n  if (relevanceScore > 0) {\n    selectedTools.push({\n      tool: tool,\n      relevanceScore: relevanceScore,\n      matchedKeywords: keywords.filter(k => requestLower.includes(k))\n    });\n  }\n});\n\n// Sort by relevance score\nselectedTools.sort((a, b) => b.relevanceScore - a.relevanceScore);\n\n// Create execution plan\nif (selectedTools.length === 0) {\n  // Fallback: suggest similar tools\n  const suggestions = tools.filter(t => {\n    const name = t.name.toLowerCase();\n    return requestLower.split(' ').some(word => \n      word.length > 2 && (name.includes(word) || word.includes(name.split('_')[0]))\n    );\n  }).slice(0, 3);\n  \n  return {\n    error: \"No matching tools found for request\",\n    request: userRequest,\n    availableTools: tools,\n    suggestions: suggestions.map(t => t.name),\n    hint: \"Try requests like: 'get weather', 'search web', 'get time', etc.\"\n  };\n}\n\n// Limit to top 3 most relevant tools\nconst topTools = selectedTools.slice(0, 3);\n\nexecutionPlan = topTools.map((item, index) => ({\n  toolName: item.tool.name,\n  tool: item.tool,\n  relevanceScore: item.relevanceScore,\n  matchedKeywords: item.matchedKeywords,\n  parameters: userParams,\n  order: index + 1\n}));\n\nreturn {\n  request: userRequest,\n  availableTools: tools,\n  selectedTools: topTools.map(t => t.tool),\n  executionPlan: executionPlan,\n  planSummary: {\n    totalAvailable: tools.length,\n    selected: executionPlan.length,\n    topMatches: executionPlan.map(p => `${p.toolName} (score: ${p.relevanceScore})`)\n  },\n  currentIndex: 0,\n  executionResults: [],\n  ready: true\n};"
+      },
+      "next": {
+        "default": "checkExecution"
+      }
+    },
+    "checkExecution": {
+      "type": "condition",
+      "description": "Check if we have tools to execute",
+      "params": {
+        "condition": "${input.ready == true && input.executionPlan.length > 0}"
+      },
+      "next": {
+        "true": "prepareExecution",
+        "false": "reportNoExecution",
+        "default": "reportNoExecution"
+      }
+    },
+    "prepareExecution": {
+      "type": "transform",
+      "description": "Prepare the current tool for execution",
+      "params": {
+        "script": "const currentIndex = input.currentIndex || 0;\nconst executionPlan = input.executionPlan || [];\n\nif (currentIndex >= executionPlan.length) {\n  return {\n    ...input,\n    allComplete: true,\n    message: \"All planned tools executed\"\n  };\n}\n\nconst currentPlan = executionPlan[currentIndex];\nconst toolParams = currentPlan.parameters || {};\n\n// Smart parameter inference based on tool name and user request\nconst inferredParams = { ...toolParams };\nconst request = input.request || '';\nconst requestLower = request.toLowerCase();\n\n// Common parameter inference patterns\nif (currentPlan.toolName.includes('weather') && !inferredParams.location) {\n  // Try to extract location from request\n  const locationMatch = request.match(/(?:in|for|at)\\s+([A-Za-z\\s]+?)(?:\\s|$|,|\\.)/i);\n  if (locationMatch) {\n    inferredParams.location = locationMatch[1].trim();\n  } else {\n    inferredParams.location = 'San Francisco'; // default\n  }\n}\n\nif (currentPlan.toolName.includes('search') && !inferredParams.query) {\n  // Use the original request as search query\n  inferredParams.query = request;\n}\n\nif (currentPlan.toolName.includes('time') && !inferredParams.timezone) {\n  inferredParams.timezone = 'UTC';\n}\n\nconsole.log(`Executing tool ${currentIndex + 1}/${executionPlan.length}: ${currentPlan.toolName}`);\nconsole.log('Parameters:', JSON.stringify(inferredParams, null, 2));\n\nreturn {\n  ...input,\n  currentPlan: currentPlan,\n  toolName: currentPlan.toolName,\n  toolParameters: JSON.stringify(inferredParams),\n  executionReady: true\n};"
+      },
+      "next": {
+        "default": "checkComplete"
+      }
+    },
+    "checkComplete": {
+      "type": "condition",
+      "description": "Check if all executions are complete",
+      "params": {
+        "condition": "${input.allComplete == true}"
+      },
+      "next": {
+        "true": "formatFinalResult",
+        "false": "executeTool",
+        "default": "executeTool"
+      }
+    },
+    "executeTool": {
+      "type": "mcp",
+      "description": "Execute the current MCP tool",
+      "params": {
+        "connectionType": "http",
+        "operation": "executeTool",
+        "url": "http://127.0.0.1:3005/mcp",
+        "rawBodyTemplate": "{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"{{.input.toolName}}\",\n    \"arguments\": {{.input.toolParameters}}\n  }\n}"
+      },
+      "next": {
+        "default": "recordResult",
+        "error": "recordError"
+      }
+    },
+    "recordResult": {
+      "type": "transform",
+      "description": "Record successful execution result",
+      "params": {
+        "script": "const currentIndex = input.currentIndex || 0;\nconst executionResults = input.executionResults || [];\nconst currentPlan = input.currentPlan;\n\n// Record this execution\nconst result = {\n  toolName: currentPlan.toolName,\n  success: true,\n  result: input.result,\n  relevanceScore: currentPlan.relevanceScore,\n  matchedKeywords: currentPlan.matchedKeywords,\n  parameters: JSON.parse(input.toolParameters || '{}'),\n  executedAt: new Date().toISOString(),\n  order: currentPlan.order\n};\n\nexecutionResults.push(result);\n\n// Prepare for next iteration\nconst nextIndex = currentIndex + 1;\n\nreturn {\n  ...input,\n  executionResults: executionResults,\n  currentIndex: nextIndex,\n  lastResult: result\n};"
+      },
+      "next": {
+        "default": "prepareExecution"
+      }
+    },
+    "recordError": {
+      "type": "transform",
+      "description": "Record failed execution result",
+      "params": {
+        "script": "const currentIndex = input.currentIndex || 0;\nconst executionResults = input.executionResults || [];\nconst currentPlan = input.currentPlan;\n\n// Record this execution failure\nconst result = {\n  toolName: currentPlan.toolName,\n  success: false,\n  error: input.error || \"Execution failed\",\n  relevanceScore: currentPlan.relevanceScore,\n  matchedKeywords: currentPlan.matchedKeywords,\n  parameters: JSON.parse(input.toolParameters || '{}'),\n  executedAt: new Date().toISOString(),\n  order: currentPlan.order\n};\n\nexecutionResults.push(result);\n\n// Continue with next tool despite error\nconst nextIndex = currentIndex + 1;\n\nreturn {\n  ...input,\n  executionResults: executionResults,\n  currentIndex: nextIndex,\n  lastResult: result\n};"
+      },
+      "next": {
+        "default": "prepareExecution"
+      }
+    },
+    "formatFinalResult": {
+      "type": "transform",
+      "description": "Format the final agent response",
+      "params": {
+        "script": "const executionResults = input.executionResults || [];\nconst successful = executionResults.filter(r => r.success);\nconst failed = executionResults.filter(r => !r.success);\n\n// Create a natural language summary\nlet summary = `I processed your request: \"${input.request}\"\\n\\n`;\n\nif (successful.length > 0) {\n  summary += `Successfully executed ${successful.length} tool(s):\\n`;\n  successful.forEach((result, i) => {\n    summary += `${i + 1}. ${result.toolName} - ${result.success ? 'Success' : 'Failed'}\\n`;\n    if (result.result && result.result.result) {\n      const resultData = typeof result.result.result === 'string' \n        ? result.result.result \n        : JSON.stringify(result.result.result, null, 2);\n      summary += `   Result: ${resultData.substring(0, 200)}${resultData.length > 200 ? '...' : ''}\\n`;\n    }\n  });\n}\n\nif (failed.length > 0) {\n  summary += `\\nFailed executions (${failed.length}):\\n`;\n  failed.forEach((result, i) => {\n    summary += `${i + 1}. ${result.toolName} - Error: ${result.error}\\n`;\n  });\n}\n\nreturn {\n  success: true,\n  request: input.request,\n  summary: summary,\n  executionStats: {\n    totalExecuted: executionResults.length,\n    successful: successful.length,\n    failed: failed.length,\n    planSummary: input.planSummary\n  },\n  results: executionResults,\n  availableTools: input.availableTools,\n  completedAt: new Date().toISOString()\n};"
+      },
+      "next": {
+        "default": "END"
+      }
+    },
+    "reportNoExecution": {
+      "type": "transform",
+      "description": "Report when no tools can be executed",
+      "params": {
+        "script": "return {\n  success: false,\n  request: input.request || 'No request provided',\n  error: input.error || \"No suitable tools found for your request\",\n  availableTools: (input.availableTools || []).map(t => t.name),\n  suggestions: input.suggestions || [],\n  hint: input.hint || \"Try describing what you want to accomplish\",\n  timestamp: new Date().toISOString()\n};"
+      },
+      "next": {
+        "default": "END"
+      }
+    },
+    "handleError": {
+      "type": "transform",
+      "description": "Handle MCP operation errors",
+      "params": {
+        "script": "return {\n  success: false,\n  error: \"MCP operation failed: \" + (input.error || \"Unknown error\"),\n  timestamp: new Date().toISOString()\n};"
+      },
+      "next": {
+        "default": "END"
+      }
+    }
+  }
+}
